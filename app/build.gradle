@@ -8,6 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'antlr'
 }
 
 repositories {
@@ -23,6 +24,10 @@ dependencies {
 
     // This dependency is used by the application.
     implementation libs.guava
+
+    implementation 'org.antlr:antlr4-runtime:4.7.2'
+
+    antlr "org.antlr:antlr4:4.7.2" // use ANTLR version 4
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -40,4 +45,11 @@ application {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += [ "-visitor", 
+                   "-long-messages",
+                   "-package", "org.example" ]
 }

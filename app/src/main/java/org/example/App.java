@@ -3,12 +3,27 @@
  */
 package org.example;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+public class App {
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        ExprLexer lexer = new ExprLexer(CharStreams.fromString("100+2*6"));
+
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ExprParser parser = new ExprParser(tokens);
+        ParseTree parseTree = parser.expr();
+
+        ParseTreeWalker walker = new ParseTreeWalker();
+        walker.walk(new Listener(), parseTree);
+    }
+}
+
+class Listener extends ExprBaseListener {
+    @Override
+    public void enterExpr(ExprParser.ExprContext ctx) {
+        System.out.println(ctx.getText());
     }
 }
