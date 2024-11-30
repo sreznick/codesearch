@@ -25,9 +25,9 @@ dependencies {
     // This dependency is used by the application.
     implementation libs.guava
 
-    implementation 'org.antlr:antlr4-runtime:4.7.2'
+    implementation 'org.antlr:antlr4-runtime:4.13.0'
 
-    antlr "org.antlr:antlr4:4.7.2" // use ANTLR version 4
+    antlr "org.antlr:antlr4:4.13.0" // use ANTLR version 4
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -39,7 +39,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.example.App'
+    mainClass = 'org.example.Test'
 }
 
 tasks.named('test') {
@@ -49,7 +49,7 @@ tasks.named('test') {
 
 generateGrammarSource {
     maxHeapSize = "64m"
-    arguments += [ "-visitor", 
+    arguments += [ "-visitor",
                    "-long-messages",
                    "-package", "org.example" ]
 }

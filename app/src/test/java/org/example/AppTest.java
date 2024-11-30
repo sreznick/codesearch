@@ -8,5 +8,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AppTest {
     @Test void testSomething() {
+        try {
+            String pathToDirectory = "src/main/java";
+            DirectoryWalker.walkDirectory(pathToDirectory);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
