@@ -55,27 +55,33 @@ public class JavaSourceIndexer {
     private static void indexJavaFile(Path file, IndexWriter writer) throws Exception {
         String content = Files.readString(file);
 
-        List<String> stringLiterals = extractStringLiterals(content);
-        for (String literal : stringLiterals) {
+        JavaStringExtractor extractor = new JavaStringExtractor();
+        extractor.setCurrentFile(file.toString());
+
+        List<JavaStringExtractor.ExtractedString> stringLiterals = extractStringLiterals(content, extractor);
+        for (JavaStringExtractor.ExtractedString literal : stringLiterals) {
             Document doc = new Document();
-            doc.add(new StringField("content", literal, StringField.Store.YES));
+            doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
+            doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
+            doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
             writer.addDocument(doc);
+
+            logger.info("Индексируем: " + literal);
         }
     }
 
-    private static List<String> extractStringLiterals(String content) {
+
+    private static List<JavaStringExtractor.ExtractedString> extractStringLiterals(String content, JavaStringExtractor extractor) {
         JavaLexer lexer = new JavaLexer(CharStreams.fromString(content));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         JavaParser parser = new JavaParser(tokens);
 
+        ParseTree tree = parser.compilationUnit();
+        ParseTreeWalker walker = new ParseTreeWalker();
+        walker.walk(extractor, tree);
         String str = "Hello, Lucene!";
 
-        ParseTree tree = parser.compilationUnit();
-        JavaStringExtractor listener = new JavaStringExtractor();
-        ParseTreeWalker walker = new ParseTreeWalker();
-        walker.walk(listener, tree);
-
-        return listener.getStrings();
+        return extractor.getStrings();
     }
 
     public static void main(String[] args) {

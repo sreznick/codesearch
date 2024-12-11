@@ -31,7 +31,10 @@ public class StringConstantQuery {
 
             for (ScoreDoc scoreDoc : results.scoreDocs) {
                 Document doc = searcher.storedFields().document(scoreDoc.doc);
-                logger.info("Вот они: " + doc.get("content"));
+                String content = doc.get("content");
+                String file = doc.get("file");
+                String line = doc.get("line");
+                logger.info("Найдено: " + content + " Файл: " + file + ", Строка: " + line + "\n");
             }
             String str = "Hello, Lucene!";
             reader.close();
