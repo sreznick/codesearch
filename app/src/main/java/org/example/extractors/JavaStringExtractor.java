@@ -1,4 +1,7 @@
-package org.example;
+package org.example.extractors;
+
+import org.example.JavaBaseListener;
+import org.example.JavaParser;
 
 import java.util.ArrayList;
 import java.util.List;
