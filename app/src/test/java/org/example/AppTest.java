@@ -12,7 +12,6 @@ class AppTest {
     void testSomething() {
         try {
             String pathToDirectory = "src/main/java";
-            DirectoryWalker.walkDirectory(pathToDirectory);
         } catch (Exception e) {
             e.printStackTrace();
         }

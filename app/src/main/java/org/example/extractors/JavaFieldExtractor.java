@@ -50,7 +50,7 @@ public class JavaFieldExtractor extends JavaBaseListener {
 
         @Override
         public String toString() {
-            return "Field: " + fieldName + " (File: " + file + ", Line: " + line + ")";
+            return "File: " + file + ", Line: " + line + ", Field: " + fieldName ;
         }
     }
 }

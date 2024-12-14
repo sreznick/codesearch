@@ -54,7 +54,7 @@ public class JavaStringExtractor extends JavaBaseListener {
 
         @Override
         public String toString() {
-            return "File: " + file + ", Line: " + line + ", Value: \"" + value + "\"";
+            return "File: " + file + ", Line: " + line + ", Value: " + value;
         }
     }
 }

@@ -50,7 +50,7 @@ public class JavaInterfaceExtractor extends JavaBaseListener {
 
         @Override
         public String toString() {
-            return "File: " + file + ", Line: " + line + ", Interface: \"" + interfaceName + "\"";
+            return "File: " + file + ", Line: " + line + ", Interface: " + interfaceName;
         }
     }
 }
