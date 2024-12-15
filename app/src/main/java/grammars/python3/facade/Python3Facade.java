@@ -1,14 +1,15 @@
 package grammars.python3.facade;
 
 import grammars.CodeGrepGrammarFacade;
+import grammars.ExtendedParseTreeListener;
 import grammars.python3.Python3Lexer;
 import grammars.python3.Python3Parser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Python3Facade implements CodeGrepGrammarFacade {
@@ -26,7 +27,12 @@ public class Python3Facade implements CodeGrepGrammarFacade {
     }
 
     @Override
-    public ParseTreeListener createListener() {
+    public ExtendedParseTreeListener createListener() {
         return new Python3Logic();
+    }
+
+    @Override
+    public boolean isValidFile(Path path) {
+        return path.getFileName().toString().endsWith(".py") && path.toFile().isFile() && path.toFile().canRead();
     }
 }
