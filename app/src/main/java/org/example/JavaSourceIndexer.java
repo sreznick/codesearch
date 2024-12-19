@@ -41,7 +41,7 @@ public class JavaSourceIndexer {
                         try {
                             indexJavaFile(file, writer);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            logger.error("Ошибка при создании индекса.", e);
                         }
                     });
 
@@ -118,6 +118,30 @@ public class JavaSourceIndexer {
             doc.add(new StringField("type", "Field", StringField.Store.YES));
             writer.addDocument(doc);
         }
+
+        JavaLocalVariableExtractor localVarExtractor = new JavaLocalVariableExtractor();
+        localVarExtractor.setCurrentFile(file.toString());
+        List<JavaLocalVariableExtractor.ExtractedLocalVariable> localVariables = extractLocalVariables(content, localVarExtractor);
+        for (JavaLocalVariableExtractor.ExtractedLocalVariable localVar : localVariables) {
+            Document doc = new Document();
+            doc.add(new StringField("content", localVar.getVariableName(), StringField.Store.YES));
+            doc.add(new StringField("file", localVar.getFile(), StringField.Store.YES));
+            doc.add(new StringField("line", String.valueOf(localVar.getLine()), StringField.Store.YES));
+            doc.add(new StringField("type", "LocalVariable", StringField.Store.YES));
+            writer.addDocument(doc);
+        }
+
+        JavaLiteralExtractor literalExtractor = new JavaLiteralExtractor();
+        literalExtractor.setCurrentFile(file.toString());
+        List<JavaLiteralExtractor.ExtractedLiteral> literals = extractLiterals(content, literalExtractor);
+        for (JavaLiteralExtractor.ExtractedLiteral literal : literals) {
+            Document doc = new Document();
+            doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
+            doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
+            doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
+            doc.add(new StringField("type", literal.getType(), StringField.Store.YES));
+            writer.addDocument(doc);
+        }
     }
 
     private static <T> T extractWithWalker(String content, JavaBaseListener extractor, ExtractResultCallback<T> callback) {
@@ -155,6 +179,14 @@ public class JavaSourceIndexer {
 
     private static List<JavaFieldExtractor.ExtractedField> extractFields(String content, JavaFieldExtractor extractor) {
         return extractWithWalker(content, extractor, e -> ((JavaFieldExtractor) e).getFields());
+    }
+
+    private static List<JavaLocalVariableExtractor.ExtractedLocalVariable> extractLocalVariables(String content, JavaLocalVariableExtractor extractor) {
+        return extractWithWalker(content, extractor, e -> ((JavaLocalVariableExtractor) e).getVariables());
+    }
+
+    private static List<JavaLiteralExtractor.ExtractedLiteral> extractLiterals(String content, JavaLiteralExtractor extractor) {
+        return extractWithWalker(content, extractor, e -> ((JavaLiteralExtractor) e).getLiterals());
     }
 
     public static void main(String[] args) {

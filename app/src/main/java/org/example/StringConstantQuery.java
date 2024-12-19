@@ -18,8 +18,13 @@ import static org.example.JavaSourceIndexer.indexJavaSources;
 public class StringConstantQuery {
     private static final Logger logger = LogManager.getLogger();
 
+    private static void findBoolLiteralsTest(Boolean flag) {
+        return;
+    }
+
     private static void runQuery(String queryString, String type, Consumer<Document> documentConsumer) {
         String str = "Hello, Lucene!";
+        findBoolLiteralsTest(true);
         try (MMapDirectory directory = new MMapDirectory(Paths.get("index"));
              IndexReader reader = DirectoryReader.open(directory)) {
             IndexSearcher searcher = new IndexSearcher(reader);
@@ -84,13 +89,38 @@ public class StringConstantQuery {
         });
     }
 
+    public static void findLocalVariable(String variableName) {
+        runQuery(variableName, "LocalVariable", doc -> {
+            String file = doc.get("file");
+            String line = doc.get("line");
+            logger.info("Переменная: " + variableName + ", Файл: " + file + ", Строка: " + line);
+        });
+    }
+
+    public static void findLiteral(String literalValue, String type) {
+        runQuery(literalValue, type, doc -> {
+            String content = doc.get("content");
+            String file = doc.get("file");
+            String line = doc.get("line");
+            logger.info("Литерал: {}, Файл: {}, Строка: {}", content, file, line);
+        });
+    }
+
+
     public static void main(String[] args) {
         //indexJavaSources("src");
-
+        float a = 3.13F;
+        boolean b = true;
         findStringConstants("Hello, Lucene!");
         findClass("StringConstantQuery");
         findMethod("indexJavaFile");
         findInterface("ExtractResultCallback");
         findField("logger");
+        findLocalVariable("file");
+        findLiteral("10", "IntegerLiteral");
+        findLiteral("3.13F", "FloatLiteral");
+        findLiteral("true", "BooleanLiteral");
+        findLiteral("}", "CharLiteral");
+        findLiteral("file", "StringLiteral");
     }
 }
