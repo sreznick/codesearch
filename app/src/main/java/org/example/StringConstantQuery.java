@@ -12,6 +12,9 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.example.JavaSourceIndexer.indexJavaSources;
 
@@ -25,8 +28,13 @@ public class StringConstantQuery {
     private static void runQuery(String queryString, String type, Consumer<Document> documentConsumer) {
         String str = "Hello, Lucene!";
         findBoolLiteralsTest(true);
+
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+
         try (MMapDirectory directory = new MMapDirectory(Paths.get("index"));
              IndexReader reader = DirectoryReader.open(directory)) {
+
             IndexSearcher searcher = new IndexSearcher(reader);
 
             BooleanQuery query = new BooleanQuery.Builder()
@@ -36,14 +44,22 @@ public class StringConstantQuery {
 
             logger.info("Запрос на {}: {}", type, queryString);
 
-            TopDocs results = searcher.search(query, 10);
+            TopDocs results = searcher.search(query, 100000);
             logger.info("Найдено совпадений: {}", results.totalHits.toString());
 
             for (ScoreDoc scoreDoc : results.scoreDocs) {
-                Document doc = searcher.storedFields().document(scoreDoc.doc);
-                documentConsumer.accept(doc);
+                executor.submit(() -> {
+                    try {
+                        Document doc = searcher.storedFields().document(scoreDoc.doc);
+                        documentConsumer.accept(doc);
+                    } catch (IOException e) {
+                        logger.error("Ошибка при обработке документа: {}", e.getMessage(), e);
+                    }
+                });
             }
-        } catch (IOException e) {
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.HOURS);
+        } catch (IOException | InterruptedException e) {
             logger.error("Ошибка при выполнении запроса: {}", e.getMessage(), e);
         }
     }
@@ -113,7 +129,7 @@ public class StringConstantQuery {
         boolean b = true;
         findStringConstants("Hello, Lucene!");
         findClass("StringConstantQuery");
-        findMethod("indexJavaFile");
+        findMethod("extractWithWalker");
         findInterface("ExtractResultCallback");
         findField("logger");
         findLocalVariable("file");

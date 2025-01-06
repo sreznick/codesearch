@@ -16,6 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.example.extractors.*;
@@ -34,22 +37,27 @@ public class JavaSourceIndexer {
 
             IndexWriter writer = new IndexWriter(directory, config);
 
+            ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
             Files.walk(Paths.get(directoryPath))
                     .filter(Files::isRegularFile)
                     .filter(file -> file.toString().endsWith(".java"))
-                    .forEach(file -> {
+                    .forEach(file -> executor.submit(() -> {
                         try {
                             indexJavaFile(file, writer);
                         } catch (Exception e) {
                             logger.error("Ошибка при создании индекса.", e);
                         }
-                    });
+                    }));
+
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.HOURS);
 
             writer.close();
             logger.info("Индексация завершена");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Ошибка в процессе индексирования.", e);
         }
     }
 
@@ -59,88 +67,106 @@ public class JavaSourceIndexer {
         JavaStringExtractor stringExtractor = new JavaStringExtractor();
         stringExtractor.setCurrentFile(file.toString());
 
-        List<JavaStringExtractor.ExtractedString> stringLiterals = extractStringLiterals(content, stringExtractor);
-        for (JavaStringExtractor.ExtractedString literal : stringLiterals) {
-            Document doc = new Document();
-            doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
-            doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", "StringLiteral", StringField.Store.YES));
-            writer.addDocument(doc);
+        synchronized (writer) {
+            List<JavaStringExtractor.ExtractedString> stringLiterals = extractStringLiterals(content, stringExtractor);
+            for (JavaStringExtractor.ExtractedString literal : stringLiterals) {
+                Document doc = new Document();
+                doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
+                doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", "StringLiteral", StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
 
         JavaClassExtractor classExtractor = new JavaClassExtractor();
         classExtractor.setCurrentFile(file.toString());
 
-        List<JavaClassExtractor.ExtractedClass> classes = extractClasses(content, classExtractor);
-        for (JavaClassExtractor.ExtractedClass cls : classes) {
-            Document doc = new Document();
-            doc.add(new StringField("content", cls.getClassName(), StringField.Store.YES));
-            doc.add(new StringField("file", cls.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(cls.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", "Class", StringField.Store.YES));
-            writer.addDocument(doc);
+        synchronized (writer) {
+            List<JavaClassExtractor.ExtractedClass> classes = extractClasses(content, classExtractor);
+            for (JavaClassExtractor.ExtractedClass cls : classes) {
+                Document doc = new Document();
+                doc.add(new StringField("content", cls.getClassName(), StringField.Store.YES));
+                doc.add(new StringField("file", cls.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(cls.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", "Class", StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
 
         JavaMethodExtractor methodExtractor = new JavaMethodExtractor();
         methodExtractor.setCurrentFile(file.toString());
 
-        List<JavaMethodExtractor.ExtractedMethod> methods = extractMethods(content, methodExtractor);
-        for (JavaMethodExtractor.ExtractedMethod method : methods) {
-            Document doc = new Document();
-            doc.add(new StringField("content", method.getMethodName(), StringField.Store.YES));
-            doc.add(new StringField("file", method.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(method.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", "Method", StringField.Store.YES));
-            writer.addDocument(doc);
+        synchronized (writer) {
+            List<JavaMethodExtractor.ExtractedMethod> methods = extractMethods(content, methodExtractor);
+            for (JavaMethodExtractor.ExtractedMethod method : methods) {
+                Document doc = new Document();
+                doc.add(new StringField("content", method.getMethodName(), StringField.Store.YES));
+                doc.add(new StringField("file", method.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(method.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", "Method", StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
 
         JavaInterfaceExtractor interfaceExtractor = new JavaInterfaceExtractor();
         interfaceExtractor.setCurrentFile(file.toString());
-        List<JavaInterfaceExtractor.ExtractedInterface> interfaces = extractInterfaces(content, interfaceExtractor);
-        for (JavaInterfaceExtractor.ExtractedInterface iface : interfaces) {
-            Document doc = new Document();
-            doc.add(new StringField("content", iface.getInterfaceName(), StringField.Store.YES));
-            doc.add(new StringField("file", iface.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(iface.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", "Interface", StringField.Store.YES));
-            writer.addDocument(doc);
+
+        synchronized (writer) {
+            List<JavaInterfaceExtractor.ExtractedInterface> interfaces = extractInterfaces(content, interfaceExtractor);
+            for (JavaInterfaceExtractor.ExtractedInterface iface : interfaces) {
+                Document doc = new Document();
+                doc.add(new StringField("content", iface.getInterfaceName(), StringField.Store.YES));
+                doc.add(new StringField("file", iface.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(iface.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", "Interface", StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
 
         JavaFieldExtractor fieldExtractor = new JavaFieldExtractor();
         fieldExtractor.setCurrentFile(file.toString());
-        List<JavaFieldExtractor.ExtractedField> fields = extractFields(content, fieldExtractor);
-        for (JavaFieldExtractor.ExtractedField field : fields) {
-            Document doc = new Document();
-            doc.add(new StringField("content", field.getFieldName(), StringField.Store.YES));
-            doc.add(new StringField("file", field.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(field.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", "Field", StringField.Store.YES));
-            writer.addDocument(doc);
+
+        synchronized (writer) {
+            List<JavaFieldExtractor.ExtractedField> fields = extractFields(content, fieldExtractor);
+            for (JavaFieldExtractor.ExtractedField field : fields) {
+                Document doc = new Document();
+                doc.add(new StringField("content", field.getFieldName(), StringField.Store.YES));
+                doc.add(new StringField("file", field.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(field.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", "Field", StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
 
         JavaLocalVariableExtractor localVarExtractor = new JavaLocalVariableExtractor();
         localVarExtractor.setCurrentFile(file.toString());
-        List<JavaLocalVariableExtractor.ExtractedLocalVariable> localVariables = extractLocalVariables(content, localVarExtractor);
-        for (JavaLocalVariableExtractor.ExtractedLocalVariable localVar : localVariables) {
-            Document doc = new Document();
-            doc.add(new StringField("content", localVar.getVariableName(), StringField.Store.YES));
-            doc.add(new StringField("file", localVar.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(localVar.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", "LocalVariable", StringField.Store.YES));
-            writer.addDocument(doc);
+
+        synchronized (writer) {
+            List<JavaLocalVariableExtractor.ExtractedLocalVariable> localVariables = extractLocalVariables(content, localVarExtractor);
+            for (JavaLocalVariableExtractor.ExtractedLocalVariable localVar : localVariables) {
+                Document doc = new Document();
+                doc.add(new StringField("content", localVar.getVariableName(), StringField.Store.YES));
+                doc.add(new StringField("file", localVar.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(localVar.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", "LocalVariable", StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
 
         JavaLiteralExtractor literalExtractor = new JavaLiteralExtractor();
         literalExtractor.setCurrentFile(file.toString());
-        List<JavaLiteralExtractor.ExtractedLiteral> literals = extractLiterals(content, literalExtractor);
-        for (JavaLiteralExtractor.ExtractedLiteral literal : literals) {
-            Document doc = new Document();
-            doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
-            doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
-            doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
-            doc.add(new StringField("type", literal.getType(), StringField.Store.YES));
-            writer.addDocument(doc);
+
+        synchronized (writer) {
+            List<JavaLiteralExtractor.ExtractedLiteral> literals = extractLiterals(content, literalExtractor);
+            for (JavaLiteralExtractor.ExtractedLiteral literal : literals) {
+                Document doc = new Document();
+                doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
+                doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
+                doc.add(new StringField("type", literal.getType(), StringField.Store.YES));
+                writer.addDocument(doc);
+            }
         }
     }
 
