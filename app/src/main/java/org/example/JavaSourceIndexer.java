@@ -74,7 +74,7 @@ public class JavaSourceIndexer {
                 doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
                 doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
-                doc.add(new StringField("type", "StringLiteral", StringField.Store.YES));
+                doc.add(new StringField("type", "StringConstant", StringField.Store.YES));
                 writer.addDocument(doc);
             }
         }
