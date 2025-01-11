@@ -54,7 +54,7 @@ eval_input
     ;
 
 decorator
-    : '@' dotted_name ('(' arglist? ')')? NEWLINE
+    : '@' test ('(' arglist? ')')? NEWLINE
     ;
 
 decorators

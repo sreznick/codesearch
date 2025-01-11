@@ -47,3 +47,7 @@ with (
 numbers = [1, 2, 3, 4, 5]
 squared_numbers = [x**2 for x in numbers if (n := x) % 2 == 0]
 print(squared_numbers)
+
+# Relaxed decorator syntax (Python 3.9+)
+@buttons[0].a
+def foo(): pass
