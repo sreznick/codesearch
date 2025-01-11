@@ -1,31 +1,24 @@
 /*
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2014 by Bart Kiers
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- *
- * Project      : python3-parser; an ANTLR4 grammar for Python 3
- *                https://github.com/bkiers/python3-parser
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Project : python3-parser; an ANTLR4 grammar for Python 3 https://github.com/bkiers/python3-parser
  * Developed by : Bart Kiers, bart@big-o.nl
  */
 
@@ -86,15 +79,21 @@ parameters
 
 typedargslist
     : (
-        tfpdef ('=' test)? (',' tfpdef ('=' test)?)* (
+        arg_maybe_default (',' arg_maybe_default)*
+        (',' '/' (',' arg_maybe_default)*)?
+        (
             ',' (
-                '*' tfpdef? (',' tfpdef ('=' test)?)* (',' ('**' tfpdef ','?)?)?
+                '*' tfpdef? (',' arg_maybe_default)* (',' ('**' tfpdef ','?)?)?
                 | '**' tfpdef ','?
             )?
         )?
-        | '*' tfpdef? (',' tfpdef ('=' test)?)* (',' ('**' tfpdef ','?)?)?
+        | '*' tfpdef? (',' arg_maybe_default)* (',' ('**' tfpdef ','?)?)?
         | '**' tfpdef ','?
     )
+    ;
+
+arg_maybe_default
+    : tfpdef ('=' test)?
     ;
 
 tfpdef
@@ -171,6 +170,7 @@ augassign
         | '>>='
         | '**='
         | '//='
+        | ':='
     )
     ;
 
@@ -267,6 +267,7 @@ compound_stmt
     : if_stmt
     | while_stmt
     | for_stmt
+    | try_group_stmt
     | try_stmt
     | with_stmt
     | funcdef
@@ -301,15 +302,33 @@ try_stmt
     )
     ;
 
+try_group_stmt
+    : (
+        'try' ':' block (
+            (except_group_clause ':' block)+ ('else' ':' block)? ('finally' ':' block)?
+            | 'finally' ':' block
+        )
+    )
+    ;
+
 with_stmt
     : 'with' with_item (',' with_item)* ':' block
+    | 'with' with_block ':' block
     ;
 
 with_item
     : test ('as' expr)?
     ;
 
+with_block
+    : '(' with_item (',' with_item)* ')'
+    ;
+
 // NB compile.c makes sure that the default except clause is last
+except_group_clause
+    : 'except' '*' test ('as' name)?
+    ;
+
 except_clause
     : 'except' (test ('as' name)?)?
     ;
@@ -570,6 +589,7 @@ expr
     | expr '&' expr
     | expr '^' expr
     | expr '|' expr
+    | expr ':=' expr
     ;
 
 //expr: xor_expr ('|' xor_expr)*;
@@ -588,7 +608,7 @@ atom
     : '(' (yield_expr | testlist_comp)? ')'
     | '[' testlist_comp? ']'
     | '{' dictorsetmaker? '}'
-    | name
+    | dotted_name
     | NUMBER
     | STRING+
     | '...'
@@ -599,8 +619,9 @@ atom
 
 name
     : NAME
-    | '_'
-    | 'match'
+    | UNDERSCORE
+    | MATCH
+    | CASE
     ;
 
 testlist_comp
@@ -631,7 +652,7 @@ exprlist
     ;
 
 testlist
-    : test (',' test)* ','?
+    : star_named_expression (',' star_named_expression)* ','?
     ;
 
 dictorsetmaker

@@ -1,31 +1,24 @@
 /*
  * The MIT License (MIT)
- *
+ * 
  * Copyright (c) 2014 by Bart Kiers
- *
- * Permission is hereby granted, free of charge, to any person
- * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
- * restriction, including without limitation the rights to use,
- * copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following
- * conditions:
- *
- * The above copyright notice and this permission notice shall be
- * included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- *
- * Project      : python3-parser; an ANTLR4 grammar for Python 3
- *                https://github.com/bkiers/python3-parser
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute,
+ * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+ * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Project : python3-parser; an ANTLR4 grammar for Python 3 https://github.com/bkiers/python3-parser
  * Developed by : Bart Kiers, bart@big-o.nl
  */
 
@@ -93,10 +86,10 @@ RAISE      : 'raise';
 RETURN     : 'return';
 TRUE       : 'True';
 TRY        : 'try';
-UNDERSCORE : '_';
 WHILE      : 'while';
 WITH       : 'with';
 YIELD      : 'yield';
+UNDERSCORE : '_';
 
 NEWLINE: ({this.atStartOfInput()}? SPACES | ( '\r'? '\n' | '\r' | '\f') SPACES?) {this.onNewLine();};
 
@@ -113,16 +106,16 @@ STRING_LITERAL: ( [rR] | [uU] | [fF] | ( [fF] [rR]) | ( [rR] [fF]))? ( SHORT_STR
 BYTES_LITERAL: ( [bB] | ( [bB] [rR]) | ( [rR] [bB])) ( SHORT_BYTES | LONG_BYTES);
 
 /// decimalinteger ::=  nonzerodigit digit* | "0"+
-DECIMAL_INTEGER: NON_ZERO_DIGIT DIGIT* | '0'+;
+DECIMAL_INTEGER: NON_ZERO_DIGIT ('_'? DIGIT)* | '0'+;
 
 /// octinteger     ::=  "0" ("o" | "O") octdigit+
-OCT_INTEGER: '0' [oO] OCT_DIGIT+;
+OCT_INTEGER: '0' [oO] OCT_DIGIT ('_'? OCT_DIGIT)*;
 
 /// hexinteger     ::=  "0" ("x" | "X") hexdigit+
-HEX_INTEGER: '0' [xX] HEX_DIGIT+;
+HEX_INTEGER: '0' [xX] HEX_DIGIT ('_'? HEX_DIGIT)*;
 
 /// bininteger     ::=  "0" ("b" | "B") bindigit+
-BIN_INTEGER: '0' [bB] BIN_DIGIT+;
+BIN_INTEGER: '0' [bB] BIN_DIGIT ('_'? BIN_DIGIT)*;
 
 /// floatnumber   ::=  pointfloat | exponentfloat
 FLOAT_NUMBER: POINT_FLOAT | EXPONENT_FLOAT;
@@ -136,6 +129,7 @@ STAR               : '*';
 OPEN_PAREN         : '(' {this.openBrace();};
 CLOSE_PAREN        : ')' {this.closeBrace();};
 COMMA              : ',';
+WALRUS             : ':=';
 COLON              : ':';
 SEMI_COLON         : ';';
 POWER              : '**';
@@ -227,13 +221,13 @@ fragment POINT_FLOAT: INT_PART? FRACTION | INT_PART '.';
 fragment EXPONENT_FLOAT: ( INT_PART | POINT_FLOAT) EXPONENT;
 
 /// intpart       ::=  digit+
-fragment INT_PART: DIGIT+;
+fragment INT_PART: DIGIT ('_'? DIGIT)*;
 
 /// fraction      ::=  "." digit+
-fragment FRACTION: '.' DIGIT+;
+fragment FRACTION: '.' DIGIT ('_'? DIGIT)*;
 
 /// exponent      ::=  ("e" | "E") ["+" | "-"] digit+
-fragment EXPONENT: [eE] [+-]? DIGIT+;
+fragment EXPONENT: [eE] [+-]? DIGIT ('_'? DIGIT)*;
 
 /// shortbytes     ::=  "'" shortbytesitem* "'" | '"' shortbytesitem* '"'
 /// shortbytesitem ::=  shortbyteschar | bytesescapeseq

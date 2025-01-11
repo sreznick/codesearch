@@ -25,9 +25,14 @@ replay_pid*
 
 # Ignore Gradle project-specific cache directory
 .gradle
+.antlr
 
 # Ignore Gradle build output directory
 build
+app/bin
+app/src/main/gen
+app/src/main/antlr
 
 # IDE folders
 .idea
+.vscode
