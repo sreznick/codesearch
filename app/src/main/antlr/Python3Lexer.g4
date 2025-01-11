@@ -90,6 +90,7 @@ WHILE      : 'while';
 WITH       : 'with';
 YIELD      : 'yield';
 UNDERSCORE : '_';
+TYPE       : 'type';
 
 NEWLINE: ({this.atStartOfInput()}? SPACES | ( '\r'? '\n' | '\r' | '\f') SPACES?) {this.onNewLine();};
 

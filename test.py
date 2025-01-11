@@ -51,3 +51,11 @@ print(squared_numbers)
 # Relaxed decorator syntax (Python 3.9+)
 @buttons[0].a
 def foo(): pass
+
+# Typing syntax (Python 3.12+)
+class SomeClass[T, *Ts, **P]: pass
+class SomeChild[T, *Ts, **P](InheritsFrom, Parent[T]): pass
+class UpperBound[T: str, U: "ForwardRef", R: dict[str, int]]: pass
+class ChoiceBound[T: (str, int)]: pass
+def bar[T](a: T, b: T) -> T: pass
+type MyCollection[T] = list[T] | set[T]

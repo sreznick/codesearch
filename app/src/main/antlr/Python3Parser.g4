@@ -70,7 +70,7 @@ async_funcdef
     ;
 
 funcdef
-    : 'def' name parameters ('->' test)? ':' block
+    : 'def' name ('[' generalize ']')? parameters ('->' test)? ':' block
     ;
 
 parameters
@@ -128,7 +128,8 @@ simple_stmts
 
 simple_stmt
     : (
-        expr_stmt
+        type_stmt
+        | expr_stmt
         | del_stmt
         | pass_stmt
         | flow_stmt
@@ -137,6 +138,10 @@ simple_stmt
         | nonlocal_stmt
         | assert_stmt
     )
+    ;
+
+type_stmt
+    : 'type' expr_stmt
     ;
 
 expr_stmt
@@ -622,6 +627,7 @@ name
     | UNDERSCORE
     | MATCH
     | CASE
+    | TYPE
     ;
 
 testlist_comp
@@ -663,11 +669,19 @@ dictorsetmaker
     ;
 
 classdef
-    : 'class' name ('(' arglist? ')')? ':' block
+    : 'class' name ('[' generalize ']')? ('(' arglist? ')')? ':' block
     ;
 
 arglist
     : argument (',' argument)* ','?
+    ;
+
+generalize
+    : gen_type (',' gen_type)* ','?
+    ;
+
+gen_type
+    : (name | '*' name | '**' name) (':' test)?
     ;
 
 // The reason that keywords are test nodes instead of NAME is that using NAME
