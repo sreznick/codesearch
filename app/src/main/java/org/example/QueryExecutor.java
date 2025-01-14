@@ -17,13 +17,13 @@ import java.util.function.Consumer;
 
 import static org.example.JavaSourceIndexer.indexJavaSources;
 
-public class StringConstantQuery {
+public class QueryExecutor {
     private static final Logger logger = LogManager.getLogger();
 
     public static StringBuilder logBuilder = new StringBuilder();
 
 
-    private static void runQueryWithConfig(String queryString, String type, boolean isFuzzy, Consumer<Document> documentConsumer) {
+    private static void runQueryWithConfig(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         try (MMapDirectory directory = new MMapDirectory(Paths.get("index"));
@@ -31,14 +31,16 @@ public class StringConstantQuery {
 
             IndexSearcher searcher = new IndexSearcher(reader);
 
+            String field = isCaseSensitive ? "content" : "content_lowercase";
+
             Query query = new BooleanQuery.Builder()
-                    .add(isFuzzy ? new FuzzyQuery(new Term("content", queryString), 2)
-                            : new TermQuery(new Term("content", queryString)), BooleanClause.Occur.MUST)
+                    .add(isFuzzy ? new FuzzyQuery(new Term(field, isCaseSensitive ? queryString : queryString.toLowerCase()), 2)
+                            : new TermQuery(new Term(field, isCaseSensitive ? queryString : queryString.toLowerCase())), BooleanClause.Occur.MUST)
                     .add(new TermQuery(new Term("type", type)), BooleanClause.Occur.MUST)
                     .build();
 
             String queryTypeMessage = isFuzzy ? " (с неточностями)" : "";
-            String logMessage = "Запрос на " + type + queryTypeMessage + ": " + queryString;
+            String logMessage = "Запрос на " + type + queryTypeMessage + ": " + queryString + " (учет регистра: " + isCaseSensitive + ")";
             logger.info(logMessage);
             logBuilder.append(logMessage).append("\n");
 
@@ -56,6 +58,7 @@ public class StringConstantQuery {
             logBuilder.append(errorMessage).append("\n");
         }
     }
+
 
     private static void processResults(ExecutorService executor, TopDocs results, IndexSearcher searcher, Consumer<Document> documentConsumer) {
         Set<String> processedResults = ConcurrentHashMap.newKeySet();
@@ -91,53 +94,52 @@ public class StringConstantQuery {
         }
     }
 
-    private static void runQuery(String queryString, String type, Consumer<Document> documentConsumer) {
-        runQueryWithConfig(queryString, type, false, documentConsumer);
+    private static void runQuery(String queryString, String type, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
+        runQueryWithConfig(queryString, type, false, isCaseSensitive, documentConsumer);
     }
 
-    private static void runFuzzyQuery(String queryString, String type, Consumer<Document> documentConsumer) {
-        runQueryWithConfig(queryString, type, true, documentConsumer);
+    private static void runFuzzyQuery(String queryString, String type, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
+        runQueryWithConfig(queryString, type, true, isCaseSensitive, documentConsumer);
     }
 
-
-    private static void findWithQuery(String queryString, String type, boolean isFuzzy, Consumer<Document> documentConsumer) {
+    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
         if (isFuzzy) {
-            runFuzzyQuery(queryString, type, documentConsumer);
+            runFuzzyQuery(queryString, type, isCaseSensitive, documentConsumer);
         } else {
-            runQuery(queryString, type, documentConsumer);
+            runQuery(queryString, type, isCaseSensitive, documentConsumer);
         }
     }
 
-    public static void findStringConstants(String queryString, boolean isFuzzy) {
-        findWithQuery(queryString, "StringConstant", isFuzzy);
+    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(queryString, "StringConstant", isFuzzy, isCaseSensitive);
     }
 
-    public static void findClass(String className, boolean isFuzzy) {
-        findWithQuery(className, "Class", isFuzzy);
+    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(className, "Class", isFuzzy, isCaseSensitive);
     }
 
-    public static void findMethod(String methodName, boolean isFuzzy) {
-        findWithQuery(methodName, "Method", isFuzzy);
+    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(methodName, "Method", isFuzzy, isCaseSensitive);
     }
 
-    public static void findInterface(String interfaceName, boolean isFuzzy) {
-        findWithQuery(interfaceName, "Interface", isFuzzy);
+    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(interfaceName, "Interface", isFuzzy, isCaseSensitive);
     }
 
-    public static void findField(String fieldName, boolean isFuzzy) {
-        findWithQuery(fieldName, "Field", isFuzzy);
+    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(fieldName, "Field", isFuzzy, isCaseSensitive);
     }
 
-    public static void findLocalVariable(String variableName, boolean isFuzzy) {
-        findWithQuery(variableName, "LocalVariable", isFuzzy);
+    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(variableName, "LocalVariable", isFuzzy, isCaseSensitive);
     }
 
-    public static void findLiteral(String literalValue, String type, boolean isFuzzy) {
-        findWithQuery(literalValue, type, isFuzzy);
+    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(literalValue, type, isFuzzy, isCaseSensitive);
     }
 
-    private static void findWithQuery(String queryString, String type, boolean isFuzzy) {
-        findWithQuery(queryString, type, isFuzzy, doc -> {
+    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(queryString, type, isFuzzy, isCaseSensitive, doc -> {
             String content = doc.get("content");
             String file = doc.get("file");
             String line = doc.get("line");
@@ -147,19 +149,19 @@ public class StringConstantQuery {
         });
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
         indexJavaSources("src");
 
-        findStringConstants("Test String", false);
-        findClass("Stringdonstantuery", true);
-        findMethod("toString", false);
-        findInterface("TestInterface", false);
-        findField("testField", false);
-        findLocalVariable("content", false);
-        findLiteral("100000", "IntegerLiteral", false);
-        findLiteral("3.13F", "FloatLiteral", false);
-        findLiteral("true", "BooleanLiteral", false);
-        findLiteral("}", "CharLiteral", false);
-        findLiteral("Hello, Lucene!", "StringLiteral", true);
+        findStringConstants("Test String", false, false);
+        findClass("Stringdonstantuery", true, false);
+        findMethod("toString", false, false);
+        findInterface("TestInterface", false, false);
+        findField("testField", false, false);
+        findLocalVariable("content", false, false);
+        findLiteral("100000", "IntegerLiteral", false, false);
+        findLiteral("3.13F", "FloatLiteral", false, false);
+        findLiteral("true", "BooleanLiteral", false, false);
+        findLiteral("}", "CharLiteral", false, false);
+        findLiteral("Hello, Lucene!", "StringLiteral", true, false);
     }
 }

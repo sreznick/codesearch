@@ -12,9 +12,11 @@ import org.apache.lucene.store.MMapDirectory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,37 +29,65 @@ public class JavaSourceIndexer {
 
     private static final Logger logger = LogManager.getLogger();
 
-    public static void indexJavaSources(String directoryPath) {
-        try {
-            Path indexPath = Paths.get("index");
-            MMapDirectory directory = new MMapDirectory(indexPath);
+    public static void indexJavaSources(String directoryPath) throws IOException, InterruptedException {
+        Path indexDirectoryPath = Paths.get("index");
 
-            StandardAnalyzer analyzer = new StandardAnalyzer();
-            IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        deleteDirectoryRecursively(indexDirectoryPath);
 
-            IndexWriter writer = new IndexWriter(directory, config);
+        try (MMapDirectory directory = new MMapDirectory(indexDirectoryPath);
+             StandardAnalyzer analyzer = new StandardAnalyzer();
+             IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(analyzer))) {
 
             ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            try {
+                Files.walk(Paths.get(directoryPath))
+                        .filter(Files::isRegularFile)
+                        .filter(file -> file.toString().endsWith(".java"))
+                        .forEach(file -> executor.submit(() -> {
+                            try {
+                                indexJavaFile(file, writer);
+                                logger.info("Файл проиндексирован: {}", file);
+                            } catch (Exception e) {
+                                logger.error("Ошибка при индексации файла: {}", file, e);
+                            }
+                        }));
 
-            Files.walk(Paths.get(directoryPath))
-                    .filter(Files::isRegularFile)
-                    .filter(file -> file.toString().endsWith(".java"))
-                    .forEach(file -> executor.submit(() -> {
+                executor.shutdown();
+                if (!executor.awaitTermination(1, TimeUnit.HOURS)) {
+                    logger.error("Время ожидания завершения задач индексации истекло.");
+                    executor.shutdownNow();
+                }
+
+            } catch (IOException | InterruptedException e) {
+                logger.error("Ошибка при чтении файлов для индексации.", e);
+                throw e;
+            } finally {
+                if (!executor.isTerminated()) {
+                    logger.warn("Индексация не была завершена.");
+                    executor.shutdownNow();
+                }
+            }
+
+            //logger.info("Индексация успешно завершена.");
+
+        } catch (IOException | InterruptedException e) {
+            logger.error("Ошибка при индексировании.", e);
+            throw e;
+        }
+    }
+
+
+    private static void deleteDirectoryRecursively(Path path) throws IOException {
+        if (Files.exists(path)) {
+            Files.walk(path)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(file -> {
                         try {
-                            indexJavaFile(file, writer);
-                        } catch (Exception e) {
-                            logger.error("Ошибка при создании индекса.", e);
+                            Files.delete(file);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Ошибка при удалении файла: " + file, e);
                         }
-                    }));
-
-            executor.shutdown();
-            executor.awaitTermination(1, TimeUnit.HOURS);
-
-            writer.close();
-            logger.info("Индексация завершена");
-
-        } catch (Exception e) {
-            logger.error("Ошибка в процессе индексирования.", e);
+                    });
         }
     }
 
@@ -69,11 +99,12 @@ public class JavaSourceIndexer {
 
         synchronized (writer) {
             List<JavaStringExtractor.ExtractedString> stringLiterals = extractStringLiterals(content, stringExtractor);
-            for (JavaStringExtractor.ExtractedString literal : stringLiterals) {
+            for (JavaStringExtractor.ExtractedString str : stringLiterals) {
                 Document doc = new Document();
-                doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
-                doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
-                doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
+                doc.add(new StringField("content", str.getValue(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", str.getValue().toLowerCase(), StringField.Store.NO));
+                doc.add(new StringField("file", str.getFile(), StringField.Store.YES));
+                doc.add(new StringField("line", String.valueOf(str.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "StringConstant", StringField.Store.YES));
                 writer.addDocument(doc);
             }
@@ -87,6 +118,7 @@ public class JavaSourceIndexer {
             for (JavaClassExtractor.ExtractedClass cls : classes) {
                 Document doc = new Document();
                 doc.add(new StringField("content", cls.getClassName(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", cls.getClassName().toLowerCase(), StringField.Store.NO));
                 doc.add(new StringField("file", cls.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(cls.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "Class", StringField.Store.YES));
@@ -102,6 +134,7 @@ public class JavaSourceIndexer {
             for (JavaMethodExtractor.ExtractedMethod method : methods) {
                 Document doc = new Document();
                 doc.add(new StringField("content", method.getMethodName(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", method.getMethodName().toLowerCase(), StringField.Store.NO));
                 doc.add(new StringField("file", method.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(method.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "Method", StringField.Store.YES));
@@ -117,6 +150,7 @@ public class JavaSourceIndexer {
             for (JavaInterfaceExtractor.ExtractedInterface iface : interfaces) {
                 Document doc = new Document();
                 doc.add(new StringField("content", iface.getInterfaceName(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", iface.getInterfaceName().toLowerCase(), StringField.Store.NO));
                 doc.add(new StringField("file", iface.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(iface.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "Interface", StringField.Store.YES));
@@ -132,6 +166,7 @@ public class JavaSourceIndexer {
             for (JavaFieldExtractor.ExtractedField field : fields) {
                 Document doc = new Document();
                 doc.add(new StringField("content", field.getFieldName(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", field.getFieldName().toLowerCase(), StringField.Store.NO));
                 doc.add(new StringField("file", field.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(field.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "Field", StringField.Store.YES));
@@ -147,6 +182,7 @@ public class JavaSourceIndexer {
             for (JavaLocalVariableExtractor.ExtractedLocalVariable localVar : localVariables) {
                 Document doc = new Document();
                 doc.add(new StringField("content", localVar.getVariableName(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", localVar.getVariableName().toLowerCase(), StringField.Store.NO));
                 doc.add(new StringField("file", localVar.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(localVar.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "LocalVariable", StringField.Store.YES));
@@ -162,6 +198,7 @@ public class JavaSourceIndexer {
             for (JavaLiteralExtractor.ExtractedLiteral literal : literals) {
                 Document doc = new Document();
                 doc.add(new StringField("content", literal.getValue(), StringField.Store.YES));
+                doc.add(new StringField("content_lowercase", literal.getValue().toLowerCase(), StringField.Store.NO));
                 doc.add(new StringField("file", literal.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(literal.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", literal.getType(), StringField.Store.YES));
