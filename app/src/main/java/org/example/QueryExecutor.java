@@ -17,6 +17,11 @@ import java.util.function.Consumer;
 
 import static org.example.JavaSourceIndexer.indexJavaSources;
 
+/**
+ * Класс для выполнения запросов поиска по индексированным данным.
+ * Поддерживает различные типы запросов, включая строки, классы, методы, интерфейсы и литералы.
+ * Обрабатывает поисковые запросы с возможностью учета регистра и работы с неточными совпадениями.
+ */
 public class QueryExecutor {
     private static final Logger logger = LogManager.getLogger();
 

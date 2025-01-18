@@ -232,6 +232,4 @@ public class AppTest {
         assertTrue(logOutput.contains("Найдено совпадений c TestClass: 1"));
         assertTrue(logOutput.contains("Class: TestClass, Файл: src/test/resources/TestClass.java, Строка: 6"));
     }
-
-
 }

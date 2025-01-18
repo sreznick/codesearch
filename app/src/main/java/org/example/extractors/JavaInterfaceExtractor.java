@@ -6,6 +6,11 @@ import org.example.JavaParser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс анализирует Java-код с помощью ANTLR
+ * и извлекает информацию об объявленных полях.
+ * Он сохраняет имя файла, строку, где встретился определенный интерфейс.
+ */
 public class JavaInterfaceExtractor extends JavaBaseListener {
     private final List<ExtractedInterface> interfaces = new ArrayList<>();
     private String currentFile;

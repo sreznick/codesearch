@@ -6,6 +6,11 @@ import org.example.JavaParser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс анализирует Java-код с помощью ANTLR
+ * и извлекает информацию об объявленных полях.
+ * Он сохраняет имя файла, строку, где встретилась определенная локальная переменная.
+ */
 public class JavaLocalVariableExtractor extends JavaBaseListener {
 
     private final List<ExtractedLocalVariable> variables = new ArrayList<>();

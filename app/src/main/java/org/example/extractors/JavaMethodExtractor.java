@@ -6,6 +6,11 @@ import org.example.JavaParser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс анализирует Java-код с помощью ANTLR
+ * и извлекает информацию об объявленных полях.
+ * Он сохраняет имя файла, строку, где встретился определенный метод.
+ */
 public class JavaMethodExtractor extends JavaBaseListener {
     private final List<ExtractedMethod> methods = new ArrayList<>();
     private String currentFile;

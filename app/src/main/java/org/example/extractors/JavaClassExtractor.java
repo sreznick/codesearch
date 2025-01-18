@@ -6,6 +6,11 @@ import org.example.JavaParser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс анализирует Java-код с помощью ANTLR
+ * и извлекает информацию об объявленных классах.
+ * Он сохраняет имя файла, строку, где встретился определенный класс.
+ */
 public class JavaClassExtractor extends JavaBaseListener {
     private final List<ExtractedClass> classes = new ArrayList<>();
     private String currentFile;

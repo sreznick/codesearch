@@ -6,6 +6,11 @@ import org.example.JavaParser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс анализирует Java-код с помощью ANTLR
+ * и извлекает информацию об объявленных полях.
+ * Он сохраняет имя файла, строку, где встретилось определенное поле.
+ */
 public class JavaFieldExtractor extends JavaBaseListener {
     private final List<ExtractedField> fields = new ArrayList<>();
     private String currentFile;
@@ -50,7 +55,7 @@ public class JavaFieldExtractor extends JavaBaseListener {
 
         @Override
         public String toString() {
-            return "File: " + file + ", Line: " + line + ", Field: " + fieldName ;
+            return "File: " + file + ", Line: " + line + ", Field: " + fieldName;
         }
     }
 }

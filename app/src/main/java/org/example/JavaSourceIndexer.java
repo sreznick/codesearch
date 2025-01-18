@@ -25,6 +25,11 @@ import java.util.concurrent.TimeUnit;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.example.extractors.*;
 
+/**
+ * Класс для индексации Java-исходных кодов.
+ * Проходит по указанным каталогам, анализирует содержимое и создает индекс данных,
+ * которые можно использовать для быстрого поиска.
+ */
 public class JavaSourceIndexer {
 
     private static final Logger logger = LogManager.getLogger();
@@ -67,15 +72,12 @@ public class JavaSourceIndexer {
                     executor.shutdownNow();
                 }
             }
-
             //logger.info("Индексация успешно завершена.");
-
         } catch (IOException | InterruptedException e) {
             logger.error("Ошибка при индексировании.", e);
             throw e;
         }
     }
-
 
     private static void deleteDirectoryRecursively(Path path) throws IOException {
         if (Files.exists(path)) {
@@ -252,7 +254,7 @@ public class JavaSourceIndexer {
         return extractWithWalker(content, extractor, e -> ((JavaLiteralExtractor) e).getLiterals());
     }
 
-    public static void main(String[] args) {
-        //indexJavaSources("src");
+    public static void main(String[] args) throws IOException, InterruptedException {
+        indexJavaSources("src");
     }
 }

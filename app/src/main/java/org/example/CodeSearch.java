@@ -4,6 +4,11 @@ import java.util.Scanner;
 
 import static org.example.JavaSourceIndexer.indexJavaSources;
 
+/**
+ * Основной класс консольного приложения CodeSearch.
+ * Приложение предназначено для обработки текстовых команд пользователя.
+ * Считывает команды из консоли, выполняет их обработку и выводит результаты.
+ */
 public class CodeSearch {
 
     private static boolean running = true;
@@ -67,7 +72,6 @@ public class CodeSearch {
         }
     }
 
-
     private static void handleFindCommand(String[] parts) {
         if (parts.length < 3) {
             System.out.println("Ошибка: Укажите тип и запрос. Пример: find <type> <query> [-f, -cs]");
@@ -93,12 +97,11 @@ public class CodeSearch {
         }
     }
 
-
     private static void showHelp() {
         System.out.println("Доступные команды:");
         System.out.println("  index <path>                     Запуск индексации вашего проекта по указанному пути.");
-        System.out.println("  find <type> <query> [-f, -cs]    Поиск объектов указанного типа (stringconstant, class, method, interface, field, localvariable, \n" +
-                "                                   [integer/float/boolean/char/string]literal) с запросом. \n" +
+        System.out.println("  find <type> <query> [-f, -cs]    Поиск объектов указанного типа (stringconstant, class, method, interface, field, localvariable,\n" +
+                "                                   [integer/float/boolean/char/string]literal) с запросом.\n" +
                 "                                   Флаг [-f] позволяет искать с неточностями. Флаг [-cs] учитывает регистр.");
         System.out.println("  help                             Показать документацию.");
         System.out.println("  exit                             Завершить работу приложения :-(");
@@ -112,7 +115,6 @@ public class CodeSearch {
             return false;
         }
     }
-
 
     private static void findWithQuery(String type, String query, boolean isFuzzy, boolean isCaseSensitive) {
         switch (type.toLowerCase()) {
