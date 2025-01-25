@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Python3Logic extends Python3ParserBaseListener implements ExtendedParseTreeListener {
-    // TODO: this should be moved into Lucene later on, also needs optimizations
     private final List<FileReference> references = new ArrayList<>();
     private Path path;
 
