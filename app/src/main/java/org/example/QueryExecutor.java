@@ -148,7 +148,12 @@ public class QueryExecutor {
             String content = doc.get("content");
             String file = doc.get("file");
             String line = doc.get("line");
-            String logMessage = String.format("%s: %s, Файл: %s, Строка: %s", type, content, file, line);
+            String logMessage;
+            logMessage = String.format("%s: %s, Файл: %s, Строка: %s", type, content, file, line);
+            if (type.equals("LocalVariable") || type.equals("Field")) {
+                String varType = doc.get("varType");
+                logMessage = String.format("%s: %s, Тип: %s, Файл: %s, Строка: %s", type, content, varType, file, line);
+            }
             logger.info(logMessage);
             logBuilder.append(logMessage).append("\n");
         });

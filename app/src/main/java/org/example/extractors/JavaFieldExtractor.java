@@ -23,7 +23,8 @@ public class JavaFieldExtractor extends JavaBaseListener {
     public void enterFieldDeclaration(JavaParser.FieldDeclarationContext ctx) {
         String fieldName = ctx.variableDeclarators().variableDeclarator(0).variableDeclaratorId().getText();
         int line = ctx.start.getLine();
-        fields.add(new ExtractedField(fieldName, currentFile, line));
+        String type = ctx.typeSpec().getText();
+        fields.add(new ExtractedField(fieldName, currentFile, line, type));
     }
 
     public List<ExtractedField> getFields() {
@@ -34,11 +35,13 @@ public class JavaFieldExtractor extends JavaBaseListener {
         private final String fieldName;
         private final String file;
         private final int line;
+        private final String type;
 
-        public ExtractedField(String fieldName, String file, int line) {
+        public ExtractedField(String fieldName, String file, int line, String type) {
             this.fieldName = fieldName;
             this.file = file;
             this.line = line;
+            this.type = type;
         }
 
         public String getFieldName() {
@@ -51,6 +54,10 @@ public class JavaFieldExtractor extends JavaBaseListener {
 
         public int getLine() {
             return line;
+        }
+
+        public String getType() {
+            return type;
         }
 
         @Override

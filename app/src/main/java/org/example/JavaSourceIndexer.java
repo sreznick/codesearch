@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -172,6 +173,7 @@ public class JavaSourceIndexer {
                 doc.add(new StringField("file", field.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(field.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "Field", StringField.Store.YES));
+                doc.add(new StringField("varType", field.getType(), Field.Store.YES));
                 writer.addDocument(doc);
             }
         }
@@ -188,6 +190,7 @@ public class JavaSourceIndexer {
                 doc.add(new StringField("file", localVar.getFile(), StringField.Store.YES));
                 doc.add(new StringField("line", String.valueOf(localVar.getLine()), StringField.Store.YES));
                 doc.add(new StringField("type", "LocalVariable", StringField.Store.YES));
+                doc.add(new StringField("varType", localVar.getType(), Field.Store.YES));
                 writer.addDocument(doc);
             }
         }
