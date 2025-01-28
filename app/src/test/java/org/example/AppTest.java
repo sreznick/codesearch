@@ -78,7 +78,7 @@ public class AppTest {
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c testField: 1"));
-        assertTrue(logOutput.contains("Field: testField, Файл: src/test/resources/TestClass.java, Строка: 7"));
+        assertTrue(logOutput.contains("Field: testField, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 7"));
     }
 
     @Test
@@ -87,8 +87,8 @@ public class AppTest {
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c localVariable: 2"));
-        assertTrue(logOutput.contains("LocalVariable: localVariable, Файл: src/test/resources/TestClass.java, Строка: 15"));
-        assertTrue(logOutput.contains("LocalVariable: localVariable, Файл: src/test/resources/TestClass.java, Строка: 20"));
+        assertTrue(logOutput.contains("LocalVariable: localVariable, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 15"));
+        assertTrue(logOutput.contains("LocalVariable: localVariable, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 20"));
     }
 
     @Test
@@ -174,7 +174,7 @@ public class AppTest {
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений с tesField: 1"));
-        assertTrue(logOutput.contains("Field: testField, Файл: src/test/resources/TestClass.java, Строка: 7"));
+        assertTrue(logOutput.contains("Field: testField, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 7"));
     }
 
     @Test
