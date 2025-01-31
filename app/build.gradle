@@ -39,7 +39,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.example.App'
+    mainClass = 'org.codesearch.App'
 }
 
 tasks.named('test') {
@@ -51,5 +51,5 @@ generateGrammarSource {
     maxHeapSize = "64m"
     arguments += [ "-visitor", 
                    "-long-messages",
-                   "-package", "org.example" ]
+                   "-package", "org.codesearch" ]
 }
