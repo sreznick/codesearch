@@ -29,7 +29,7 @@ public record ProjectContents(List<FileReference> references) {
         Document doc = new Document();
 
         doc.add(new StringField("type", ref.type().name(), Store.YES));
-        doc.add(new TextField("path", ref.path().toString(), Store.YES));
+        doc.add(new StringField("path", ref.path().toString(), Store.YES));
         doc.add(new TextField("content", ref.content(), Store.YES));
         doc.add(new IntField("lineno", ref.startLineno(), Store.YES));
         doc.add(new IntField("endLineno", ref.endLineno(), Store.YES));

@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.DirectoryReader;
@@ -82,12 +81,10 @@ public class IndexManager {
         newDoc.add(new StringField("hash", newHash, Store.YES));
 
         metaWriter.deleteDocuments(q);
-        metaWriter.commit();
         metaWriter.addDocument(newDoc);
 
         // the same query !!
         writer.deleteDocuments(q);
-        writer.commit();
         writer.addDocuments(data);
     }
 
@@ -100,9 +97,7 @@ public class IndexManager {
 
     public void save() throws IOException {
         writer.commit();
-        writer.close();
         metaWriter.commit();
-        metaWriter.close();
         reader = DirectoryReader.open(storeDirectory);
         searcher = new IndexSearcher(reader);
     }
