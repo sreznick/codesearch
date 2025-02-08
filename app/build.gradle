@@ -28,6 +28,13 @@ dependencies {
     implementation 'org.antlr:antlr4-runtime:4.7.2'
 
     antlr "org.antlr:antlr4:4.7.2" // use ANTLR version 4
+
+    implementation 'org.apache.lucene:lucene-core:10.0.0'
+    implementation 'org.apache.lucene:lucene-queryparser:10.0.0'
+    implementation 'org.apache.lucene:lucene-analysis-common:10.0.0'
+    implementation('org.apache.logging.log4j:log4j-core:2.23.1')
+    implementation('org.apache.logging.log4j:log4j-api:2.23.1')
+    implementation('org.json:json:20210307')
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -39,7 +46,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.codesearch.App'
+    mainClass = 'org.codesearch.golang.App'
 }
 
 tasks.named('test') {
@@ -52,4 +59,5 @@ generateGrammarSource {
     arguments += [ "-visitor", 
                    "-long-messages",
                    "-package", "org.codesearch" ]
+    outputDirectory = new File(buildDir.toString() + "/generated-src/antlr/main/org/codesearch/")
 }

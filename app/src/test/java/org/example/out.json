@@ -1,0 +1,933 @@
+[
+    {
+        "file": "src/test/java/org/example/test.go",
+        "package": "antlr",
+        "line": 5
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"bytes\""
+        },
+        "line": 8
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"errors\""
+        },
+        "line": 9
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"fmt\""
+        },
+        "line": 10
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"math/bits\""
+        },
+        "line": 11
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"os\""
+        },
+        "line": 12
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"strconv\""
+        },
+        "line": 13
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"strings\""
+        },
+        "line": 14
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "import": {
+            "path": "\"syscall\""
+        },
+        "line": 15
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 18,
+        "declaration": {
+            "func": {
+                "identifier": "intMin",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "a",
+                                "b"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 25,
+        "declaration": {
+            "func": {
+                "identifier": "intMax",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "a",
+                                "b"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 34,
+        "declaration": {
+            "type": {
+                "identifier": "IntStack",
+                "type_": "int"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 36,
+        "declaration": {
+            "var": {
+                "identifier": "ErrEmptyStack"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 38,
+        "declaration": {
+            "method": {
+                "identifier": "Pop",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "s"
+                        ],
+                        "type_": "IntStack"
+                    }
+                ],
+                "signature": {
+                    "result": [
+                        {
+                            "type_": "int"
+                        },
+                        {
+                            "type_": "error"
+                        }
+                    ],
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 48,
+        "declaration": {
+            "method": {
+                "identifier": "Push",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "s"
+                        ],
+                        "type_": "IntStack"
+                    }
+                ],
+                "signature": {
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "e"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 52,
+        "declaration": {
+            "const": {
+                "identifier": "bitsPerWord"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 54,
+        "declaration": {
+            "func": {
+                "identifier": "indexForBit",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "bit"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 59,
+        "declaration": {
+            "func": {
+                "identifier": "wordForBit",
+                "signature": {
+                    "result": "uint64",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "data"
+                            ],
+                            "type_": "uint64"
+                        },
+                        {
+                            "identifier_list": [
+                                "bit"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 67,
+        "declaration": {
+            "func": {
+                "identifier": "maskForBit",
+                "signature": {
+                    "result": "uint64",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "bit"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 71,
+        "declaration": {
+            "func": {
+                "identifier": "wordsNeeded",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "bit"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 75,
+        "declaration": {
+            "type": {
+                "identifier": "BitSet",
+                "type_": null
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 81,
+        "declaration": {
+            "func": {
+                "identifier": "NewBitSet",
+                "signature": {
+                    "result": "BitSet",
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 85,
+        "declaration": {
+            "method": {
+                "identifier": "add",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "value"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 96,
+        "declaration": {
+            "method": {
+                "identifier": "clear",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "index"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 104,
+        "declaration": {
+            "method": {
+                "identifier": "or",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "set"
+                            ],
+                            "type_": "BitSet"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 121,
+        "declaration": {
+            "method": {
+                "identifier": "remove",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "value"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 125,
+        "declaration": {
+            "method": {
+                "identifier": "contains",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "result": "bool",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "value"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 133,
+        "declaration": {
+            "method": {
+                "identifier": "minValue",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "result": "int",
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 143,
+        "declaration": {
+            "method": {
+                "identifier": "equals",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "result": "bool",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "other"
+                            ],
+                            "type_": []
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 172,
+        "declaration": {
+            "method": {
+                "identifier": "minLen",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "result": "int",
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 181,
+        "declaration": {
+            "method": {
+                "identifier": "length",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "result": "int",
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 189,
+        "declaration": {
+            "method": {
+                "identifier": "String",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "b"
+                        ],
+                        "type_": "BitSet"
+                    }
+                ],
+                "signature": {
+                    "result": "string",
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 203,
+        "declaration": {
+            "type": {
+                "identifier": "AltDict",
+                "type_": null
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 207,
+        "declaration": {
+            "func": {
+                "identifier": "NewAltDict",
+                "signature": {
+                    "result": "AltDict",
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 213,
+        "declaration": {
+            "method": {
+                "identifier": "Get",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "a"
+                        ],
+                        "type_": "AltDict"
+                    }
+                ],
+                "signature": {
+                    "result": [],
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "key"
+                            ],
+                            "type_": "string"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 218,
+        "declaration": {
+            "method": {
+                "identifier": "put",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "a"
+                        ],
+                        "type_": "AltDict"
+                    }
+                ],
+                "signature": {
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "key"
+                            ],
+                            "type_": "string"
+                        },
+                        {
+                            "identifier_list": [
+                                "value"
+                            ],
+                            "type_": []
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 223,
+        "declaration": {
+            "method": {
+                "identifier": "values",
+                "receiver": [
+                    {
+                        "identifier_list": [
+                            "a"
+                        ],
+                        "type_": "AltDict"
+                    }
+                ],
+                "signature": {
+                    "result": [],
+                    "parameters": []
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 233,
+        "declaration": {
+            "func": {
+                "identifier": "EscapeWhitespace",
+                "signature": {
+                    "result": "string",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "s"
+                            ],
+                            "type_": "string"
+                        },
+                        {
+                            "identifier_list": [
+                                "escapeSpaces"
+                            ],
+                            "type_": "bool"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 245,
+        "declaration": {
+            "func": {
+                "identifier": "TerminalNodeToStringArray",
+                "signature": {
+                    "result": "string",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "sa"
+                            ],
+                            "type_": "TerminalNode"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 256,
+        "declaration": {
+            "func": {
+                "identifier": "PrintArrayJavaStyle",
+                "signature": {
+                    "result": "string",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "sa"
+                            ],
+                            "type_": "string"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 257,
+        "declaration": {
+            "var": {
+                "identifier": "buffer",
+                "type": {
+                    "identifier": "Buffer",
+                    "package_name": "bytes"
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 274,
+        "declaration": {
+            "func": {
+                "identifier": "murmurInit",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "seed"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 278,
+        "declaration": {
+            "func": {
+                "identifier": "murmurUpdate",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "h"
+                            ],
+                            "type_": "int"
+                        },
+                        {
+                            "identifier_list": [
+                                "value"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 279,
+        "declaration": {
+            "const": {
+                "identifier": "c1"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 280,
+        "declaration": {
+            "const": {
+                "identifier": "c2"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 281,
+        "declaration": {
+            "const": {
+                "identifier": "r1"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 282,
+        "declaration": {
+            "const": {
+                "identifier": "r2"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 283,
+        "declaration": {
+            "const": {
+                "identifier": "m"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 284,
+        "declaration": {
+            "const": {
+                "identifier": "n"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 297,
+        "declaration": {
+            "func": {
+                "identifier": "murmurFinish",
+                "signature": {
+                    "result": "int",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "h"
+                            ],
+                            "type_": "int"
+                        },
+                        {
+                            "identifier_list": [
+                                "numberOfWords"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 298,
+        "declaration": {
+            "var": {
+                "identifier": "hash"
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 309,
+        "declaration": {
+            "func": {
+                "identifier": "isDirectory",
+                "signature": {
+                    "result": [
+                        {
+                            "type_": "bool"
+                        },
+                        {
+                            "type_": "error"
+                        }
+                    ],
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "dir"
+                            ],
+                            "type_": "string"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 332,
+        "declaration": {
+            "func": {
+                "identifier": "intSlicesEqual",
+                "signature": {
+                    "result": "bool",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "s1",
+                                "s2"
+                            ],
+                            "type_": "int"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "file": "src/test/java/org/example/test.go",
+        "line": 358,
+        "declaration": {
+            "func": {
+                "identifier": "pcSliceEqual",
+                "signature": {
+                    "result": "bool",
+                    "parameters": [
+                        {
+                            "identifier_list": [
+                                "s1",
+                                "s2"
+                            ],
+                            "type_": "PredictionContext"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+]
