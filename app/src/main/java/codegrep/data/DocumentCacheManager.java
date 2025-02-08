@@ -3,6 +3,7 @@ package codegrep.data;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,8 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.util.QueryBuilder;
 
+import com.google.common.hash.Hashing;
+
 import codegrep.util.FileUtils;
 import grammars.CodeGrepGrammarFacade;
 import grammars.ExtendedParseTreeListener;
@@ -24,7 +27,7 @@ public class DocumentCacheManager {
     public static final String CACHE_PATH = ".codegrep";
 
     private final IndexManager index;
-    private final Map<Path, Long> invalidPaths = new HashMap<>();
+    private final Map<Path, String> invalidPaths = new HashMap<>();
 
     public DocumentCacheManager() {
         IndexManager mgr = null;
@@ -64,6 +67,15 @@ public class DocumentCacheManager {
                 System.err.printf("Unable to update the cache for the file %s%n", doc.getKey());
             }
         }
+        for (var entry : invalidPaths.entrySet()) {
+            if (!docs.containsKey(entry.getKey())) {
+                try {
+                    index.setDocuments(entry.getKey(), entry.getValue(), new ArrayList<>());
+                } catch (IOException e) {
+                    System.err.printf("Unable to update the cache for the file %s%n", entry.getKey());
+                }
+            }
+        }
 
         try {
             index.save();
@@ -75,18 +87,19 @@ public class DocumentCacheManager {
     }
 
     private void revalidateFile(Path p) {
-        long t = 0;
+        String currentHash = "";
         try {
-            t = Files.getLastModifiedTime(p).toMillis();
-            long cachedTime = index.getUpdateTime(p);
-            // If the modification date is earlier than the cached time, we don't need to regen the cache
-            if (t < cachedTime) return;
+            byte[] data = Files.readAllBytes(p);
+            currentHash = Hashing.sha256().hashBytes(data).toString();
+            String indexedHash = index.getUpdateHash(p);
+            // If the hashes are the same, we don't need to regen the cache
+            if (currentHash.equals(indexedHash)) return;
         } catch (IOException e) {
             System.err.println("Cannot read the file " + p.toString());
             return;
         }
 
-        invalidPaths.put(p, t);
+        invalidPaths.put(p, currentHash);
     }
 
     public Map<Path, List<FileReference>> search(String s) {

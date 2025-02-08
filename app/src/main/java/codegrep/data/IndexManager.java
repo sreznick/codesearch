@@ -64,28 +64,30 @@ public class IndexManager {
         return documents;
     }
 
-    public long getUpdateTime(Path path) throws IOException {
+    public String getUpdateHash(Path path) throws IOException {
         Query q = new TermQuery(new Term("path", path.toString()));
         // there should only be 1 document with this path at most
-        // TODO: this does not work for some reason!!
         List<Document> doc = resolveDocs(metaSearcher, q, 1);
         if (doc.isEmpty()) {
             // File was not yet cached.
-            return -1;
+            return "";
         }
-        return doc.get(0).getField("timestamp").numericValue().longValue();
+        return doc.get(0).getField("hash").stringValue();
     }
 
-    public void setDocuments(Path path, long newTime, List<Document> data) throws IOException {
+    public void setDocuments(Path path, String newHash, List<Document> data) throws IOException {
         Query q = new TermQuery(new Term("path", path.toString()));
         Document newDoc = new Document();
         newDoc.add(new StringField("path", path.toString(), Store.YES));
-        newDoc.add(new LongField("timestamp", newTime, Store.YES));
+        newDoc.add(new StringField("hash", newHash, Store.YES));
+
         metaWriter.deleteDocuments(q);
+        metaWriter.commit();
         metaWriter.addDocument(newDoc);
 
         // the same query !!
         writer.deleteDocuments(q);
+        writer.commit();
         writer.addDocuments(data);
     }
 

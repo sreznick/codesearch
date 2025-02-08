@@ -36,3 +36,6 @@ app/src/main/antlr
 # IDE folders
 .idea
 .vscode
+
+# Codegrep output
+.codegrep
