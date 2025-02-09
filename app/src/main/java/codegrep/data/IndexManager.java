@@ -19,6 +19,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 
 public class IndexManager {
     
@@ -88,11 +89,15 @@ public class IndexManager {
         writer.addDocuments(data);
     }
 
-    // TODO: method to delete files from the cache
-
     public List<Document> getDocuments(Query q) throws IOException {
         if (reader.maxDoc() == 0) return new ArrayList<>();
         return resolveDocs(searcher, q, reader.maxDoc());
+    }
+
+    public void deleteFiles(List<Path> badFiles) throws IOException {
+        Query q = new TermInSetQuery("path", badFiles.stream().map(Path::toString).map(BytesRef::new).toList());
+        metaWriter.deleteDocuments(q);
+        writer.deleteDocuments(q);
     }
 
     public void save() throws IOException {

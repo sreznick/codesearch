@@ -115,7 +115,24 @@ public class DocumentCacheManager {
             return new HashMap<>();
         }
 
-        return docs.stream().map(ProjectContents::convertToFileRef).collect(Collectors.groupingBy(FileReference::path));
+        // At this point we might have files that no longer exist, because cache invalidation only affects
+        // existing files. We delete the files lazily as they're being loaded.
+        // This is a bit easier to do and a bit more efficient than eager deletion.
+        Map<Path, List<FileReference>> out =
+            docs.stream().map(ProjectContents::convertToFileRef).collect(Collectors.groupingBy(FileReference::path));
+        List<Path> badPaths = new ArrayList<>();
+        for (Path p : out.keySet()) {
+            if (!Files.exists(p)) {
+                badPaths.add(p);
+            }
+        }
+
+        try {
+            index.deleteFiles(badPaths);
+            index.save();
+        } catch (IOException e) {}  // oh well, just delete them the next time.
+        for (Path p : badPaths) out.remove(p);
+        return out;
     }
 
 }
