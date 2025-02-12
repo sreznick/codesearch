@@ -28,6 +28,8 @@ dependencies {
     implementation 'org.antlr:antlr4-runtime:4.7.2'
 
     antlr "org.antlr:antlr4:4.7.2" // use ANTLR version 4
+
+    implementation 'org.apache.lucene:lucene-core:10.1.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -39,7 +41,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.example.App'
+    mainClass = 'codegrep.Main'
 }
 
 tasks.named('test') {
@@ -51,5 +53,16 @@ generateGrammarSource {
     maxHeapSize = "64m"
     arguments += [ "-visitor", 
                    "-long-messages",
-                   "-package", "org.example" ]
+                   "-package", "grammars.python3" ]
+    outputDirectory = new File(buildDir.toString() + "/generated-src/antlr/main/grammars/python3/")
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'codegrep.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
