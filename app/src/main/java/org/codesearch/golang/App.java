@@ -17,8 +17,8 @@ import org.json.JSONObject;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        // parseTest();
-        // indexTest();
+        parseTest();
+        indexTest();
         searchTest();
     }
 
@@ -60,13 +60,22 @@ public class App {
     public static void searchTest() throws Exception {
         String indexPath = "app/index/golang";
         List<String> keys = List.of(
-            // "function.signature.result.type.name.id.int",
-            "declaration"
+            "function.signature.result.type.name.id.int",
+            "function.signature.param_list.[0].param.type.name.id.int"
         );
         List<Unit> res = Searcher.runQuery(Paths.get(indexPath), keys, false, 100);
         System.out.println(String.format("%d docs", res.size()));
         for (Unit unit: res) {
             System.out.println(String.format("unit: [%s:%d]", unit.getFile(), unit.getLine()));
         }
+        // out:
+        // 7 docs
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:18]
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:25]
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:54]
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:71]
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:274]
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:278]
+        // unit: [app/src/test/java/org/codesearch/golang/test.go:297]
     }
 }
