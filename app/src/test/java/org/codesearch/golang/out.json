@@ -1,0 +1,2703 @@
+[
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "package",
+            "package.id",
+            "package.id.antlr"
+        ],
+        "line": 5,
+        "json": {
+            "package": {
+                "id": "antlr"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"bytes\""
+        ],
+        "line": 8,
+        "json": {
+            "import": {
+                "path": "\"bytes\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"errors\""
+        ],
+        "line": 9,
+        "json": {
+            "import": {
+                "path": "\"errors\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"fmt\""
+        ],
+        "line": 10,
+        "json": {
+            "import": {
+                "path": "\"fmt\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"math/bits\""
+        ],
+        "line": 11,
+        "json": {
+            "import": {
+                "path": "\"math/bits\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"os\""
+        ],
+        "line": 12,
+        "json": {
+            "import": {
+                "path": "\"os\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"strconv\""
+        ],
+        "line": 13,
+        "json": {
+            "import": {
+                "path": "\"strconv\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"strings\""
+        ],
+        "line": 14,
+        "json": {
+            "import": {
+                "path": "\"strings\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "import",
+            "import.path",
+            "import.path.\"syscall\""
+        ],
+        "line": 15,
+        "json": {
+            "import": {
+                "path": "\"syscall\""
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.intMin",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.a",
+            "function.signature.param_list.[0].param.id_list.[1].id",
+            "function.signature.param_list.[0].param.id_list.[1].id.b",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 18,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "a"
+                                    },
+                                    {
+                                        "id": "b"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "intMin"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.intMax",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.a",
+            "function.signature.param_list.[0].param.id_list.[1].id",
+            "function.signature.param_list.[0].param.id_list.[1].id.b",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 25,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "a"
+                                    },
+                                    {
+                                        "id": "b"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "intMax"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.type",
+            "declaration.type.id",
+            "declaration.type.id.IntStack",
+            "declaration.type.type",
+            "declaration.type.type.lit",
+            "declaration.type.type.lit.slice",
+            "declaration.type.type.lit.slice.type",
+            "declaration.type.type.lit.slice.type.name",
+            "declaration.type.type.lit.slice.type.name.id",
+            "declaration.type.type.lit.slice.type.name.id.int"
+        ],
+        "line": 34,
+        "json": {
+            "declaration": {
+                "type": {
+                    "id": "IntStack",
+                    "type": {
+                        "lit": {
+                            "slice": {
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.var",
+            "declaration.var.id",
+            "declaration.var.id.ErrEmptyStack"
+        ],
+        "line": 36,
+        "json": {
+            "declaration": {
+                "var": {
+                    "id": "ErrEmptyStack"
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.IntStack",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.s",
+            "method.id",
+            "method.id.Pop",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.result",
+            "method.signature.result.param_list",
+            "method.signature.result.param_list.[0].param",
+            "method.signature.result.param_list.[0].param.type",
+            "method.signature.result.param_list.[0].param.type.name",
+            "method.signature.result.param_list.[0].param.type.name.id",
+            "method.signature.result.param_list.[0].param.type.name.id.int",
+            "method.signature.result.param_list.[1].param",
+            "method.signature.result.param_list.[1].param.type",
+            "method.signature.result.param_list.[1].param.type.name",
+            "method.signature.result.param_list.[1].param.type.name.id",
+            "method.signature.result.param_list.[1].param.type.name.id.error"
+        ],
+        "line": 38,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "s"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "IntStack"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "param_list": [
+                            {
+                                "param": {
+                                    "type": {
+                                        "name": {
+                                            "id": "int"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "param": {
+                                    "type": {
+                                        "name": {
+                                            "id": "error"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "param_list": []
+                },
+                "id": "Pop"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.IntStack",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.s",
+            "method.id",
+            "method.id.Push",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.int",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.e"
+        ],
+        "line": 48,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "s"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "IntStack"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "e"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "Push"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.bitsPerWord"
+        ],
+        "line": 52,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "bitsPerWord"
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.indexForBit",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.bit",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 54,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "bit"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "indexForBit"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.wordForBit",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.lit",
+            "function.signature.param_list.[0].param.type.lit.slice",
+            "function.signature.param_list.[0].param.type.lit.slice.type",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id.uint64",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.data",
+            "function.signature.param_list.[1].param",
+            "function.signature.param_list.[1].param.type",
+            "function.signature.param_list.[1].param.type.name",
+            "function.signature.param_list.[1].param.type.name.id",
+            "function.signature.param_list.[1].param.type.name.id.int",
+            "function.signature.param_list.[1].param.id_list",
+            "function.signature.param_list.[1].param.id_list.[0].id",
+            "function.signature.param_list.[1].param.id_list.[0].id.bit",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.uint64"
+        ],
+        "line": 59,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "uint64"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "data"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "slice": {
+                                            "type": {
+                                                "name": {
+                                                    "id": "uint64"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "bit"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "wordForBit"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.maskForBit",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.bit",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.uint64"
+        ],
+        "line": 67,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "uint64"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "bit"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "maskForBit"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.wordsNeeded",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.bit",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 71,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "bit"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "wordsNeeded"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.type",
+            "declaration.type.id",
+            "declaration.type.id.BitSet",
+            "declaration.type.type",
+            "declaration.type.type.lit",
+            "declaration.type.type.lit.struct"
+        ],
+        "line": 75,
+        "json": {
+            "declaration": {
+                "type": {
+                    "id": "BitSet",
+                    "type": {
+                        "lit": {
+                            "struct": {}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.NewBitSet",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.lit",
+            "function.signature.result.type.lit.pointer",
+            "function.signature.result.type.lit.pointer.type",
+            "function.signature.result.type.lit.pointer.type.name",
+            "function.signature.result.type.lit.pointer.type.name.id",
+            "function.signature.result.type.lit.pointer.type.name.id.BitSet"
+        ],
+        "line": 81,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "lit": {
+                                "pointer": {
+                                    "type": {
+                                        "name": {
+                                            "id": "BitSet"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "NewBitSet"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.add",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.int",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.value"
+        ],
+        "line": 85,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "value"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "add"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.clear",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.int",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.index"
+        ],
+        "line": 96,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "index"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "clear"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.or",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.lit",
+            "method.signature.param_list.[0].param.type.lit.pointer",
+            "method.signature.param_list.[0].param.type.lit.pointer.type",
+            "method.signature.param_list.[0].param.type.lit.pointer.type.name",
+            "method.signature.param_list.[0].param.type.lit.pointer.type.name.id",
+            "method.signature.param_list.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.set"
+        ],
+        "line": 104,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "set"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "pointer": {
+                                            "type": {
+                                                "name": {
+                                                    "id": "BitSet"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "or"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.remove",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.int",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.value"
+        ],
+        "line": 121,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "value"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "remove"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.contains",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.int",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.value",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.name",
+            "method.signature.result.type.name.id",
+            "method.signature.result.type.name.id.bool"
+        ],
+        "line": 125,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "bool"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "value"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "contains"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.minValue",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.name",
+            "method.signature.result.type.name.id",
+            "method.signature.result.type.name.id.int"
+        ],
+        "line": 133,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "minValue"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.equals",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.lit",
+            "method.signature.param_list.[0].param.type.lit.interface",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.other",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.name",
+            "method.signature.result.type.name.id",
+            "method.signature.result.type.name.id.bool"
+        ],
+        "line": 143,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "bool"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "other"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "interface": []
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "equals"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.minLen",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.name",
+            "method.signature.result.type.name.id",
+            "method.signature.result.type.name.id.int"
+        ],
+        "line": 172,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "minLen"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.length",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.name",
+            "method.signature.result.type.name.id",
+            "method.signature.result.type.name.id.int"
+        ],
+        "line": 181,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "length"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.BitSet",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.b",
+            "method.id",
+            "method.id.String",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.name",
+            "method.signature.result.type.name.id",
+            "method.signature.result.type.name.id.string"
+        ],
+        "line": 189,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "b"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "BitSet"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "string"
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "String"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.type",
+            "declaration.type.id",
+            "declaration.type.id.AltDict",
+            "declaration.type.type",
+            "declaration.type.type.lit",
+            "declaration.type.type.lit.struct"
+        ],
+        "line": 203,
+        "json": {
+            "declaration": {
+                "type": {
+                    "id": "AltDict",
+                    "type": {
+                        "lit": {
+                            "struct": {}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.NewAltDict",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.lit",
+            "function.signature.result.type.lit.pointer",
+            "function.signature.result.type.lit.pointer.type",
+            "function.signature.result.type.lit.pointer.type.name",
+            "function.signature.result.type.lit.pointer.type.name.id",
+            "function.signature.result.type.lit.pointer.type.name.id.AltDict"
+        ],
+        "line": 207,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "lit": {
+                                "pointer": {
+                                    "type": {
+                                        "name": {
+                                            "id": "AltDict"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "NewAltDict"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.AltDict",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.a",
+            "method.id",
+            "method.id.Get",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.string",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.key",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.lit",
+            "method.signature.result.type.lit.interface"
+        ],
+        "line": 213,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "a"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "AltDict"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "lit": {
+                                "interface": []
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "key"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "string"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "Get"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.AltDict",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.a",
+            "method.id",
+            "method.id.put",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.param_list.[0].param",
+            "method.signature.param_list.[0].param.type",
+            "method.signature.param_list.[0].param.type.name",
+            "method.signature.param_list.[0].param.type.name.id",
+            "method.signature.param_list.[0].param.type.name.id.string",
+            "method.signature.param_list.[0].param.id_list",
+            "method.signature.param_list.[0].param.id_list.[0].id",
+            "method.signature.param_list.[0].param.id_list.[0].id.key",
+            "method.signature.param_list.[1].param",
+            "method.signature.param_list.[1].param.type",
+            "method.signature.param_list.[1].param.type.lit",
+            "method.signature.param_list.[1].param.type.lit.interface",
+            "method.signature.param_list.[1].param.id_list",
+            "method.signature.param_list.[1].param.id_list.[0].id",
+            "method.signature.param_list.[1].param.id_list.[0].id.value"
+        ],
+        "line": 218,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "a"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "AltDict"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "key"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "string"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "value"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "interface": []
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "put"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "method",
+            "method.receiver",
+            "method.receiver.[0].param",
+            "method.receiver.[0].param.type",
+            "method.receiver.[0].param.type.lit",
+            "method.receiver.[0].param.type.lit.pointer",
+            "method.receiver.[0].param.type.lit.pointer.type",
+            "method.receiver.[0].param.type.lit.pointer.type.name",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id",
+            "method.receiver.[0].param.type.lit.pointer.type.name.id.AltDict",
+            "method.receiver.[0].param.id_list",
+            "method.receiver.[0].param.id_list.[0].id",
+            "method.receiver.[0].param.id_list.[0].id.a",
+            "method.id",
+            "method.id.values",
+            "method.signature",
+            "method.signature.param_list",
+            "method.signature.result",
+            "method.signature.result.type",
+            "method.signature.result.type.lit",
+            "method.signature.result.type.lit.slice",
+            "method.signature.result.type.lit.slice.type",
+            "method.signature.result.type.lit.slice.type.lit",
+            "method.signature.result.type.lit.slice.type.lit.interface"
+        ],
+        "line": 223,
+        "json": {
+            "method": {
+                "receiver": [
+                    {
+                        "param": {
+                            "id_list": [
+                                {
+                                    "id": "a"
+                                }
+                            ],
+                            "type": {
+                                "lit": {
+                                    "pointer": {
+                                        "type": {
+                                            "name": {
+                                                "id": "AltDict"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "signature": {
+                    "result": {
+                        "type": {
+                            "lit": {
+                                "slice": {
+                                    "type": {
+                                        "lit": {
+                                            "interface": []
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "param_list": []
+                },
+                "id": "values"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.EscapeWhitespace",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.string",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.s",
+            "function.signature.param_list.[1].param",
+            "function.signature.param_list.[1].param.type",
+            "function.signature.param_list.[1].param.type.name",
+            "function.signature.param_list.[1].param.type.name.id",
+            "function.signature.param_list.[1].param.type.name.id.bool",
+            "function.signature.param_list.[1].param.id_list",
+            "function.signature.param_list.[1].param.id_list.[0].id",
+            "function.signature.param_list.[1].param.id_list.[0].id.escapeSpaces",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.string"
+        ],
+        "line": 233,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "string"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "s"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "string"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "escapeSpaces"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "bool"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "EscapeWhitespace"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.TerminalNodeToStringArray",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.lit",
+            "function.signature.param_list.[0].param.type.lit.slice",
+            "function.signature.param_list.[0].param.type.lit.slice.type",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id.TerminalNode",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.sa",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.lit",
+            "function.signature.result.type.lit.slice",
+            "function.signature.result.type.lit.slice.type",
+            "function.signature.result.type.lit.slice.type.name",
+            "function.signature.result.type.lit.slice.type.name.id",
+            "function.signature.result.type.lit.slice.type.name.id.string"
+        ],
+        "line": 245,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "lit": {
+                                "slice": {
+                                    "type": {
+                                        "name": {
+                                            "id": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "sa"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "slice": {
+                                            "type": {
+                                                "name": {
+                                                    "id": "TerminalNode"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "TerminalNodeToStringArray"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.PrintArrayJavaStyle",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.lit",
+            "function.signature.param_list.[0].param.type.lit.slice",
+            "function.signature.param_list.[0].param.type.lit.slice.type",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id.string",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.sa",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.string"
+        ],
+        "line": 256,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "string"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "sa"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "slice": {
+                                            "type": {
+                                                "name": {
+                                                    "id": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "PrintArrayJavaStyle"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.var",
+            "declaration.var.id",
+            "declaration.var.id.buffer",
+            "declaration.var.type",
+            "declaration.var.type.name",
+            "declaration.var.type.name.qualified_ident",
+            "declaration.var.type.name.qualified_ident.package",
+            "declaration.var.type.name.qualified_ident.package.bytes",
+            "declaration.var.type.name.qualified_ident.id",
+            "declaration.var.type.name.qualified_ident.id.Buffer"
+        ],
+        "line": 257,
+        "json": {
+            "declaration": {
+                "var": {
+                    "id": "buffer",
+                    "type": {
+                        "name": {
+                            "qualified_ident": {
+                                "package": "bytes",
+                                "id": "Buffer"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.murmurInit",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.seed",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 274,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "seed"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "murmurInit"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.murmurUpdate",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.h",
+            "function.signature.param_list.[1].param",
+            "function.signature.param_list.[1].param.type",
+            "function.signature.param_list.[1].param.type.name",
+            "function.signature.param_list.[1].param.type.name.id",
+            "function.signature.param_list.[1].param.type.name.id.int",
+            "function.signature.param_list.[1].param.id_list",
+            "function.signature.param_list.[1].param.id_list.[0].id",
+            "function.signature.param_list.[1].param.id_list.[0].id.value",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 278,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "h"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "value"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "murmurUpdate"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.c1",
+            "declaration.const.type",
+            "declaration.const.type.name",
+            "declaration.const.type.name.id",
+            "declaration.const.type.name.id.uint32"
+        ],
+        "line": 279,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "c1",
+                    "type": {
+                        "name": {
+                            "id": "uint32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.c2",
+            "declaration.const.type",
+            "declaration.const.type.name",
+            "declaration.const.type.name.id",
+            "declaration.const.type.name.id.uint32"
+        ],
+        "line": 280,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "c2",
+                    "type": {
+                        "name": {
+                            "id": "uint32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.r1",
+            "declaration.const.type",
+            "declaration.const.type.name",
+            "declaration.const.type.name.id",
+            "declaration.const.type.name.id.uint32"
+        ],
+        "line": 281,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "r1",
+                    "type": {
+                        "name": {
+                            "id": "uint32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.r2",
+            "declaration.const.type",
+            "declaration.const.type.name",
+            "declaration.const.type.name.id",
+            "declaration.const.type.name.id.uint32"
+        ],
+        "line": 282,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "r2",
+                    "type": {
+                        "name": {
+                            "id": "uint32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.m",
+            "declaration.const.type",
+            "declaration.const.type.name",
+            "declaration.const.type.name.id",
+            "declaration.const.type.name.id.uint32"
+        ],
+        "line": 283,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "m",
+                    "type": {
+                        "name": {
+                            "id": "uint32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.const",
+            "declaration.const.id",
+            "declaration.const.id.n",
+            "declaration.const.type",
+            "declaration.const.type.name",
+            "declaration.const.type.name.id",
+            "declaration.const.type.name.id.uint32"
+        ],
+        "line": 284,
+        "json": {
+            "declaration": {
+                "const": {
+                    "id": "n",
+                    "type": {
+                        "name": {
+                            "id": "uint32"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.murmurFinish",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.h",
+            "function.signature.param_list.[1].param",
+            "function.signature.param_list.[1].param.type",
+            "function.signature.param_list.[1].param.type.name",
+            "function.signature.param_list.[1].param.type.name.id",
+            "function.signature.param_list.[1].param.type.name.id.int",
+            "function.signature.param_list.[1].param.id_list",
+            "function.signature.param_list.[1].param.id_list.[0].id",
+            "function.signature.param_list.[1].param.id_list.[0].id.numberOfWords",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.int"
+        ],
+        "line": 297,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "int"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "h"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "numberOfWords"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "int"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "murmurFinish"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "declaration",
+            "declaration.var",
+            "declaration.var.id",
+            "declaration.var.id.hash"
+        ],
+        "line": 298,
+        "json": {
+            "declaration": {
+                "var": {
+                    "id": "hash"
+                }
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.isDirectory",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.name",
+            "function.signature.param_list.[0].param.type.name.id",
+            "function.signature.param_list.[0].param.type.name.id.string",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.dir",
+            "function.signature.result",
+            "function.signature.result.param_list",
+            "function.signature.result.param_list.[0].param",
+            "function.signature.result.param_list.[0].param.type",
+            "function.signature.result.param_list.[0].param.type.name",
+            "function.signature.result.param_list.[0].param.type.name.id",
+            "function.signature.result.param_list.[0].param.type.name.id.bool",
+            "function.signature.result.param_list.[1].param",
+            "function.signature.result.param_list.[1].param.type",
+            "function.signature.result.param_list.[1].param.type.name",
+            "function.signature.result.param_list.[1].param.type.name.id",
+            "function.signature.result.param_list.[1].param.type.name.id.error"
+        ],
+        "line": 309,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "param_list": [
+                            {
+                                "param": {
+                                    "type": {
+                                        "name": {
+                                            "id": "bool"
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                "param": {
+                                    "type": {
+                                        "name": {
+                                            "id": "error"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "dir"
+                                    }
+                                ],
+                                "type": {
+                                    "name": {
+                                        "id": "string"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "isDirectory"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.intSlicesEqual",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.lit",
+            "function.signature.param_list.[0].param.type.lit.slice",
+            "function.signature.param_list.[0].param.type.lit.slice.type",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id",
+            "function.signature.param_list.[0].param.type.lit.slice.type.name.id.int",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.s1",
+            "function.signature.param_list.[0].param.id_list.[1].id",
+            "function.signature.param_list.[0].param.id_list.[1].id.s2",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.bool"
+        ],
+        "line": 332,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "bool"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "s1"
+                                    },
+                                    {
+                                        "id": "s2"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "slice": {
+                                            "type": {
+                                                "name": {
+                                                    "id": "int"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "intSlicesEqual"
+            }
+        }
+    },
+    {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
+        "keys": [
+            "function",
+            "function.id",
+            "function.id.pcSliceEqual",
+            "function.signature",
+            "function.signature.param_list",
+            "function.signature.param_list.[0].param",
+            "function.signature.param_list.[0].param.type",
+            "function.signature.param_list.[0].param.type.lit",
+            "function.signature.param_list.[0].param.type.lit.slice",
+            "function.signature.param_list.[0].param.type.lit.slice.type",
+            "function.signature.param_list.[0].param.type.lit.slice.type.lit",
+            "function.signature.param_list.[0].param.type.lit.slice.type.lit.pointer",
+            "function.signature.param_list.[0].param.type.lit.slice.type.lit.pointer.type",
+            "function.signature.param_list.[0].param.type.lit.slice.type.lit.pointer.type.name",
+            "function.signature.param_list.[0].param.type.lit.slice.type.lit.pointer.type.name.id",
+            "function.signature.param_list.[0].param.type.lit.slice.type.lit.pointer.type.name.id.PredictionContext",
+            "function.signature.param_list.[0].param.id_list",
+            "function.signature.param_list.[0].param.id_list.[0].id",
+            "function.signature.param_list.[0].param.id_list.[0].id.s1",
+            "function.signature.param_list.[0].param.id_list.[1].id",
+            "function.signature.param_list.[0].param.id_list.[1].id.s2",
+            "function.signature.result",
+            "function.signature.result.type",
+            "function.signature.result.type.name",
+            "function.signature.result.type.name.id",
+            "function.signature.result.type.name.id.bool"
+        ],
+        "line": 358,
+        "json": {
+            "function": {
+                "signature": {
+                    "result": {
+                        "type": {
+                            "name": {
+                                "id": "bool"
+                            }
+                        }
+                    },
+                    "param_list": [
+                        {
+                            "param": {
+                                "id_list": [
+                                    {
+                                        "id": "s1"
+                                    },
+                                    {
+                                        "id": "s2"
+                                    }
+                                ],
+                                "type": {
+                                    "lit": {
+                                        "slice": {
+                                            "type": {
+                                                "lit": {
+                                                    "pointer": {
+                                                        "type": {
+                                                            "name": {
+                                                                "id": "PredictionContext"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                "id": "pcSliceEqual"
+            }
+        }
+    }
+]
