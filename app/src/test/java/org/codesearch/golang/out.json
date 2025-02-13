@@ -1,10 +1,12 @@
 [
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "package",
             "package.id",
             "package.id.antlr"
         ],
+        "line": 5,
         "json": {
             "package": {
                 "id": "antlr"
@@ -12,11 +14,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"bytes\""
         ],
+        "line": 8,
         "json": {
             "import": {
                 "path": "\"bytes\""
@@ -24,11 +28,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"errors\""
         ],
+        "line": 9,
         "json": {
             "import": {
                 "path": "\"errors\""
@@ -36,11 +42,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"fmt\""
         ],
+        "line": 10,
         "json": {
             "import": {
                 "path": "\"fmt\""
@@ -48,11 +56,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"math/bits\""
         ],
+        "line": 11,
         "json": {
             "import": {
                 "path": "\"math/bits\""
@@ -60,11 +70,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"os\""
         ],
+        "line": 12,
         "json": {
             "import": {
                 "path": "\"os\""
@@ -72,11 +84,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"strconv\""
         ],
+        "line": 13,
         "json": {
             "import": {
                 "path": "\"strconv\""
@@ -84,11 +98,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"strings\""
         ],
+        "line": 14,
         "json": {
             "import": {
                 "path": "\"strings\""
@@ -96,11 +112,13 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "import",
             "import.path",
             "import.path.\"syscall\""
         ],
+        "line": 15,
         "json": {
             "import": {
                 "path": "\"syscall\""
@@ -108,6 +126,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -130,6 +149,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 18,
         "json": {
             "function": {
                 "signature": {
@@ -165,6 +185,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -187,6 +208,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 25,
         "json": {
             "function": {
                 "signature": {
@@ -222,6 +244,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.type",
@@ -235,6 +258,7 @@
             "declaration.type.type.lit.slice.type.name.id",
             "declaration.type.type.lit.slice.type.name.id.int"
         ],
+        "line": 34,
         "json": {
             "declaration": {
                 "type": {
@@ -255,12 +279,14 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.var",
             "declaration.var.id",
             "declaration.var.id.ErrEmptyStack"
         ],
+        "line": 36,
         "json": {
             "declaration": {
                 "var": {
@@ -270,6 +296,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -301,6 +328,7 @@
             "method.signature.result.param_list.[1].param.type.name.id",
             "method.signature.result.param_list.[1].param.type.name.id.error"
         ],
+        "line": 38,
         "json": {
             "method": {
                 "receiver": [
@@ -355,6 +383,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -382,6 +411,7 @@
             "method.signature.param_list.[0].param.id_list.[0].id",
             "method.signature.param_list.[0].param.id_list.[0].id.e"
         ],
+        "line": 48,
         "json": {
             "method": {
                 "receiver": [
@@ -429,12 +459,14 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
             "declaration.const.id",
             "declaration.const.id.bitsPerWord"
         ],
+        "line": 52,
         "json": {
             "declaration": {
                 "const": {
@@ -444,6 +476,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -464,6 +497,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 54,
         "json": {
             "function": {
                 "signature": {
@@ -496,6 +530,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -527,6 +562,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.uint64"
         ],
+        "line": 59,
         "json": {
             "function": {
                 "signature": {
@@ -579,6 +615,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -599,6 +636,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.uint64"
         ],
+        "line": 67,
         "json": {
             "function": {
                 "signature": {
@@ -631,6 +669,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -651,6 +690,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 71,
         "json": {
             "function": {
                 "signature": {
@@ -683,6 +723,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.type",
@@ -692,6 +733,7 @@
             "declaration.type.type.lit",
             "declaration.type.type.lit.struct"
         ],
+        "line": 75,
         "json": {
             "declaration": {
                 "type": {
@@ -706,6 +748,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -721,6 +764,7 @@
             "function.signature.result.type.lit.pointer.type.name.id",
             "function.signature.result.type.lit.pointer.type.name.id.BitSet"
         ],
+        "line": 81,
         "json": {
             "function": {
                 "signature": {
@@ -744,6 +788,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -771,6 +816,7 @@
             "method.signature.param_list.[0].param.id_list.[0].id",
             "method.signature.param_list.[0].param.id_list.[0].id.value"
         ],
+        "line": 85,
         "json": {
             "method": {
                 "receiver": [
@@ -818,6 +864,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -845,6 +892,7 @@
             "method.signature.param_list.[0].param.id_list.[0].id",
             "method.signature.param_list.[0].param.id_list.[0].id.index"
         ],
+        "line": 96,
         "json": {
             "method": {
                 "receiver": [
@@ -892,6 +940,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -922,6 +971,7 @@
             "method.signature.param_list.[0].param.id_list.[0].id",
             "method.signature.param_list.[0].param.id_list.[0].id.set"
         ],
+        "line": 104,
         "json": {
             "method": {
                 "receiver": [
@@ -975,6 +1025,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1002,6 +1053,7 @@
             "method.signature.param_list.[0].param.id_list.[0].id",
             "method.signature.param_list.[0].param.id_list.[0].id.value"
         ],
+        "line": 121,
         "json": {
             "method": {
                 "receiver": [
@@ -1049,6 +1101,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1081,6 +1134,7 @@
             "method.signature.result.type.name.id",
             "method.signature.result.type.name.id.bool"
         ],
+        "line": 125,
         "json": {
             "method": {
                 "receiver": [
@@ -1135,6 +1189,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1159,6 +1214,7 @@
             "method.signature.result.type.name.id",
             "method.signature.result.type.name.id.int"
         ],
+        "line": 133,
         "json": {
             "method": {
                 "receiver": [
@@ -1198,6 +1254,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1229,6 +1286,7 @@
             "method.signature.result.type.name.id",
             "method.signature.result.type.name.id.bool"
         ],
+        "line": 143,
         "json": {
             "method": {
                 "receiver": [
@@ -1283,6 +1341,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1307,6 +1366,7 @@
             "method.signature.result.type.name.id",
             "method.signature.result.type.name.id.int"
         ],
+        "line": 172,
         "json": {
             "method": {
                 "receiver": [
@@ -1346,6 +1406,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1370,6 +1431,7 @@
             "method.signature.result.type.name.id",
             "method.signature.result.type.name.id.int"
         ],
+        "line": 181,
         "json": {
             "method": {
                 "receiver": [
@@ -1409,6 +1471,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1433,6 +1496,7 @@
             "method.signature.result.type.name.id",
             "method.signature.result.type.name.id.string"
         ],
+        "line": 189,
         "json": {
             "method": {
                 "receiver": [
@@ -1472,6 +1536,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.type",
@@ -1481,6 +1546,7 @@
             "declaration.type.type.lit",
             "declaration.type.type.lit.struct"
         ],
+        "line": 203,
         "json": {
             "declaration": {
                 "type": {
@@ -1495,6 +1561,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -1510,6 +1577,7 @@
             "function.signature.result.type.lit.pointer.type.name.id",
             "function.signature.result.type.lit.pointer.type.name.id.AltDict"
         ],
+        "line": 207,
         "json": {
             "function": {
                 "signature": {
@@ -1533,6 +1601,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1564,6 +1633,7 @@
             "method.signature.result.type.lit",
             "method.signature.result.type.lit.interface"
         ],
+        "line": 213,
         "json": {
             "method": {
                 "receiver": [
@@ -1618,6 +1688,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1652,6 +1723,7 @@
             "method.signature.param_list.[1].param.id_list.[0].id",
             "method.signature.param_list.[1].param.id_list.[0].id.value"
         ],
+        "line": 218,
         "json": {
             "method": {
                 "receiver": [
@@ -1713,6 +1785,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "method",
             "method.receiver",
@@ -1739,6 +1812,7 @@
             "method.signature.result.type.lit.slice.type.lit",
             "method.signature.result.type.lit.slice.type.lit.interface"
         ],
+        "line": 223,
         "json": {
             "method": {
                 "receiver": [
@@ -1784,6 +1858,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -1812,6 +1887,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.string"
         ],
+        "line": 233,
         "json": {
             "function": {
                 "signature": {
@@ -1858,6 +1934,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -1884,6 +1961,7 @@
             "function.signature.result.type.lit.slice.type.name.id",
             "function.signature.result.type.lit.slice.type.name.id.string"
         ],
+        "line": 245,
         "json": {
             "function": {
                 "signature": {
@@ -1928,6 +2006,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -1951,6 +2030,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.string"
         ],
+        "line": 256,
         "json": {
             "function": {
                 "signature": {
@@ -1989,6 +2069,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.var",
@@ -2002,6 +2083,7 @@
             "declaration.var.type.name.qualified_ident.id",
             "declaration.var.type.name.qualified_ident.id.Buffer"
         ],
+        "line": 257,
         "json": {
             "declaration": {
                 "var": {
@@ -2019,6 +2101,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -2039,6 +2122,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 274,
         "json": {
             "function": {
                 "signature": {
@@ -2071,6 +2155,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -2099,6 +2184,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 278,
         "json": {
             "function": {
                 "signature": {
@@ -2145,6 +2231,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
@@ -2155,6 +2242,7 @@
             "declaration.const.type.name.id",
             "declaration.const.type.name.id.uint32"
         ],
+        "line": 279,
         "json": {
             "declaration": {
                 "const": {
@@ -2169,6 +2257,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
@@ -2179,6 +2268,7 @@
             "declaration.const.type.name.id",
             "declaration.const.type.name.id.uint32"
         ],
+        "line": 280,
         "json": {
             "declaration": {
                 "const": {
@@ -2193,6 +2283,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
@@ -2203,6 +2294,7 @@
             "declaration.const.type.name.id",
             "declaration.const.type.name.id.uint32"
         ],
+        "line": 281,
         "json": {
             "declaration": {
                 "const": {
@@ -2217,6 +2309,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
@@ -2227,6 +2320,7 @@
             "declaration.const.type.name.id",
             "declaration.const.type.name.id.uint32"
         ],
+        "line": 282,
         "json": {
             "declaration": {
                 "const": {
@@ -2241,6 +2335,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
@@ -2251,6 +2346,7 @@
             "declaration.const.type.name.id",
             "declaration.const.type.name.id.uint32"
         ],
+        "line": 283,
         "json": {
             "declaration": {
                 "const": {
@@ -2265,6 +2361,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.const",
@@ -2275,6 +2372,7 @@
             "declaration.const.type.name.id",
             "declaration.const.type.name.id.uint32"
         ],
+        "line": 284,
         "json": {
             "declaration": {
                 "const": {
@@ -2289,6 +2387,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -2317,6 +2416,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.int"
         ],
+        "line": 297,
         "json": {
             "function": {
                 "signature": {
@@ -2363,12 +2463,14 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "declaration",
             "declaration.var",
             "declaration.var.id",
             "declaration.var.id.hash"
         ],
+        "line": 298,
         "json": {
             "declaration": {
                 "var": {
@@ -2378,6 +2480,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -2405,6 +2508,7 @@
             "function.signature.result.param_list.[1].param.type.name.id",
             "function.signature.result.param_list.[1].param.type.name.id.error"
         ],
+        "line": 309,
         "json": {
             "function": {
                 "signature": {
@@ -2452,6 +2556,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -2477,6 +2582,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.bool"
         ],
+        "line": 332,
         "json": {
             "function": {
                 "signature": {
@@ -2518,6 +2624,7 @@
         }
     },
     {
+        "file": "app/src/test/java/org/codesearch/golang/test.go",
         "keys": [
             "function",
             "function.id",
@@ -2546,6 +2653,7 @@
             "function.signature.result.type.name.id",
             "function.signature.result.type.name.id.bool"
         ],
+        "line": 358,
         "json": {
             "function": {
                 "signature": {

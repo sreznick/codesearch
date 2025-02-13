@@ -43,7 +43,6 @@ public abstract class Indexer {
                     })
                     .forEach(file -> executor.submit(() -> {
                         try {
-                            System.out.println(String.format("file: %s", file.getFileName().toString()));
                             writer.addDocuments(indexFile(file));
                             logger.info("Файл проиндексирован: {}", file);
                         } catch (Exception e) {

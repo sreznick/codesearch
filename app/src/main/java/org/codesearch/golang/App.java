@@ -2,27 +2,29 @@ package org.codesearch.golang;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-
-import org.codesearch.golang.GolangUnits.GolangUnit;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.codesearch.GoLexer;
 import org.codesearch.GoParser;
+import org.codesearch.Searcher;
+import org.codesearch.Units.Unit;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        indexTest();
+        // parseTest();
+        // indexTest();
+        searchTest();
     }
 
     public static void parseTest() throws Exception {
-        String fileName = "src/test/java/org/codesearch/golang/test.go";
-        String fileOut = "src/test/java/org/codesearch/golang/out.json";
+        String fileName = "app/src/test/java/org/codesearch/golang/test.go";
+        String fileOut = "app/src/test/java/org/codesearch/golang/out.json";
         String content = String.join("\n", Files.readAllLines(Paths.get(fileName)));
         GolangListener listener = new GolangListener();
         listener.setFile(fileName);
@@ -36,10 +38,12 @@ public class App {
         walker.walk(listener, tree);
 
         JSONArray res = new JSONArray();
-        for (GolangUnit unit: listener.getUnits()) {
+        for (Unit unit: listener.getUnits()) {
             res.put((new JSONObject())
                 .put("json", unit.getJSON())
                 .put("keys", new JSONArray(unit.getKeys()))
+                .put("line", unit.getLine())
+                .put("file", unit.getFile())
             );
         }
 
@@ -48,8 +52,21 @@ public class App {
 
     public static void indexTest() throws Exception {
         GolangIndexer indexer = new GolangIndexer();
-        String dirPath = "src/test/java/org/codesearch/golang";
-        String fileOut = "index/golang";
-        indexer.indexSources(Paths.get(dirPath), Paths.get(fileOut));
+        String dirPath = "app/src/test/java/org/codesearch/golang";
+        String indexPath = "app/index/golang";
+        indexer.indexSources(Paths.get(dirPath), Paths.get(indexPath));
+    }
+
+    public static void searchTest() throws Exception {
+        String indexPath = "app/index/golang";
+        List<String> keys = List.of(
+            // "function.signature.result.type.name.id.int",
+            "declaration"
+        );
+        List<Unit> res = Searcher.runQuery(Paths.get(indexPath), keys, false, 100);
+        System.out.println(String.format("%d docs", res.size()));
+        for (Unit unit: res) {
+            System.out.println(String.format("unit: [%s:%d]", unit.getFile(), unit.getLine()));
+        }
     }
 }

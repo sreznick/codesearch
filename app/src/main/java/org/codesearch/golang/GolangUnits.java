@@ -2,36 +2,15 @@ package org.codesearch.golang;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.json.*;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import org.codesearch.GoParser.*;
+import org.codesearch.Units.UnitContent;;
 
 public class GolangUnits {
-
-    public static class GolangUnit {
-        protected JSONObject json;
-        protected List<String> keys;
-
-        GolangUnit(String file, int line, GolangUnitContent content) {
-            this.json = content.getJson()
-                .put("file", file)
-                .put("line", line);
-            this.keys = content.getKeys();
-        }
-
-        public JSONObject getJSON() {return json;}
-        public List<String> getKeys() {return keys;}
-    }
-
-    public static interface GolangUnitContent {
-        public JSONObject getJson();
-        public List<String> getKeys();
-        public String getName();
-    }
-
-    public static abstract class GolangUnitContentString implements GolangUnitContent {
+    public static abstract class UnitContentString implements UnitContent {
         protected String lit;
 
         @Override
@@ -48,16 +27,16 @@ public class GolangUnits {
         }
     }
 
-    public static abstract class GolangUnitContentFields implements GolangUnitContent {
-        protected List<GolangUnitContent> fields;
+    public static abstract class UnitContentFields implements UnitContent {
+        protected List<UnitContent> fields;
 
-        GolangUnitContentFields() {fields = new ArrayList<>();}
+        UnitContentFields() {fields = new ArrayList<>();}
 
         @Override
         public List<String> getKeys() {
             List<String> keys = new ArrayList<>();
             keys.add(getName());
-            for (GolangUnitContent field: fields) {
+            for (UnitContent field: fields) {
                 for (String fieldKey: field.getKeys()) {
                     keys.add(String.format("%s.%s", getName(), fieldKey));
                 }
@@ -68,17 +47,17 @@ public class GolangUnits {
         @Override
         public JSONObject getJson() {
             JSONObject val = new JSONObject();
-            for (GolangUnitContent guc: fields) {
+            for (UnitContent guc: fields) {
                 val.put(guc.getName(), guc.getJson().get(guc.getName()));
             }
             return (new JSONObject()).put(getName(), val);
         }
     }
 
-    public static abstract class GolangUnitContentArray implements GolangUnitContent {
-        protected List<GolangUnitContent> elems;
+    public static abstract class UnitContentArray implements UnitContent {
+        protected List<UnitContent> elems;
 
-        GolangUnitContentArray() {elems = new ArrayList<>();}
+        UnitContentArray() {elems = new ArrayList<>();}
 
         @Override
         public List<String> getKeys() {
@@ -95,21 +74,21 @@ public class GolangUnits {
         @Override
         public JSONObject getJson() {
             JSONArray val = new JSONArray();
-            for (GolangUnitContent guc: elems) {
+            for (UnitContent guc: elems) {
                 val.put(guc.getJson());
             }
             return (new JSONObject()).put(getName(), val);
         }
     }
 
-    public static class IdUnit extends GolangUnitContentString {
+    public static class IdUnit extends UnitContentString {
         IdUnit(TerminalNode ctx) {lit = ctx.getText();}
 
         @Override
         public String getName() {return "id";}
     }
 
-    public static class IdListUnit extends GolangUnitContentArray{
+    public static class IdListUnit extends UnitContentArray{
         IdListUnit(IdentifierListContext ctx) {
             for (TerminalNode tn: ctx.IDENTIFIER()) {
                 elems.add(new IdUnit(tn));
@@ -127,7 +106,7 @@ public class GolangUnits {
         public String getName() {return "package";}
     }
 
-    public static class QualifiedIdentUnit extends GolangUnitContentFields {
+    public static class QualifiedIdentUnit extends UnitContentFields {
         QualifiedIdentUnit(QualifiedIdentContext ctx) {
             fields.add(new PackageNameUnit(ctx.IDENTIFIER(0)));
             fields.add(new IdUnit(ctx.IDENTIFIER(1)));
@@ -137,7 +116,7 @@ public class GolangUnits {
         public String getName() {return "qualified_ident";}
     }
 
-    public static class TypeNameUnit extends GolangUnitContentFields {
+    public static class TypeNameUnit extends UnitContentFields {
         TypeNameUnit(TypeNameContext ctx) {
             if (ctx.IDENTIFIER() != null) {fields.add(new IdUnit(ctx.IDENTIFIER()));} 
             else {fields.add(new QualifiedIdentUnit(ctx.qualifiedIdent()));}
@@ -147,7 +126,7 @@ public class GolangUnits {
         public String getName() {return "name";}
     }
 
-    public static class ParameterUnit extends GolangUnitContentFields {
+    public static class ParameterUnit extends UnitContentFields {
         ParameterUnit(ParameterDeclContext ctx) {
             fields.add(new TypeUnit(ctx.type_()));
             if (ctx.identifierList() != null) {
@@ -159,7 +138,7 @@ public class GolangUnits {
         public String getName() {return "param";}
     }
 
-    public static class ParameterListUnit extends GolangUnitContentArray {
+    public static class ParameterListUnit extends UnitContentArray {
         ParameterListUnit(ParametersContext ctx) {
             for (ParameterDeclContext parmCtx: ctx.parameterDecl()) {
                 elems.add(new ParameterUnit(parmCtx));
@@ -170,7 +149,7 @@ public class GolangUnits {
         public String getName() {return "param_list";}
     }
 
-    public static class ArrayTypeUnit extends GolangUnitContentFields {
+    public static class ArrayTypeUnit extends UnitContentFields {
         ArrayTypeUnit(ArrayTypeContext ctx) {
             fields.add(new TypeUnit(ctx.elementType().type_()));
         }
@@ -179,14 +158,14 @@ public class GolangUnits {
         public String getName() {return "array";}
     }
 
-    public static class StructTypeUnit extends GolangUnitContentFields {
+    public static class StructTypeUnit extends UnitContentFields {
         StructTypeUnit(StructTypeContext ctx) {}
 
         @Override
         public String getName() {return "struct";}
     }
 
-    public static class PointerTypeUnit extends GolangUnitContentFields {
+    public static class PointerTypeUnit extends UnitContentFields {
         PointerTypeUnit(PointerTypeContext ctx) {
             fields.add(new TypeUnit(ctx.type_()));
         }
@@ -195,7 +174,7 @@ public class GolangUnits {
         public String getName() {return "pointer";}
     }
     
-    public static class ResultUnit extends GolangUnitContentFields {
+    public static class ResultUnit extends UnitContentFields {
         ResultUnit(ResultContext ctx) {
             if (ctx.parameters() != null) {fields.add(new ParameterListUnit(ctx.parameters()));}
             else {fields.add(new TypeUnit(ctx.type_()));}
@@ -205,7 +184,7 @@ public class GolangUnits {
         public String getName() {return "result";}
     }
 
-    public static class SignatureUnit extends GolangUnitContentFields {
+    public static class SignatureUnit extends UnitContentFields {
         SignatureUnit(SignatureContext ctx) {
             fields.add(new ParameterListUnit(ctx.parameters()));
             if (ctx.result() != null) {
@@ -217,7 +196,7 @@ public class GolangUnits {
         public String getName() {return "signature";}
     }
 
-    public static class FunctionTypeUnit extends GolangUnitContentFields {
+    public static class FunctionTypeUnit extends UnitContentFields {
         FunctionTypeUnit(FunctionTypeContext ctx) {
             fields.add(new SignatureUnit(ctx.signature()));
         }
@@ -226,7 +205,7 @@ public class GolangUnits {
         public String getName() {return "function";}
     }
 
-    public static class MethodSpecUnit extends GolangUnitContentFields {
+    public static class MethodSpecUnit extends UnitContentFields {
         MethodSpecUnit(MethodSpecContext ctx) {
             fields.add(new IdUnit(ctx.IDENTIFIER()));
             fields.add(new ParameterListUnit(ctx.parameters()));
@@ -240,7 +219,7 @@ public class GolangUnits {
     }
 
     // TODO Убрать зависимость от порядка
-    public static class InterfaceTypeUnit extends GolangUnitContentArray {
+    public static class InterfaceTypeUnit extends UnitContentArray {
         InterfaceTypeUnit(InterfaceTypeContext ctx) {
             for (MethodSpecContext method: ctx.methodSpec()) {
                 elems.add(new MethodSpecUnit(method));
@@ -251,7 +230,7 @@ public class GolangUnits {
         public String getName() {return "interface";}
     }
 
-    public static class SliceTypeUnit extends GolangUnitContentFields {
+    public static class SliceTypeUnit extends UnitContentFields {
         SliceTypeUnit(SliceTypeContext ctx) {
             fields.add(new TypeUnit(ctx.elementType().type_()));
         }
@@ -274,7 +253,7 @@ public class GolangUnits {
         public String getName() {return "value";}
     }
 
-    public static class MapTypeUnit extends GolangUnitContentFields {
+    public static class MapTypeUnit extends UnitContentFields {
         MapTypeUnit(MapTypeContext ctx) {
             fields.add(new KeyUnit(ctx.type_()));
             fields.add(new ValueUnit(ctx.elementType().type_()));
@@ -284,7 +263,7 @@ public class GolangUnits {
         public String getName() {return "map";}
     }
 
-    public static class ChannelTypeUnit extends GolangUnitContentFields {
+    public static class ChannelTypeUnit extends UnitContentFields {
         ChannelTypeUnit(ChannelTypeContext ctx) {
             fields.add(new TypeUnit(ctx.elementType().type_()));
         }
@@ -293,7 +272,7 @@ public class GolangUnits {
         public String getName() {return "channel";}
     }
 
-    public static class TypeLitUnit extends GolangUnitContentFields {
+    public static class TypeLitUnit extends UnitContentFields {
         TypeLitUnit(TypeLitContext ctx) {
             if (ctx.arrayType() != null) {
                 fields.add(new ArrayTypeUnit(ctx.arrayType()));
@@ -318,7 +297,7 @@ public class GolangUnits {
         public String getName() {return "lit";}
     }
 
-    public static class TypeUnit extends GolangUnitContentFields {
+    public static class TypeUnit extends UnitContentFields {
         TypeUnit(Type_Context ctx) {
             while (ctx.type_() != null) {ctx = ctx.type_();}
             if (ctx.typeName() != null) {fields.add(new TypeNameUnit(ctx.typeName()));}
@@ -329,7 +308,7 @@ public class GolangUnits {
         public String getName() {return "type";}
     }
 
-    public static class PackageUnit extends GolangUnitContentFields {
+    public static class PackageUnit extends UnitContentFields {
         PackageUnit(PackageClauseContext ctx) {
             fields.add(new IdUnit(ctx.IDENTIFIER()));
         }
@@ -338,7 +317,7 @@ public class GolangUnits {
         public String getName() {return "package";}
     }
 
-    public static class PathUnit extends GolangUnitContentString {
+    public static class PathUnit extends UnitContentString {
         PathUnit(String_Context ctx) {
             lit = ctx.getText();
         }
@@ -354,7 +333,7 @@ public class GolangUnits {
         public String getName() {return "alias";}
     }
 
-    public static class ImportUnit extends GolangUnitContentFields {
+    public static class ImportUnit extends UnitContentFields {
         ImportUnit(ImportSpecContext ctx) {
             fields.add(new PathUnit(ctx.importPath().string_()));
             if (ctx.IDENTIFIER() != null) {
@@ -366,7 +345,7 @@ public class GolangUnits {
         public String getName() {return "import";}
     }
 
-    public static class TypeParameterUnit extends GolangUnitContentFields {
+    public static class TypeParameterUnit extends UnitContentFields {
         TypeParameterUnit(TypeParameterDeclContext ctx) {
             fields.add(new TypeUnit(ctx.typeElement().typeTerm(0).type_()));
             fields.add(new IdListUnit(ctx.identifierList()));
@@ -376,7 +355,7 @@ public class GolangUnits {
         public String getName() {return "param";}
     }
 
-    public static class TypeParameterListUnit extends GolangUnitContentArray {
+    public static class TypeParameterListUnit extends UnitContentArray {
         TypeParameterListUnit(TypeParametersContext ctx) {
             for (TypeParameterDeclContext parmCtx: ctx.typeParameterDecl()) {
                 elems.add(new TypeParameterUnit(parmCtx));
@@ -387,7 +366,7 @@ public class GolangUnits {
         public String getName() {return "param_list";}
     }
 
-    public static class FunctionDeclUnit extends GolangUnitContentFields {
+    public static class FunctionDeclUnit extends UnitContentFields {
         FunctionDeclUnit(FunctionDeclContext ctx) {
             fields.add(new IdUnit(ctx.IDENTIFIER()));
             fields.add(new SignatureUnit(ctx.signature()));
@@ -407,7 +386,7 @@ public class GolangUnits {
         public String getName() {return "receiver";}
     }
 
-    public static class MethdoDeclUnit extends GolangUnitContentFields {
+    public static class MethdoDeclUnit extends UnitContentFields {
         MethdoDeclUnit(MethodDeclContext ctx) {
             fields.add(new ReceiverUnit(ctx.receiver()));
             fields.add(new IdUnit(ctx.IDENTIFIER()));
@@ -418,7 +397,7 @@ public class GolangUnits {
         public String getName() {return "method";}
     }
 
-    public static class TypeAliasUnit extends GolangUnitContentFields {
+    public static class TypeAliasUnit extends UnitContentFields {
         TypeAliasUnit(AliasDeclContext ctx) {
             fields.add(new IdUnit(ctx.IDENTIFIER()));
             fields.add(new TypeUnit(ctx.type_()));
@@ -428,7 +407,7 @@ public class GolangUnits {
         public String getName() {return "alias";}
     }
 
-    public static class TypeSpecUnit extends GolangUnitContentFields {
+    public static class TypeSpecUnit extends UnitContentFields {
         TypeSpecUnit(TypeSpecContext ctx) {
             if (ctx.aliasDecl() != null) {fields.add(new TypeAliasUnit(ctx.aliasDecl()));}
             else {
@@ -444,7 +423,7 @@ public class GolangUnits {
         public String getName() {return "type";}
     }
 
-    public static class VarSpecUnit extends GolangUnitContentFields {
+    public static class VarSpecUnit extends UnitContentFields {
         VarSpecUnit(TerminalNode tn, Type_Context ctx) {
             fields.add(new IdUnit(tn));
             if (ctx != null) {
@@ -464,7 +443,7 @@ public class GolangUnits {
         public String getName() {return "var";}
     }
 
-    public static class ConstSpecUnit extends GolangUnitContentFields {
+    public static class ConstSpecUnit extends UnitContentFields {
         ConstSpecUnit(TerminalNode tn, Type_Context ctx) {
             fields.add(new IdUnit(tn));
             if (ctx != null) {
@@ -484,7 +463,7 @@ public class GolangUnits {
         public String getName() {return "const";}
     }
 
-    public static class DeclarationUnit extends GolangUnitContentFields {
+    public static class DeclarationUnit extends UnitContentFields {
         DeclarationUnit(ConstSpecUnit unit) {fields.add(unit);}
         DeclarationUnit(VarSpecUnit unit) {fields.add(unit);}
         DeclarationUnit(TypeSpecUnit unit) {fields.add(unit);}

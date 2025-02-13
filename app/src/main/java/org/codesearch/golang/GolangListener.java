@@ -7,16 +7,17 @@ import org.antlr.v4.runtime.ParserRuleContext;
 
 import org.codesearch.GoParserBaseListener;
 import org.codesearch.GoParser.*;
+import org.codesearch.Units.*;
 import org.codesearch.golang.GolangUnits.*;
 
 
 public class GolangListener extends GoParserBaseListener {
     private String file;
-    private List<GolangUnit> units = new ArrayList<>();
+    private List<Unit> units = new ArrayList<>();
 
     public void setFile(String file) {this.file = file;}
 
-    public List<GolangUnit> getUnits() {return units;}
+    public List<Unit> getUnits() {return units;}
     
     private int getLine(ParserRuleContext ctx) {
         return ctx.getStart().getLine();
@@ -24,28 +25,28 @@ public class GolangListener extends GoParserBaseListener {
 
     @Override
     public void enterPackageClause(PackageClauseContext ctx) {
-        units.add(new GolangUnit(file, getLine(ctx), new PackageUnit(ctx)));
+        units.add(new Unit(file, getLine(ctx), new PackageUnit(ctx)));
     }
 
     @Override
     public void enterImportSpec(ImportSpecContext ctx) {
-        units.add(new GolangUnit(file, getLine(ctx), new ImportUnit(ctx)));
+        units.add(new Unit(file, getLine(ctx), new ImportUnit(ctx)));
     }
 
     @Override
     public void enterFunctionDecl(FunctionDeclContext ctx) {
-        units.add(new GolangUnit(file, getLine(ctx), new FunctionDeclUnit(ctx)));
+        units.add(new Unit(file, getLine(ctx), new FunctionDeclUnit(ctx)));
     }
 
     @Override
     public void enterMethodDecl(MethodDeclContext ctx) {
-        units.add(new GolangUnit(file, getLine(ctx), new MethdoDeclUnit(ctx)));
+        units.add(new Unit(file, getLine(ctx), new MethdoDeclUnit(ctx)));
     }
 
     @Override
     public void enterDeclaration(DeclarationContext ctx) {
         for (DeclarationUnit unit: DeclarationUnit.fromDeclaration(ctx)) {
-            units.add(new GolangUnit(file, getLine(ctx), unit));
+            units.add(new Unit(file, getLine(ctx), unit));
         }
     }
 }

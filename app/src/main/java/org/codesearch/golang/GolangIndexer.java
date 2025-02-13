@@ -5,8 +5,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONObject;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -19,7 +17,7 @@ import org.apache.lucene.document.Field;
 import org.codesearch.GoLexer;
 import org.codesearch.GoParser;
 import org.codesearch.Indexer;
-import org.codesearch.golang.GolangUnits.GolangUnit;
+import org.codesearch.Units.Unit;
 
 public class GolangIndexer extends Indexer {
 
@@ -44,11 +42,13 @@ public class GolangIndexer extends Indexer {
 
         List<Document> docs = new ArrayList<>();
 
-        for (GolangUnit unit: listener.getUnits()) {
-            JSONObject json = unit.getJSON();
+        for (Unit unit: listener.getUnits()) {
             Document doc = new Document();
+            doc.add(new StringField("file", unit.getFile(), Field.Store.YES));;
+            doc.add(new StringField("line", String.valueOf(unit.getLine()), Field.Store.YES));
+            doc.add(new StringField("json", unit.getJSON().toString(), Field.Store.YES));
             for (String key: unit.getKeys()) {
-                doc.add(new StringField(key, json.toString(), Field.Store.YES));
+                doc.add(new StringField("key", key, Field.Store.YES));
             }
             docs.add(doc);
         }
