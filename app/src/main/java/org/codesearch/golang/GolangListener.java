@@ -10,7 +10,7 @@ import org.codesearch.GoParser.*;
 import org.codesearch.golang.GolangUnits.*;
 
 
-public class Listener extends GoParserBaseListener {
+public class GolangListener extends GoParserBaseListener {
     private String file;
     private List<GolangUnit> units = new ArrayList<>();
 

@@ -13,13 +13,11 @@ public class GolangUnits {
     public static class GolangUnit {
         protected JSONObject json;
         protected List<String> keys;
-        protected String file;
-        protected int line;
 
         GolangUnit(String file, int line, GolangUnitContent content) {
-            this.file = file;
-            this.line = line;
-            this.json = content.getJson();
+            this.json = content.getJson()
+                .put("file", file)
+                .put("line", line);
             this.keys = content.getKeys();
         }
 
