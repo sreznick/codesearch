@@ -7,7 +7,7 @@ import org.json.*;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import org.codesearch.GoParser.*;
-import org.codesearch.Units.UnitContent;;
+import org.codesearch.Units.UnitContent;
 
 public class GolangUnits {
     public static abstract class UnitContentString implements UnitContent {
@@ -52,6 +52,8 @@ public class GolangUnits {
             }
             return (new JSONObject()).put(getName(), val);
         }
+
+        public List<UnitContent> getFields() {return fields;}
     }
 
     public static abstract class UnitContentArray implements UnitContent {
@@ -78,6 +80,20 @@ public class GolangUnits {
                 val.put(guc.getJson());
             }
             return (new JSONObject()).put(getName(), val);
+        }
+    }
+
+    public static abstract class UnitContentSet extends UnitContentArray {
+        @Override
+        public List<String> getKeys() {
+            List<String> keys = new ArrayList<>();
+            keys.add(getName());
+            for (int i = 0; i < elems.size(); ++i) {
+                for (String elemKey: elems.get(i).getKeys()) {
+                    keys.add(String.format("%s.%s", getName(), i, elemKey));
+                }
+            }
+            return keys;
         }
     }
 
@@ -218,8 +234,7 @@ public class GolangUnits {
         public String getName() {return "method";}
     }
 
-    // TODO Убрать зависимость от порядка
-    public static class InterfaceTypeUnit extends UnitContentArray {
+    public static class InterfaceTypeUnit extends UnitContentSet {
         InterfaceTypeUnit(InterfaceTypeContext ctx) {
             for (MethodSpecContext method: ctx.methodSpec()) {
                 elems.add(new MethodSpecUnit(method));
@@ -300,12 +315,35 @@ public class GolangUnits {
     public static class TypeUnit extends UnitContentFields {
         TypeUnit(Type_Context ctx) {
             while (ctx.type_() != null) {ctx = ctx.type_();}
-            if (ctx.typeName() != null) {fields.add(new TypeNameUnit(ctx.typeName()));}
+            if (ctx.typeName() != null) {
+                fields.add(new TypeNameUnit(ctx.typeName()));
+                if (ctx.typeArgs() != null) {
+                    fields.add(new TypeArgListUnit(ctx.typeArgs()));
+                }
+            }
             else {fields.add(new TypeLitUnit(ctx.typeLit()));}
         }
 
         @Override
         public String getName() {return "type";}
+    }
+
+    public static class TypeListUnit extends UnitContentArray {
+        TypeListUnit(TypeListContext ctx) {
+            for (Type_Context typeCtx: ctx.type_()) {
+                elems.add(new TypeUnit(typeCtx));
+            }
+        }
+
+        @Override
+        public String getName() {return "type_list";}
+    }
+
+    public static class TypeArgListUnit extends TypeListUnit {
+        TypeArgListUnit(TypeArgsContext ctx) {super(ctx.typeList());}
+
+        @Override
+        public String getName() {return "type_arg_list";}
     }
 
     public static class PackageUnit extends UnitContentFields {
@@ -317,10 +355,17 @@ public class GolangUnits {
         public String getName() {return "package";}
     }
 
-    public static class PathUnit extends UnitContentString {
-        PathUnit(String_Context ctx) {
+    public static class StringUnit extends UnitContentString {
+        StringUnit(String_Context ctx) {
             lit = ctx.getText();
         }
+
+        @Override
+        public String getName() {return "string";}
+    }
+
+    public static class PathUnit extends StringUnit {
+        PathUnit(String_Context ctx) {super(ctx);}
 
         @Override
         public String getName() {return "path";}
@@ -492,5 +537,154 @@ public class GolangUnits {
 
         @Override
         public String getName() {return "declaration";}
+    }
+
+    public static class NilUnit extends UnitContentFields {
+        @Override
+        public String getName() {return "nil";}
+    }
+
+    public static class IntegerUnit extends UnitContentString {
+        IntegerUnit(IntegerContext ctx) {
+            lit = ctx.getText();
+        }
+
+        @Override
+        public String getName() {return "int";}
+    }
+
+    public static class FloatUnit extends UnitContentString {
+        FloatUnit(TerminalNode ctx) {
+            lit = ctx.getText();
+        }
+
+        @Override
+        public String getName() {return "float";}
+    }
+
+    public static class BasicLitUnit extends UnitContentFields {
+        BasicLitUnit(BasicLitContext ctx) {
+            if (ctx.NIL_LIT() != null) {fields.add(new NilUnit());}
+            else if (ctx.integer() != null) {fields.add(new IntegerUnit(ctx.integer()));}
+            else if (ctx.string_() != null) {fields.add(new StringUnit(ctx.string_()));}
+            else {fields.add(new FloatUnit(ctx.FLOAT_LIT()));}
+        }
+
+        @Override
+        public String getName() {return "basic";}
+    }
+
+    public static class EllipsisUnit extends UnitContentFields {
+        @Override
+        public String getName() {return "ellipsis";}
+    }
+
+    public static class LiteralTypeUnit extends UnitContentFields {
+        LiteralTypeUnit(LiteralTypeContext ctx) {
+            if (ctx.structType() != null) {fields.add(new StructTypeUnit(ctx.structType()));}
+            else if (ctx.arrayType() != null) {fields.add(new ArrayTypeUnit(ctx.arrayType()));}
+            else if (ctx.ELLIPSIS() != null) {
+                fields.add(new EllipsisUnit());
+                fields.add(new TypeUnit(ctx.elementType().type_()));
+            }
+            else if (ctx.sliceType() != null) {fields.add(new SliceTypeUnit(ctx.sliceType()));}
+            else if (ctx.mapType() != null) {fields.add(new MapTypeUnit(ctx.mapType()));}
+            else {fields.add(new TypeNameUnit(ctx.typeName()));}
+        }
+
+        @Override
+        public String getName() {return "type";}
+    }
+
+    public static class FunctionLitUnit extends UnitContentFields {
+        FunctionLitUnit(FunctionLitContext ctx) {
+            fields.add(new SignatureUnit(ctx.signature()));
+        }
+
+        @Override
+        public String getName() {return "function";}
+    }
+
+    public static class LiteralUnit extends UnitContentFields {
+        LiteralUnit(LiteralContext ctx) {
+            if (ctx.basicLit() != null) {fields.add(new BasicLitUnit(ctx.basicLit()));}
+            else if (ctx.compositeLit() != null) {
+                fields.add(new LiteralTypeUnit(ctx.compositeLit().literalType()));
+            }
+            else {fields.add(new FunctionLitUnit(ctx.functionLit()));}      
+        }
+
+        @Override
+        public String getName() {return "literal";}
+    }
+
+    public static class FieldUnit extends UnitContentFields {
+        FieldUnit(TerminalNode idCtx, Type_Context typeCtx) {
+            fields.add(new IdUnit(idCtx));
+            fields.add(new TypeUnit(typeCtx));
+        }
+
+        FieldUnit(TypeNameContext ctx) {
+            fields.add(new TypeNameUnit(ctx));
+        }
+
+        public static List<FieldUnit> fromFieldDecl(FieldDeclContext ctx) {
+            if (ctx.embeddedField() != null) {
+                return List.of(new FieldUnit(ctx.embeddedField().typeName()));
+            }
+            List<FieldUnit> fields = new ArrayList<>();
+            for (TerminalNode idCtx: ctx.identifierList().IDENTIFIER()) {
+                fields.add(new FieldUnit(idCtx, ctx.type_()));
+            }
+            return fields;
+        }
+
+        @Override
+        public String getName() {return "field";}
+    }
+
+    public static class PrimaryExprUnit extends UnitContentFields {
+        PrimaryExprUnit(PrimaryExprContext ctx) {
+            if (ctx.operand() != null) {fields.add(new OperandUnit(ctx.operand()));}
+            else if (ctx.conversion() != null) {fields.add(new ConversionUnit(ctx.conversion()));}
+            else if (ctx.methodExpr() != null) {fields.add(new MethodExprUnit(ctx.methodExpr()));}
+        }
+
+        @Override
+        public String getName() {return "expression";}
+    }
+    
+    public static class OperandUnit extends UnitContentFields {
+        OperandUnit(OperandContext ctx) {
+            if (ctx.literal() != null) {fields.add(new LiteralUnit(ctx.literal()));}
+            else if (ctx.operandName() != null) {
+                fields.add(new IdUnit(ctx.operandName().IDENTIFIER()));
+                if (ctx.typeArgs() != null) {
+                    fields.add(new TypeArgListUnit(ctx.typeArgs()));
+                }
+            }
+        }
+
+        @Override
+        public String getName() {return "operand";}
+    }
+
+    public static class ConversionUnit extends UnitContentFields {
+        ConversionUnit(ConversionContext ctx) {
+            fields.add(new TypeUnit(ctx.type_()));
+        }
+
+        @Override
+        public String getName() {return "conversion";}
+    }
+
+    public static class MethodExprUnit extends UnitContentFields {
+        MethodExprUnit(MethodExprContext ctx) {
+            fields.add(new TypeUnit(ctx.type_()));
+            fields.add(new IdUnit(ctx.IDENTIFIER()));
+        }
+
+        @Override
+        public String getName() {return "method";}
     }
 }

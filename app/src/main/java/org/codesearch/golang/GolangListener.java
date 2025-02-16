@@ -49,4 +49,23 @@ public class GolangListener extends GoParserBaseListener {
             units.add(new Unit(file, getLine(ctx), unit));
         }
     }
+
+    @Override
+    public void enterLiteral(LiteralContext ctx) {
+        units.add(new Unit(file, getLine(ctx), new LiteralUnit(ctx)));
+    }
+
+    @Override
+    public void enterFieldDecl(FieldDeclContext ctx) {
+        for (FieldUnit unit: FieldUnit.fromFieldDecl(ctx)) {
+            units.add(new Unit(file, getLine(ctx), unit));
+        }
+    }
+
+    @Override public void enterPrimaryExpr(PrimaryExprContext ctx) {
+        PrimaryExprUnit unit = new PrimaryExprUnit(ctx);
+        if (unit.getFields().size() != 0) {
+            units.add(new Unit(file, getLine(ctx), new PrimaryExprUnit(ctx)));
+        }
+    }
 }

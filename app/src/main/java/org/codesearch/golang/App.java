@@ -60,8 +60,9 @@ public class App {
     public static void searchTest() throws Exception {
         String indexPath = "app/index/golang";
         List<String> keys = List.of(
-            "function.signature.result.type.name.id.int",
-            "function.signature.param_list.[0].param.type.name.id.int"
+            "expression.operand.literal.basic.string"
+            // "function.signature.result.type.name.id.int",
+            // "function.signature.param_list.[0].param.type.name.id.int"
         );
         List<Unit> res = Searcher.runQuery(Paths.get(indexPath), keys, false, 100);
         System.out.println(String.format("%d docs", res.size()));
