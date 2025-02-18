@@ -9,6 +9,8 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
+import codegrep.Main;
+
 public class FileUtils {
     
     public static void processFiles(Path p, @Nonnull Predicate<Path> filter, @Nonnull Consumer<Path> cons) {
@@ -16,7 +18,7 @@ public class FileUtils {
             try (Stream<Path> walk = Files.walk(p)) {
                 walk.filter(e -> !e.toFile().isDirectory()).filter(filter).forEach(f -> processFiles(f, filter, cons));
             } catch (IOException e) {
-                System.err.println("Unable to read the directory");
+                Main.printer.error("Unable to read the directory");
                 e.printStackTrace();
             }
             return;

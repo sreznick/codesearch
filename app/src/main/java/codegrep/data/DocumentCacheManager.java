@@ -18,7 +18,9 @@ import org.apache.lucene.util.QueryBuilder;
 
 import com.google.common.hash.Hashing;
 
+import codegrep.Main;
 import codegrep.util.FileUtils;
+import codegrep.util.Settings;
 import grammars.CodeGrepGrammarFacade;
 import grammars.ExtendedParseTreeListener;
 
@@ -28,15 +30,17 @@ public class DocumentCacheManager {
 
     private final IndexManager index;
     private final Map<Path, String> invalidPaths = new HashMap<>();
+    private final Settings settings;
 
-    public DocumentCacheManager() {
+    public DocumentCacheManager(Settings settings) {
+        this.settings = settings;
         IndexManager mgr = null;
         try {
             mgr = new IndexManager(Path.of(CACHE_PATH));
         } catch (IOException e) {
             System.err.println("Fatal Error: Unable to create an index manager");
             e.printStackTrace();
-            System.exit(1);
+            System.exit(2);
         }
 
         this.index = mgr;
@@ -46,7 +50,7 @@ public class DocumentCacheManager {
         FileUtils.processFiles(p, e -> grammar.isValidFile(e) && !e.toString().contains(CACHE_PATH), this::revalidateFile);
         if (invalidPaths.isEmpty()) return;
 
-        System.err.println("Revalidating cache...");
+        Main.printer.debug("Revalidating cache...");
 
         ExtendedParseTreeListener listener = grammar.createListener();
         for (Path revalid : invalidPaths.keySet()) {
@@ -55,7 +59,7 @@ public class DocumentCacheManager {
                 ParseTreeWalker walker = new ParseTreeWalker();
                 walker.walk(listener, grammar.parse(revalid.toFile()));
             } catch (IOException e) {
-                System.err.printf("Unable to read the file %s%n", revalid);
+                Main.printer.error("Unable to read the file %s", revalid);
             }
         }
 
@@ -64,7 +68,7 @@ public class DocumentCacheManager {
             try {
                 index.setDocuments(doc.getKey(), invalidPaths.get(doc.getKey()), doc.getValue());
             } catch (IOException e) {
-                System.err.printf("Unable to update the cache for the file %s%n", doc.getKey());
+                Main.printer.error("Unable to update the cache for the file %s", doc.getKey());
             }
         }
         for (var entry : invalidPaths.entrySet()) {
@@ -72,7 +76,7 @@ public class DocumentCacheManager {
                 try {
                     index.setDocuments(entry.getKey(), entry.getValue(), new ArrayList<>());
                 } catch (IOException e) {
-                    System.err.printf("Unable to update the cache for the file %s%n", entry.getKey());
+                    Main.printer.error("Unable to update the cache for the file %s", entry.getKey());
                 }
             }
         }
@@ -80,10 +84,11 @@ public class DocumentCacheManager {
         try {
             index.save();
         } catch (IOException e) {
-            System.err.println("Unable to save the index...");
+            Main.printer.error("Unable to save the index!");
+            e.printStackTrace();
         }
         
-        System.err.println("Cache done!");
+        Main.printer.debug("Cache done!");
     }
 
     private void revalidateFile(Path p) {
@@ -95,7 +100,7 @@ public class DocumentCacheManager {
             // If the hashes are the same, we don't need to regen the cache
             if (currentHash.equals(indexedHash)) return;
         } catch (IOException e) {
-            System.err.println("Cannot read the file " + p.toString());
+            Main.printer.error("Could not read the file %s", p.toString());
             return;
         }
 
@@ -103,15 +108,19 @@ public class DocumentCacheManager {
     }
 
     public Map<Path, List<FileReference>> search(String s) {
-        
-        Query q1 = new QueryBuilder(index.analyzer).createPhraseQuery("content", s);
+        Query q1;
+        if (!settings.regex()) {
+            q1 = new QueryBuilder(index.analyzer).createPhraseQuery("content", s);
+        } else {
+            q1 = new RegexpQuery(new Term("content", s));
+        }
         Query q2 = new TermQuery(new Term("type", ObjectType.STRING_LITERAL.toString()));
         Query combo = new BooleanQuery.Builder().add(q1, Occur.MUST).add(q2, Occur.MUST).build();
         List<Document> docs = null;
         try {
             docs = index.getDocuments(combo);
         } catch (IOException e) {
-            System.err.println("Cannot do a search :(");
+            Main.printer.error("Could not perform a search!");
             return new HashMap<>();
         }
 
