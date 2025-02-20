@@ -1,1 +1,124 @@
 # codesearch
+
+## Ключи для поиска (golang)
+- `id`: `IdUnit` extends `UnitContentString`
+    - {`ANY_STRING`}
+- `id_list`: `IdListUnit` extends `UnitContentArray`
+    - [? {`ANY_INT`}] `id`
+- `package`: `PackageNameUnit` extends `id`
+- `qualified_ident`: `QualifiedIdentUnit` extends `UnitContentFields`
+    - `package`
+    - `id`
+- `name`: `TypeNameUnit` extends `UnitContentFields`
+    - `id` | `qualified_ident`
+- `param`: `ParameterListUnit` extends `UnitContentFields`
+    - `type`
+    - ? `id_list`
+- `param_list`: `ParameterListUnit` extends `UnitContentArray`
+    - [? {`ANY_INT`}] `param`
+- `array`: `ArrayTypeUnit` extends `UnitContentFields`
+    - `type`
+- `struct`: `StructTypeUnit` extends `UnitContentFields`
+- `pointer`: `PointerTypeUnit` extends `UnitContentFields`
+    - `type`
+- `result`: `ResultUnit` extends `UnitContentFields`
+    - `param_list` | `type`
+- `signature`: `SignatureUnit` extends `UnitContentFields`
+    - `param_list`
+    - ? `result`
+- `function`: `FunctionTypeUnit` extends `UnitContentFields`
+    - `signature`
+- `method`: `MethodSpecUnit` extends `UnitContentFields`
+    - `id`
+    - `param_list`
+    - ? `result`
+- `interface`: `InterfaceTypeUnit` extends `UnitContentArray`
+    - [? {`ANY_INT`}] `method`
+- `slice`: `SliceTypeUnit` extends `UnitContentFields`
+    - `type`
+- `key`: `KeyUnit` extends `TypeUnit`
+- `value`: `ValueUnit` extends `TypeUnit`
+- `map`: `MapTypeUnit` extends `UnitContentFields`
+    - `key`
+    - `value`
+- `channel`: `ChannelTypeUnit` extends `UnitContentFields`
+    - `type`
+- `lit`: `TypeLitUnit` extends `UnitContentFields`
+    - `array` | `struct` | `pointer` | `function` | `interface` | `slice` | `map` | `channel`
+- `type`: `TypeUnit` extends `UnitContentFields`
+    - `lit`| 
+        - `name`
+        - ? `type_arg_list`
+- `type_list`: `TypeListUnit` extends `UnitContentArray`
+    - [? {`ANY_INT`}] `type`
+- `type_arg_list`: `TypeArgListUnit` extends `TypeListUnit`
+- `package`: `PackageUnit` extends `UnitContentFields`
+    - `id`
+- `string`: `StringUnit` extends `UnitContentString`
+    - {`ANY_STRING`}
+- `path`: `PathUnit` extends `StringUnit`
+- `alias`: `AliasUnit` extends `IdUnit`
+- `import`: `ImportUnit` extends `UnitContentFields`
+    - `path`
+    - ? `alias`
+- `param`: `TypeParameterUnit` extends `UnitContentFields`
+    - `type`
+    - `id_list`
+- `param_list`: `TypeParameterListUnit` extends `UnitContentArray`
+    - [? {`ANY_INT`}] `param`
+- `function`: `FunctionDeclUnit` extends `UnitContentFields`
+    - `id`
+    - `signature`
+    - ? `param_list`
+- `receiver`: `ReceiverUnit` extends `ParameterListUnit`
+- `method`: `MethdoDeclUnit` extends `UnitContentFields`
+    - `id`
+    - `signature`
+    - `receiver`
+- `alias`: `TypeAliasUnit` extends `UnitContentFields`
+    - `id`
+    - `type`
+- `type`: `TypeSpecUnit` extends `UnitContentFields`
+    - `alias` |
+        - `id`
+        - `type`
+        - ? `param_list`
+- `var`: `VarSpecUnit` extends `UnitContentFields`
+    - `id`
+    - ? `type`
+- `const`: `ConstSpecUnit` extends `UnitContentFields`
+    - `id`
+    - ? `type`
+- `declaration`: `DeclarationUnit` extends `UnitContentFields`
+    - `var` | `const` | `type`
+- `nil`: `NilUnit` extends `UnitContentFields`
+- `int`: `IntegerUnit` extends `UnitContentString`
+    - {`ANY_STRING`}
+- `float`: `FloatUnit` extends `UnitContentString`
+    - {`ANY_STRING`}
+- `basic`: `BasicLitUnit` extends `UnitContentFields`
+    - `nil` | `int` | `string` | `float`
+- `ellipsis`: `EllipsisUnit` extends `UnitContentFields`
+- `type`: `LiteralTypeUnit` extends `UnitContentFields`
+    - `struct` | `array` | `slice` | `map` | `name` | 
+        - `ellipsis`
+        - `type`
+- `function`: `FunctionLitUnit` extends `UnitContentFields`
+    - `signature`
+- `literal`: `LiteralUnit` extends `UnitContentFields`
+    - `basic` | `type` | `function`
+- `field`: `FieldUnit` extends `UnitContentFields`
+    - `name` |
+        - `id`
+        - `type`
+- `operand`: `OperandUnit` extends `UnitContentFields`
+    - `literal` |
+        - `id`
+        - ? `type_arg_list`
+- `conversion`: `ConversionUnit` extends `UnitContentFields`
+    - `type`
+- `method`: `MethodExprUnit` extends `UnitContentFields`
+    - `id`
+    - `type`
+- `expression`: `PrimaryExprUnit` extends `UnitContentFields`
+    - `operand` | `conversion` | `method`
