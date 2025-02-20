@@ -29,7 +29,7 @@ public class GolangIndexer extends Indexer {
     @Override
     protected List<Document> indexFile(Path file) throws Exception {
         GolangListener listener = new GolangListener();
-        listener.setFile(file.toString());
+        listener.setFile(file.toAbsolutePath().toString());
         String content = String.join("\n", Files.readAllLines(file));
         GoLexer lexer = new GoLexer(CharStreams.fromString(content));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -46,12 +46,16 @@ public class GolangIndexer extends Indexer {
             Document doc = new Document();
             doc.add(new StringField("file", unit.getFile(), Field.Store.YES));;
             doc.add(new StringField("line", String.valueOf(unit.getLine()), Field.Store.YES));
+            doc.add(new StringField("position", String.valueOf(unit.getPosition()), Field.Store.YES));
             doc.add(new StringField("json", unit.getJSON().toString(), Field.Store.YES));
             for (String key: unit.getKeys()) {
                 doc.add(new StringField("key", key, Field.Store.YES));
             }
             docs.add(doc);
+            infoKeys.addAll(unit.getInfoKeys());
         }
+
+
         return docs;
     }
 }

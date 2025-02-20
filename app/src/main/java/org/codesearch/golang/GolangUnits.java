@@ -22,6 +22,13 @@ public class GolangUnits {
         }
 
         @Override
+        public List<String> getInfoKeys() {
+            List<String> keys = new ArrayList<>();
+            keys.add(String.format("%s.{STRING}", getName()));
+            return keys;
+        }
+
+        @Override
         public JSONObject getJson() {
             return (new JSONObject()).put(getName(), lit);
         }
@@ -38,6 +45,17 @@ public class GolangUnits {
             keys.add(getName());
             for (UnitContent field: fields) {
                 for (String fieldKey: field.getKeys()) {
+                    keys.add(String.format("%s.%s", getName(), fieldKey));
+                }
+            }
+            return keys;
+        }
+
+        @Override
+        public List<String> getInfoKeys() {
+            List<String> keys = new ArrayList<>();
+            for (UnitContent field: fields) {
+                for (String fieldKey: field.getInfoKeys()) {
                     keys.add(String.format("%s.%s", getName(), fieldKey));
                 }
             }
@@ -68,6 +86,18 @@ public class GolangUnits {
             for (int i = 0; i < elems.size(); ++i) {
                 for (String elemKey: elems.get(i).getKeys()) {
                     keys.add(String.format("%s.[%d].%s", getName(), i, elemKey));
+                    keys.add(String.format("%s.[].%s", getName(), elemKey));
+                }
+            }
+            return keys;
+        }
+
+        @Override
+        public List<String> getInfoKeys() {
+            List<String> keys = new ArrayList<>();
+            for (int i = 0; i < elems.size(); ++i) {
+                for (String elemKey: elems.get(i).getInfoKeys()) {
+                    keys.add(String.format("%s.[?{INT}].%s", getName(), elemKey));
                 }
             }
             return keys;
@@ -80,20 +110,6 @@ public class GolangUnits {
                 val.put(guc.getJson());
             }
             return (new JSONObject()).put(getName(), val);
-        }
-    }
-
-    public static abstract class UnitContentSet extends UnitContentArray {
-        @Override
-        public List<String> getKeys() {
-            List<String> keys = new ArrayList<>();
-            keys.add(getName());
-            for (int i = 0; i < elems.size(); ++i) {
-                for (String elemKey: elems.get(i).getKeys()) {
-                    keys.add(String.format("%s.%s", getName(), i, elemKey));
-                }
-            }
-            return keys;
         }
     }
 
@@ -234,7 +250,7 @@ public class GolangUnits {
         public String getName() {return "method";}
     }
 
-    public static class InterfaceTypeUnit extends UnitContentSet {
+    public static class InterfaceTypeUnit extends UnitContentArray {
         InterfaceTypeUnit(InterfaceTypeContext ctx) {
             for (MethodSpecContext method: ctx.methodSpec()) {
                 elems.add(new MethodSpecUnit(method));

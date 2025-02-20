@@ -1,13 +1,17 @@
 package org.codesearch;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,11 +25,16 @@ public abstract class Indexer {
     protected abstract List<String> getExtensions();
     protected abstract List<Document> indexFile(Path file) throws Exception;
 
-    private static final Logger logger = LogManager.getLogger();
+    private static Logger logger = LogManager.getLogger();
+    protected Set<String> infoKeys = new HashSet<>();
 
     public void indexSources(Path dirPath, Path indexDirPath) 
         throws IOException, InterruptedException {
-        clearIndices(indexDirPath);
+        try {
+            clearIndices(indexDirPath);
+        } catch (RuntimeException e) {
+            throw new IOException(e);
+        }
 
         try (MMapDirectory directory = new MMapDirectory(indexDirPath);
              StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -44,38 +53,49 @@ public abstract class Indexer {
                     .forEach(file -> executor.submit(() -> {
                         try {
                             writer.addDocuments(indexFile(file));
-                            logger.info("Файл проиндексирован: {}", file);
                         } catch (Exception e) {
-                            logger.error("Ошибка при индексации файла: {}", file, e);
+                            logger.error("indexing error on file: {}", file, e);
                         }
                     }));
 
                 executor.shutdown();
                 if (!executor.awaitTermination(1, TimeUnit.HOURS)) {
-                    logger.error("Время ожидания завершения задач индексации истекло.");
+                    logger.error("indexing time has expired");
                     executor.shutdownNow();
                 }
 
+                try {
+                    List<String> infoKeysArr = new ArrayList<>(infoKeys);
+                    infoKeysArr.sort(String::compareTo);
+                    Path infoKeysPath = indexDirPath.resolve("info_keys.txt");
+                    Files.createFile(infoKeysPath);
+                    FileWriter infoKeysWriter = new FileWriter(infoKeysPath.toString(), true);
+                    for (String key: infoKeysArr) {
+                        infoKeysWriter.write(key + '\n');
+                    }
+                    infoKeysWriter.close();
+                } catch (IOException e) {
+                    logger.error("info_keys file error", e);
+                }   
             } 
             catch (IOException | InterruptedException e) {
-                logger.error("Ошибка при чтении файлов для индексации.", e);
+                logger.error("file reading error", e);
                 throw e;
             } 
             finally {
                 if (!executor.isTerminated()) {
-                    logger.warn("Индексация не была завершена.");
+                    logger.warn("indexing failed with an error");
                     executor.shutdownNow();
                 }
             }
-            logger.info("Индексация успешно завершена.");
         } 
         catch (IOException | InterruptedException e) {
-            logger.error("Ошибка при индексировании.", e);
+            logger.error("indexing error", e);
             throw e;
         }
     }
 
-    private static void clearIndices(Path path) throws IOException {
+    private void clearIndices(Path path) throws IOException, RuntimeException {
         if (!Files.exists(path)) {return;}
         Files.walk(path)
             .sorted(Comparator.reverseOrder())
@@ -83,7 +103,8 @@ public abstract class Indexer {
                 try {
                     Files.delete(file);
                 } catch (IOException e) {
-                    throw new RuntimeException("Ошибка при удалении файла: " + file, e);
+                    logger.error("deleting error on file: ", file, e);
+                    throw new RuntimeException();
                 }
             });
     }
