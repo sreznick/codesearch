@@ -41,6 +41,12 @@ public class PrintingService {
         }
     }
 
+    public void verboseDebug(String s, Object... args) {
+        if (settings.verboseDebug()) {
+            System.err.println(String.format(s, args));
+        }
+    }
+
     public void error(String s, Object... args) {
         System.err.println(String.format(s, args));
         hadError = true;

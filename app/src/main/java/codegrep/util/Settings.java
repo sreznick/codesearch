@@ -46,6 +46,16 @@ public class Settings {
         return debug;
     }
 
+    private boolean verboseDebug = false;
+    public boolean verboseDebug() {
+        return verboseDebug;
+    }
+
+    private boolean useCache = true;
+    public boolean useCache() {
+        return useCache;
+    }
+
     public Settings(String[] args) {
         options = new Options();
         options.addOption("R", "regex", false, "Enable regular expressions");
@@ -53,7 +63,9 @@ public class Settings {
         options.addOption("l", "files-with-matches", false, "Only print matched file names, but not literals");
         options.addOption("q", "quiet", false, "Do not print anything, exit with 0 or 1 status depending if any matches were found");
         options.addOption("D", "debug", false, "Show debug information");
+        options.addOption(null, "verbose-debug", false, "Show more debug information");
         options.addOption("h", "help", false, "Show the help and quit");
+        options.addOption(null, "skip-cache", false, "Skip cache and search in files directly");
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -72,6 +84,8 @@ public class Settings {
                 if (cmd.hasOption("files-with-matches")) onlyFileNames = true;
                 if (cmd.hasOption("quiet")) quiet = true;
                 if (cmd.hasOption("debug")) debug = true;
+                if (cmd.hasOption("debug") && cmd.hasOption("verbose-debug")) verboseDebug = true;
+                if (cmd.hasOption("skip-cache")) useCache = false;
             }
         } catch (ParseException e) {
             System.err.println("Parsing failed. Reason: " + e.getMessage());

@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 public record ProjectContents(List<FileReference> references) {
-    public Map<Path, List<Document>> getDocuments() {
+    public static Map<Path, List<Document>> getDocuments(List<FileReference> references) {
         return references
                 .stream()
                 .collect(Collectors.groupingBy(FileReference::path))

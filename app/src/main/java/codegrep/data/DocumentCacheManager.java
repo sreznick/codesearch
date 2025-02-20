@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,14 +47,20 @@ public class DocumentCacheManager {
         this.index = mgr;
     }
 
-    public void revalidate(Path p, CodeGrepGrammarFacade grammar) {
-        FileUtils.processFiles(p, e -> grammar.isValidFile(e) && !e.toString().contains(CACHE_PATH), this::revalidateFile);
-        if (invalidPaths.isEmpty()) return;
+    public Map<Path, List<FileReference>> directSearch(Path p, CodeGrepGrammarFacade grammar, String s) {
+        List<Path> files = new ArrayList<>();
+        FileUtils.processFiles(p, e -> grammar.isValidFile(e) && !e.toString().contains(CACHE_PATH), files::add);
+        List<FileReference> references = collectDocuments(grammar, files).references();
+        Map<Path, List<FileReference>> out = references
+            .stream()
+            .collect(Collectors.groupingBy(FileReference::path));
+        return out;
+    }
 
-        Main.printer.debug("Revalidating cache...");
-
+    private static ProjectContents collectDocuments(CodeGrepGrammarFacade grammar, Collection<Path> files) {
         ExtendedParseTreeListener listener = grammar.createListener();
-        for (Path revalid : invalidPaths.keySet()) {
+        for (Path revalid : files) {
+            Main.printer.verboseDebug("Parsing file: %s", revalid);
             listener.setPath(revalid);
             try {
                 ParseTreeWalker walker = new ParseTreeWalker();
@@ -62,8 +69,16 @@ public class DocumentCacheManager {
                 Main.printer.error("Unable to read the file %s", revalid);
             }
         }
+        return listener.getProjectContents();
+    }
 
-        Map<Path, List<Document>> docs = listener.getProjectContents().getDocuments();
+    public void revalidate(Path p, CodeGrepGrammarFacade grammar) {
+        FileUtils.processFiles(p, e -> grammar.isValidFile(e) && !e.toString().contains(CACHE_PATH), this::revalidateFile);
+        if (invalidPaths.isEmpty()) return;
+
+        Main.printer.debug("Revalidating cache...");
+
+        Map<Path, List<Document>> docs = ProjectContents.getDocuments(collectDocuments(grammar, invalidPaths.keySet()).references());
         for (var doc : docs.entrySet()) {
             try {
                 index.setDocuments(doc.getKey(), invalidPaths.get(doc.getKey()), doc.getValue());

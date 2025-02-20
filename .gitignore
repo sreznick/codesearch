@@ -31,7 +31,7 @@ replay_pid*
 build
 app/bin
 app/src/main/gen
-app/src/main/antlr
+*.tokens
 
 # IDE folders
 .idea

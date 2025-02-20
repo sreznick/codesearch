@@ -24,9 +24,14 @@ public class Main {
         Path cwd = Path.of(System.getProperty("user.dir"));
         grammar = new Python3Facade();
         DocumentCacheManager dcm = new DocumentCacheManager(settings);
-        dcm.revalidate(cwd, grammar);
-
-        Map<Path, List<FileReference>> grepped = dcm.search(searchString);
+        
+        Map<Path, List<FileReference>> grepped;
+        if (settings.useCache()) {
+            dcm.revalidate(cwd, grammar);
+            grepped = dcm.search(searchString);
+        } else {
+            grepped = dcm.directSearch(cwd, grammar, searchString);
+        }
         printer.printResults(grepped);
         if (printer.hadError()) System.exit(2);  // FS access failed, etc
         else if (grepped.isEmpty()) System.exit(1);  // nothing found
