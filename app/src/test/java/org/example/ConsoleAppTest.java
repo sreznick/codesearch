@@ -40,6 +40,9 @@ public class ConsoleAppTest {
                 "  find <type> <query> [-f, -cs]    Поиск объектов указанного типа (stringconstant, class, method, interface, field, localvariable,",
                 "                                   [integer/float/boolean/char/string]literal) с запросом.",
                 "                                   Флаг [-f] позволяет искать с неточностями. Флаг [-cs] учитывает регистр.",
+                "                                   Флаг [-cs] учитывает регистр.",
+                "                                   Флаг [-m] устанавливает максимум совпадений на вывод.",
+                "                                   Флаг [-r] устанавтливает директорию в которой искать.",
                 "  help                             Показать документацию.",
                 "  exit                             Завершить работу приложения :-(",
                 ""

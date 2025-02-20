@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static org.example.JavaSourceIndexer.indexJavaSources;
@@ -27,6 +29,7 @@ public class QueryExecutor {
 
     public static StringBuilder logBuilder = new StringBuilder();
 
+    private static final ReentrantLock lock = new ReentrantLock();
 
     private static void runQueryWithConfig(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -115,63 +118,81 @@ public class QueryExecutor {
         }
     }
 
-    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(queryString, "StringConstant", isFuzzy, isCaseSensitive);
+    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(queryString, "StringConstant", isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(className, "Class", isFuzzy, isCaseSensitive);
+    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(className, "Class", isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(methodName, "Method", isFuzzy, isCaseSensitive);
+    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(methodName, "Method", isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(interfaceName, "Interface", isFuzzy, isCaseSensitive);
+    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(interfaceName, "Interface", isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(fieldName, "Field", isFuzzy, isCaseSensitive);
+    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(fieldName, "Field", isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(variableName, "LocalVariable", isFuzzy, isCaseSensitive);
+    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(variableName, "LocalVariable", isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(literalValue, type, isFuzzy, isCaseSensitive);
+    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        findWithQuery(literalValue, type, isFuzzy, isCaseSensitive, maxMatches);
     }
 
-    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive) {
+    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+        AtomicInteger matchCount = new AtomicInteger(0);
+
         findWithQuery(queryString, type, isFuzzy, isCaseSensitive, doc -> {
-            String content = doc.get("content");
-            String file = doc.get("file");
-            String line = doc.get("line");
-            String logMessage;
-            logMessage = String.format("%s: %s, Файл: %s, Строка: %s", type, content, file, line);
-            if (type.equals("LocalVariable") || type.equals("Field")) {
-                String varType = doc.get("varType");
-                logMessage = String.format("%s: %s, Тип: %s, Файл: %s, Строка: %s", type, content, varType, file, line);
+            if (matchCount.get() >= maxMatches) {
+                return;
             }
-            logger.info(logMessage);
-            logBuilder.append(logMessage).append("\n");
+
+            lock.lock();
+            try {
+                if (matchCount.get() >= maxMatches) {
+                    return;
+                }
+
+                String content = doc.get("content");
+                String file = doc.get("file");
+                String line = doc.get("line");
+                String logMessage = String.format("%s: %s, Файл: %s, Строка: %s", type, content, file, line);
+
+                if (type.equals("LocalVariable") || type.equals("Field")) {
+                    String varType = doc.get("varType");
+                    logMessage = String.format("%s: %s, Тип: %s, Файл: %s, Строка: %s", type, content, varType, file, line);
+                }
+
+                logger.info(logMessage);
+                logBuilder.append(logMessage).append("\n");
+
+                matchCount.incrementAndGet();
+            } finally {
+                lock.unlock();
+            }
         });
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         indexJavaSources("src");
 
-        findStringConstants("Test String", false, false);
-        findClass("Stringdonstantuery", true, false);
-        findMethod("toString", false, false);
-        findInterface("TestInterface", false, false);
-        findField("testField", false, false);
-        findLocalVariable("content", false, false);
-        findLiteral("100000", "IntegerLiteral", false, false);
-        findLiteral("3.13F", "FloatLiteral", false, false);
-        findLiteral("true", "BooleanLiteral", false, false);
-        findLiteral("}", "CharLiteral", false, false);
-        findLiteral("Hello, Lucene!", "StringLiteral", true, false);
+        findStringConstants("Test String", false, false, 200);
+        findClass("Stringdonstantuery", true, false, 200);
+        findMethod("toString", false, false, 200);
+        findInterface("TestInterface", false, false, 200);
+        findField("testField", false, false, 200);
+        findLocalVariable("content", false, false, 200);
+        findLiteral("100000", "IntegerLiteral", false, false, 200);
+        findLiteral("3.13F", "FloatLiteral", false, false, 200);
+        findLiteral("true", "BooleanLiteral", false, false, 200);
+        findLiteral("}", "CharLiteral", false, false, 200);
+        findLiteral("Hello, Lucene!", "StringLiteral", true, false, 200);
     }
 }

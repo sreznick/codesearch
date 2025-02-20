@@ -30,5 +30,9 @@ public class TestClass {
     public String getTestField() {
         return testField;
     }
+
+    private String testFieldforMaxOutput = "max_out";
+
+    private String testFieldforMaxOutput2 = "max_out";
 }
 

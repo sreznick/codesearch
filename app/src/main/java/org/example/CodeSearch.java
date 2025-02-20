@@ -71,6 +71,9 @@ public class CodeSearch {
             System.out.println("Ошибка в процессе индексирования: " + path);
         }
     }
+    public static boolean isNumeric(String str) {
+        return str.matches("-?\\d+(\\.\\d+)?");
+    }
 
     private static void handleFindCommand(String[] parts) {
         if (parts.length < 3) {
@@ -82,16 +85,25 @@ public class CodeSearch {
         String query = parts[2];
         boolean isFuzzy = false;
         boolean isCaseSensitive = false;
+        int maxMatches = 200;
 
         for (int i = 3; i < parts.length; i++) {
             if (parts[i].equalsIgnoreCase("-f")) {
                 isFuzzy = true;
             } else if (parts[i].equalsIgnoreCase("-cs")) {
                 isCaseSensitive = true;
+            } else if (parts[i].equalsIgnoreCase("-m")) {
+                String val = parts[i + 1];
+                if (isNumeric(val)) {
+                    maxMatches = Integer.parseInt(parts[i + 1]);
+                } else {
+                    System.out.println("Ошибка: за флагом -m должно быть число.");
+                    return;
+                }
             }
         }
         try {
-            findWithQuery(type, query, isFuzzy, isCaseSensitive);
+            findWithQuery(type, query, isFuzzy, isCaseSensitive, maxMatches);
         } catch (Exception e) {
             System.err.println("Ошибка поиска: " + e.getMessage());
         }
@@ -102,7 +114,10 @@ public class CodeSearch {
         System.out.println("  index <path>                     Запуск индексации вашего проекта по указанному пути.");
         System.out.println("  find <type> <query> [-f, -cs]    Поиск объектов указанного типа (stringconstant, class, method, interface, field, localvariable,\n" +
                 "                                   [integer/float/boolean/char/string]literal) с запросом.\n" +
-                "                                   Флаг [-f] позволяет искать с неточностями. Флаг [-cs] учитывает регистр.");
+                "                                   Флаг [-f] позволяет искать с неточностями. Флаг [-cs] учитывает регистр.\n" +
+                "                                   Флаг [-cs] учитывает регистр.\n" +
+                "                                   Флаг [-m] устанавливает максимум совпадений на вывод.\n" +
+                "                                   Флаг [-r] устанавтливает директорию в которой искать.");
         System.out.println("  help                             Показать документацию.");
         System.out.println("  exit                             Завершить работу приложения :-(");
     }
@@ -115,41 +130,40 @@ public class CodeSearch {
             return false;
         }
     }
-
-    private static void findWithQuery(String type, String query, boolean isFuzzy, boolean isCaseSensitive) {
+    private static void findWithQuery(String type, String query, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
         switch (type.toLowerCase()) {
             case "stringconstant":
-                QueryExecutor.findStringConstants(query, isFuzzy, isCaseSensitive);
+                QueryExecutor.findStringConstants(query, isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "class":
-                QueryExecutor.findClass(query, isFuzzy, isCaseSensitive);
+                QueryExecutor.findClass(query, isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "method":
-                QueryExecutor.findMethod(query, isFuzzy, isCaseSensitive);
+                QueryExecutor.findMethod(query, isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "interface":
-                QueryExecutor.findInterface(query, isFuzzy, isCaseSensitive);
+                QueryExecutor.findInterface(query, isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "field":
-                QueryExecutor.findField(query, isFuzzy, isCaseSensitive);
+                QueryExecutor.findField(query, isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "localvariable":
-                QueryExecutor.findLocalVariable(query, isFuzzy, isCaseSensitive);
+                QueryExecutor.findLocalVariable(query, isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "integerliteral":
-                QueryExecutor.findLiteral(query, "IntegerLiteral", isFuzzy, isCaseSensitive);
+                QueryExecutor.findLiteral(query, "IntegerLiteral", isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "floatliteral":
-                QueryExecutor.findLiteral(query, "FloatLiteral", isFuzzy, isCaseSensitive);
+                QueryExecutor.findLiteral(query, "FloatLiteral", isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "booleanliteral":
-                QueryExecutor.findLiteral(query, "BooleanLiteral", isFuzzy, isCaseSensitive);
+                QueryExecutor.findLiteral(query, "BooleanLiteral", isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "charliteral":
-                QueryExecutor.findLiteral(query, "CharLiteral", isFuzzy, isCaseSensitive);
+                QueryExecutor.findLiteral(query, "CharLiteral", isFuzzy, isCaseSensitive, maxMatches);
                 break;
             case "stringliteral":
-                QueryExecutor.findLiteral(query, "StringLiteral", isFuzzy, isCaseSensitive);
+                QueryExecutor.findLiteral(query, "StringLiteral", isFuzzy, isCaseSensitive, maxMatches);
                 break;
             default:
                 System.out.println("Неизвестный тип для поиска: " + type);
