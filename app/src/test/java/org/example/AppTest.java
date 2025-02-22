@@ -27,7 +27,7 @@ public class AppTest {
 
     @Test
     public void testFindStringConstants() {
-        QueryExecutor.findStringConstants("test String", false, false, 200);
+        QueryExecutor.findStringConstants("test String", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c Test String: 2"));
@@ -37,7 +37,7 @@ public class AppTest {
 
     @Test
     public void testFindClass() {
-        QueryExecutor.findClass("TestClass", false, false, 200);
+        QueryExecutor.findClass("TestClass", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c TestClass: 1"));
@@ -46,7 +46,7 @@ public class AppTest {
 
     @Test
     public void testFindMethod() {
-        QueryExecutor.findMethod("testMethod", false, false, 200);
+        QueryExecutor.findMethod("testMethod", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c testMethod: 2"));
@@ -56,7 +56,7 @@ public class AppTest {
 
     @Test
     public void testFindMethodWithReturn() {
-        QueryExecutor.findMethod("testMethodWithReturn", false, false, 200);
+        QueryExecutor.findMethod("testMethodWithReturn", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c testMethodWithReturn: 1"));
@@ -65,7 +65,7 @@ public class AppTest {
 
     @Test
     public void testFindInterface() {
-        QueryExecutor.findInterface("TestInterface", false, false, 200);
+        QueryExecutor.findInterface("TestInterface", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c TestInterface: 1"));
@@ -74,7 +74,7 @@ public class AppTest {
 
     @Test
     public void testFindField() {
-        QueryExecutor.findField("testField", false, false, 200);
+        QueryExecutor.findField("testField", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c testField: 1"));
@@ -83,7 +83,7 @@ public class AppTest {
 
     @Test
     public void testFindLocalVariable() {
-        QueryExecutor.findLocalVariable("localVariable", false, false, 200);
+        QueryExecutor.findLocalVariable("localVariable", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c localVariable: 2"));
@@ -93,7 +93,7 @@ public class AppTest {
 
     @Test
     public void testFindStringLiteral() {
-        QueryExecutor.findLiteral("Test String", "StringLiteral", false, false, 200);
+        QueryExecutor.findLiteral("Test String", "StringLiteral", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c Test String: 2"));
@@ -103,7 +103,7 @@ public class AppTest {
 
     @Test
     public void testFindIntLiteral() {
-        QueryExecutor.findLiteral("12345", "IntegerLiteral", false, false, 200);
+        QueryExecutor.findLiteral("12345", "IntegerLiteral", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c 12345: 2"));
@@ -113,7 +113,7 @@ public class AppTest {
 
     @Test
     public void testFindFloatLiteral() {
-        QueryExecutor.findLiteral("123.45", "FloatLiteral", false, false, 200);
+        QueryExecutor.findLiteral("123.45", "FloatLiteral", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c 123.45: 2"));
@@ -123,7 +123,7 @@ public class AppTest {
 
     @Test
     public void testFindCharLiteral() {
-        QueryExecutor.findLiteral("A", "CharLiteral", false, false, 200);
+        QueryExecutor.findLiteral("A", "CharLiteral", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c A: 1"));
@@ -132,7 +132,7 @@ public class AppTest {
 
     @Test
     public void testFindBooleanLiteral() {
-        QueryExecutor.findLiteral("true", "BooleanLiteral", false, false, 200);
+        QueryExecutor.findLiteral("true", "BooleanLiteral", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c true: 1"));
@@ -141,7 +141,7 @@ public class AppTest {
 
     @Test
     public void testFuzzyFindStringConstants() {
-        QueryExecutor.findStringConstants("TesString", true, false, 200);
+        QueryExecutor.findStringConstants("TesString", true, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений с TesString: 2"));
@@ -151,7 +151,7 @@ public class AppTest {
 
     @Test
     public void testFuzzyFindClass() {
-        QueryExecutor.findClass("TstClas", true, false, 200);
+        QueryExecutor.findClass("TstClas", true, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений с TstClas: 1"));
@@ -160,7 +160,7 @@ public class AppTest {
 
     @Test
     public void testFuzzyFindMethod() {
-        QueryExecutor.findMethod("testMethood", true, false, 200);
+        QueryExecutor.findMethod("testMethood", true, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений с testMethood: 2"));
@@ -170,7 +170,7 @@ public class AppTest {
 
     @Test
     public void testFuzzyFindField() {
-        QueryExecutor.findField("tesField", true, false, 200);
+        QueryExecutor.findField("tesField", true, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений с tesField: 1"));
@@ -179,7 +179,7 @@ public class AppTest {
 
     @Test
     public void testFuzzyFindLiteral() {
-        QueryExecutor.findLiteral("1234", "IntegerLiteral", true, false, 200);
+        QueryExecutor.findLiteral("1234", "IntegerLiteral", true, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений с 1234: 2"));
@@ -189,21 +189,21 @@ public class AppTest {
 
     @Test
     public void testEmptySearchQuery() {
-        QueryExecutor.findStringConstants("", false, false, 200);
+        QueryExecutor.findStringConstants("", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
         assertTrue(logOutput.contains("Найдено совпадений c : 0"));
     }
 
     @Test
     public void testNoMatchesFound() {
-        QueryExecutor.findStringConstants("AbraAbraCadabra", false, false, 200);
+        QueryExecutor.findStringConstants("AbraAbraCadabra", false, false, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
         assertTrue(logOutput.contains("Найдено совпадений c AbraAbraCadabra: 0"));
     }
 
     @Test
     public void testCaseSensitiveSearchMatch() {
-        QueryExecutor.findStringConstants("Test String", false, true, 200);
+        QueryExecutor.findStringConstants("Test String", false, true, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c Test String: 2"));
@@ -213,7 +213,7 @@ public class AppTest {
 
     @Test
     public void testCaseSensitiveSearchNoMatch() {
-        QueryExecutor.findStringConstants("test string", false, true, 200);
+        QueryExecutor.findStringConstants("test string", false, true, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c test string: 0"));
@@ -221,12 +221,12 @@ public class AppTest {
 
     @Test
     public void testClassCaseSensitivity() {
-        QueryExecutor.findClass("testclass", false, true, 200);
+        QueryExecutor.findClass("testclass", false, true, 200, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c testclass: 0"));
 
-        QueryExecutor.findClass("TestClass", false, true, 200);
+        QueryExecutor.findClass("TestClass", false, true, 200, null);
         logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c TestClass: 1"));
@@ -235,7 +235,7 @@ public class AppTest {
 
     @Test
     public void testMaxMatchFlag() {
-        QueryExecutor.findStringConstants("max_out", false, true, 2);
+        QueryExecutor.findStringConstants("max_out", false, true, 2, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c max_out: 2"));
@@ -245,7 +245,7 @@ public class AppTest {
 
     @Test
     public void testMaxMatchFlagLessThenFoundMatches() {
-        QueryExecutor.findStringConstants("max_out", false, true, 1);
+        QueryExecutor.findStringConstants("max_out", false, true, 1, null);
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c max_out: 2"));
@@ -259,4 +259,49 @@ public class AppTest {
         assertEquals(1, outCount);
     }
 
+    @Test
+    public void testSearchInSpecificDirectory() {
+        QueryExecutor.findStringConstants("Test String", false, true, 200, "src/test");
+        String logOutput = QueryExecutor.logBuilder.toString();
+
+        assertTrue(logOutput.contains("Найдено совпадений c Test String: 2"));
+        assertTrue(logOutput.contains("StringConstant: Test String, Файл: src/test/resources/TestClass.java, Строка: 7"));
+        assertTrue(logOutput.contains("StringConstant: Test String, Файл: src/test/resources/TestClass.java, Строка: 12"));
+    }
+
+    @Test
+    public void testSearchInAllDirectories() {
+        QueryExecutor.findStringConstants("Test String", false, true, 200, null);
+        String logOutput = QueryExecutor.logBuilder.toString();
+
+        assertTrue(logOutput.contains("Найдено совпадений c Test String: 2"));
+        assertTrue(logOutput.contains("StringConstant: Test String, Файл: src/test/resources/TestClass.java, Строка: 7"));
+        assertTrue(logOutput.contains("StringConstant: Test String, Файл: src/test/resources/TestClass.java, Строка: 12"));
+    }
+
+    @Test
+    public void testSearchInFalseDirectory() {
+        QueryExecutor.findStringConstants("Test String False", false, true, 200, "not/exist");
+        String logOutput = QueryExecutor.logBuilder.toString();
+
+        assertTrue(logOutput.contains("Найдено совпадений c Test String False: 2"));
+        assertFalse(logOutput.contains("StringConstant: Test String False, Файл: src/test/resources/TestClass.java, Строка: 38"));
+        assertFalse(logOutput.contains("StringConstant: Test String False, Файл: src/test/resources/TestClass.java, Строка: 40"));
+    }
+
+    @Test
+    public void testSearchWithMaxMatchesAndDirectory() {
+        QueryExecutor.findStringConstants("Test String", false, true, 1, "src/test");
+        String logOutput = QueryExecutor.logBuilder.toString();
+
+        assertTrue(logOutput.contains("Найдено совпадений c Test String: 2"));
+        int outCount = 0;
+        if (logOutput.contains("StringConstant: Test String, Файл: src/test/resources/TestClass.java, Строка: 7")) {
+            outCount++;
+        }
+        if (logOutput.contains("StringConstant: Test String, Файл: src/test/resources/TestClass.java, Строка: 12")) {
+            outCount++;
+        }
+        assertEquals(1, outCount);
+    }
 }

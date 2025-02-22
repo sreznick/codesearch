@@ -34,5 +34,9 @@ public class TestClass {
     private String testFieldforMaxOutput = "max_out";
 
     private String testFieldforMaxOutput2 = "max_out";
+
+    private String testSearchInFalseDirectory = "Test String False";
+
+    private String testSearchInFalseDirectory2 = "Test String False";
 }
 

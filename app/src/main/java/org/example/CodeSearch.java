@@ -12,6 +12,8 @@ import static org.example.JavaSourceIndexer.indexJavaSources;
 public class CodeSearch {
 
     private static boolean running = true;
+    
+    private static String indexedProjectPaths;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -62,13 +64,13 @@ public class CodeSearch {
             return;
         }
 
-        String path = parts[1];
+        indexedProjectPaths = parts[1];
 
-        System.out.println("Запуск индексации для: " + path);
-        if (indexProject(path)) {
-            System.out.println("Индексация завершена успешно для: " + path);
+        System.out.println("Запуск индексации для: " + indexedProjectPaths);
+        if (indexProject(indexedProjectPaths)) {
+            System.out.println("Индексация завершена успешно для: " + indexedProjectPaths);
         } else {
-            System.out.println("Ошибка в процессе индексирования: " + path);
+            System.out.println("Ошибка в процессе индексирования: " + indexedProjectPaths);
         }
     }
     public static boolean isNumeric(String str) {
@@ -86,6 +88,7 @@ public class CodeSearch {
         boolean isFuzzy = false;
         boolean isCaseSensitive = false;
         int maxMatches = 200;
+        String directoryToSearch = "";
 
         for (int i = 3; i < parts.length; i++) {
             if (parts[i].equalsIgnoreCase("-f")) {
@@ -95,15 +98,23 @@ public class CodeSearch {
             } else if (parts[i].equalsIgnoreCase("-m")) {
                 String val = parts[i + 1];
                 if (isNumeric(val)) {
-                    maxMatches = Integer.parseInt(parts[i + 1]);
+                    maxMatches = Integer.parseInt(val);
                 } else {
                     System.out.println("Ошибка: за флагом -m должно быть число.");
+                    return;
+                }
+            } else if (parts[i].equalsIgnoreCase("-r")) {
+                String directory = parts[i + 1];
+                if (indexedProjectPaths.contains(directory)) {
+                    directoryToSearch = directory;
+                } else {
+                    System.out.println("Ошибка: за флагом -m должна быть директория из индексируемого проекта.");
                     return;
                 }
             }
         }
         try {
-            findWithQuery(type, query, isFuzzy, isCaseSensitive, maxMatches);
+            findWithQuery(type, query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
         } catch (Exception e) {
             System.err.println("Ошибка поиска: " + e.getMessage());
         }
@@ -130,40 +141,40 @@ public class CodeSearch {
             return false;
         }
     }
-    private static void findWithQuery(String type, String query, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+    private static void findWithQuery(String type, String query, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
         switch (type.toLowerCase()) {
             case "stringconstant":
-                QueryExecutor.findStringConstants(query, isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findStringConstants(query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "class":
-                QueryExecutor.findClass(query, isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findClass(query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "method":
-                QueryExecutor.findMethod(query, isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findMethod(query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "interface":
-                QueryExecutor.findInterface(query, isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findInterface(query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "field":
-                QueryExecutor.findField(query, isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findField(query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "localvariable":
-                QueryExecutor.findLocalVariable(query, isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findLocalVariable(query, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "integerliteral":
-                QueryExecutor.findLiteral(query, "IntegerLiteral", isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findLiteral(query, "IntegerLiteral", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "floatliteral":
-                QueryExecutor.findLiteral(query, "FloatLiteral", isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findLiteral(query, "FloatLiteral", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "booleanliteral":
-                QueryExecutor.findLiteral(query, "BooleanLiteral", isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findLiteral(query, "BooleanLiteral", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "charliteral":
-                QueryExecutor.findLiteral(query, "CharLiteral", isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findLiteral(query, "CharLiteral", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             case "stringliteral":
-                QueryExecutor.findLiteral(query, "StringLiteral", isFuzzy, isCaseSensitive, maxMatches);
+                QueryExecutor.findLiteral(query, "StringLiteral", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
                 break;
             default:
                 System.out.println("Неизвестный тип для поиска: " + type);

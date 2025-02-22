@@ -118,38 +118,44 @@ public class QueryExecutor {
         }
     }
 
-    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(queryString, "StringConstant", isFuzzy, isCaseSensitive, maxMatches);
+    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(queryString, "StringConstant", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(className, "Class", isFuzzy, isCaseSensitive, maxMatches);
+    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(className, "Class", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(methodName, "Method", isFuzzy, isCaseSensitive, maxMatches);
+    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(methodName, "Method", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(interfaceName, "Interface", isFuzzy, isCaseSensitive, maxMatches);
+    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(interfaceName, "Interface", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(fieldName, "Field", isFuzzy, isCaseSensitive, maxMatches);
+    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(fieldName, "Field", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(variableName, "LocalVariable", isFuzzy, isCaseSensitive, maxMatches);
+    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(variableName, "LocalVariable", isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
-        findWithQuery(literalValue, type, isFuzzy, isCaseSensitive, maxMatches);
+    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
+        findWithQuery(literalValue, type, isFuzzy, isCaseSensitive, maxMatches, directoryToSearch);
     }
 
-    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, int maxMatches) {
+    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, int maxMatches, String directoryToSearch) {
         AtomicInteger matchCount = new AtomicInteger(0);
 
         findWithQuery(queryString, type, isFuzzy, isCaseSensitive, doc -> {
+            String file = doc.get("file");
+
+            if (directoryToSearch != null && !file.contains(directoryToSearch)) {
+                return;
+            }
+
             if (matchCount.get() >= maxMatches) {
                 return;
             }
@@ -161,7 +167,6 @@ public class QueryExecutor {
                 }
 
                 String content = doc.get("content");
-                String file = doc.get("file");
                 String line = doc.get("line");
                 String logMessage = String.format("%s: %s, Файл: %s, Строка: %s", type, content, file, line);
 
@@ -183,16 +188,16 @@ public class QueryExecutor {
     public static void main(String[] args) throws IOException, InterruptedException {
         indexJavaSources("src");
 
-        findStringConstants("Test String", false, false, 200);
-        findClass("Stringdonstantuery", true, false, 200);
-        findMethod("toString", false, false, 200);
-        findInterface("TestInterface", false, false, 200);
-        findField("testField", false, false, 200);
-        findLocalVariable("content", false, false, 200);
-        findLiteral("100000", "IntegerLiteral", false, false, 200);
-        findLiteral("3.13F", "FloatLiteral", false, false, 200);
-        findLiteral("true", "BooleanLiteral", false, false, 200);
-        findLiteral("}", "CharLiteral", false, false, 200);
-        findLiteral("Hello, Lucene!", "StringLiteral", true, false, 200);
+        findStringConstants("Test String", false, false, 200, null);
+        findClass("Stringdonstantuery", true, false, 200, null);
+        findMethod("toString", false, false, 200, null);
+        findInterface("TestInterface", false, false, 200, null);
+        findField("testField", false, false, 200, null);
+        findLocalVariable("content", false, false, 200, null);
+        findLiteral("100000", "IntegerLiteral", false, false, 200, null);
+        findLiteral("3.13F", "FloatLiteral", false, false, 200, null);
+        findLiteral("true", "BooleanLiteral", false, false, 200, null);
+        findLiteral("}", "CharLiteral", false, false, 200, null);
+        findLiteral("Hello, Lucene!", "StringLiteral", true, false, 200, null);
     }
 }
