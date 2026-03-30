@@ -32,8 +32,10 @@ dependencies {
     implementation 'org.apache.lucene:lucene-core:10.0.0'
     implementation 'org.apache.lucene:lucene-queryparser:10.0.0'
     implementation 'org.apache.lucene:lucene-analysis-common:10.0.0'
-    implementation('org.apache.logging.log4j:log4j-core:2.23.1')
-    implementation('org.apache.logging.log4j:log4j-api:2.23.1')
+    implementation 'org.apache.logging.log4j:log4j-core:2.23.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.23.1'
+    implementation 'org.json:json:20210307'
+    implementation 'com.beust:jcommander:1.82'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -45,15 +47,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.example.CodeSearch'
-}
-
-jar {
-    manifest {
-        attributes(
-                'Main-Class': 'org.example.CodeSearch'
-        )
-    }
+    mainClass = 'org.codesearch.App'
 }
 
 tasks.named('test') {
@@ -69,5 +63,6 @@ generateGrammarSource {
     maxHeapSize = "64m"
     arguments += [ "-visitor",
                    "-long-messages",
-                   "-package", "org.example" ]
+                   "-package", "org.codesearch" ]
+    outputDirectory = new File(buildDir.toString() + "/generated-src/antlr/main/org/codesearch/")
 }
