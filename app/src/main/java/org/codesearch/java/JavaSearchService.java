@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JavaSearchService {
+    public record SearchResponse(long totalHits, List<SearchResult> results) {}
+
     private final Path indexPath;
     private final JavaLanguageModule languageModule;
 
@@ -36,10 +38,14 @@ public class JavaSearchService {
     }
 
     public List<SearchResult> search(SearchQuery searchQuery) throws IOException {
+        return searchWithMetadata(searchQuery).results();
+    }
+
+    public SearchResponse searchWithMetadata(SearchQuery searchQuery) throws IOException {
         validateQuery(searchQuery);
 
         if (searchQuery.language() != null && !languageModule.language().equals(searchQuery.language())) {
-            return List.of();
+            return new SearchResponse(0, List.of());
         }
 
         try (MMapDirectory directory = new MMapDirectory(indexPath);
@@ -54,7 +60,7 @@ public class JavaSearchService {
                 results.add(new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score));
             }
 
-            return results;
+            return new SearchResponse(topDocs.totalHits.value(), results);
         }
     }
 

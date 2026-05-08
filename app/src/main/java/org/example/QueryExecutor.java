@@ -1,19 +1,16 @@
 package org.example;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.*;
-import org.apache.lucene.store.MMapDirectory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codesearch.core.CodeEntity;
+import org.codesearch.core.EntityKind;
+import org.codesearch.core.SearchQuery;
+import org.codesearch.core.SearchResult;
+import org.codesearch.java.JavaSearchService;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Set;
-import java.util.concurrent.*;
-import java.util.function.Consumer;
+import java.util.List;
 
 import static org.example.JavaSourceIndexer.indexJavaSources;
 
@@ -24,39 +21,52 @@ import static org.example.JavaSourceIndexer.indexJavaSources;
  */
 public class QueryExecutor {
     private static final Logger logger = LogManager.getLogger();
+    private static final JavaSearchService SEARCH_SERVICE = new JavaSearchService(Paths.get("index"));
 
     public static StringBuilder logBuilder = new StringBuilder();
 
 
-    private static void runQueryWithConfig(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
-        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(queryString, EntityKind.STRING_CONSTANT, isFuzzy, isCaseSensitive);
+    }
 
-        try (MMapDirectory directory = new MMapDirectory(Paths.get("index"));
-             IndexReader reader = DirectoryReader.open(directory)) {
+    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(className, EntityKind.CLASS, isFuzzy, isCaseSensitive);
+    }
 
-            IndexSearcher searcher = new IndexSearcher(reader);
+    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(methodName, EntityKind.METHOD, isFuzzy, isCaseSensitive);
+    }
 
-            String field = isCaseSensitive ? "content" : "content_lowercase";
+    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(interfaceName, EntityKind.INTERFACE, isFuzzy, isCaseSensitive);
+    }
 
-            Query query = new BooleanQuery.Builder()
-                    .add(isFuzzy ? new FuzzyQuery(new Term(field, isCaseSensitive ? queryString : queryString.toLowerCase()), 2)
-                            : new TermQuery(new Term(field, isCaseSensitive ? queryString : queryString.toLowerCase())), BooleanClause.Occur.MUST)
-                    .add(new TermQuery(new Term("type", type)), BooleanClause.Occur.MUST)
-                    .build();
+    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(fieldName, EntityKind.FIELD, isFuzzy, isCaseSensitive);
+    }
 
-            String queryTypeMessage = isFuzzy ? " (с неточностями)" : "";
-            String logMessage = "Запрос на " + type + queryTypeMessage + ": " + queryString + " (учет регистра: " + isCaseSensitive + ")";
-            logger.info(logMessage);
-            logBuilder.append(logMessage).append("\n");
+    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(variableName, EntityKind.LOCAL_VARIABLE, isFuzzy, isCaseSensitive);
+    }
 
-            TopDocs results = searcher.search(query, 100000);
-            logMessage = "Найдено совпадений " + (isFuzzy ? "с" : "c") + " " + queryString + ": " +
-                    results.totalHits.toString().substring(0, Math.max(0, results.totalHits.toString().length() - 5));
-            logger.info(logMessage);
-            logBuilder.append(logMessage).append("\n");
+    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive) {
+        findWithQuery(literalValue, EntityKind.fromValue(type), isFuzzy, isCaseSensitive);
+    }
 
-            processResults(executor, results, searcher, documentConsumer);
+    private static void findWithQuery(String queryString, EntityKind kind, boolean isFuzzy, boolean isCaseSensitive) {
+        logQueryStart(queryString, kind.legacyJavaType(), isFuzzy, isCaseSensitive);
+        if (queryString.isEmpty()) {
+            logQuerySummary(queryString, isFuzzy, 0);
+            return;
+        }
 
+        try {
+            JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(
+                    new SearchQuery(queryString, kind, "java", isFuzzy, isCaseSensitive, 100000)
+            );
+            logQuerySummary(queryString, isFuzzy, response.totalHits());
+            logResults(kind, response.results());
         } catch (IOException e) {
             String errorMessage = "Ошибка при выполнении запроса: " + e.getMessage();
             logger.error(errorMessage, e);
@@ -64,99 +74,44 @@ public class QueryExecutor {
         }
     }
 
-
-    private static void processResults(ExecutorService executor, TopDocs results, IndexSearcher searcher, Consumer<Document> documentConsumer) {
-        Set<String> processedResults = ConcurrentHashMap.newKeySet();
-
-        for (ScoreDoc scoreDoc : results.scoreDocs) {
-            executor.submit(() -> {
-                try {
-                    Document doc = searcher.storedFields().document(scoreDoc.doc);
-                    String content = doc.get("content");
-                    String file = doc.get("file");
-                    String line = doc.get("line");
-
-                    String logMessage = String.format("Литерал: %s, Файл: %s, Строка: %s", content, file, line);
-                    if (processedResults.add(logMessage)) {
-                        documentConsumer.accept(doc);
-                        logBuilder.append(logMessage).append("\n");
-                    }
-                } catch (IOException e) {
-                    String errorMessage = "Ошибка при обработке документа: " + e.getMessage();
-                    logger.error(errorMessage, e);
-                    logBuilder.append(errorMessage).append("\n");
-                }
-            });
-        }
-
-        executor.shutdown();
-        try {
-            executor.awaitTermination(1, TimeUnit.HOURS);
-        } catch (InterruptedException e) {
-            String errorMessage = "Ошибка при ожидании завершения обработки: " + e.getMessage();
-            logger.error(errorMessage, e);
-            logBuilder.append(errorMessage).append("\n");
-        }
+    private static void logQueryStart(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive) {
+        String queryTypeMessage = isFuzzy ? " (с неточностями)" : "";
+        String logMessage = "Запрос на " + type + queryTypeMessage + ": " + queryString + " (учет регистра: " + isCaseSensitive + ")";
+        logger.info(logMessage);
+        logBuilder.append(logMessage).append("\n");
     }
 
-    private static void runQuery(String queryString, String type, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
-        runQueryWithConfig(queryString, type, false, isCaseSensitive, documentConsumer);
+    private static void logQuerySummary(String queryString, boolean isFuzzy, long totalHits) {
+        String logMessage = "Найдено совпадений " + (isFuzzy ? "с" : "c") + " " + queryString + ": " + totalHits;
+        logger.info(logMessage);
+        logBuilder.append(logMessage).append("\n");
     }
 
-    private static void runFuzzyQuery(String queryString, String type, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
-        runQueryWithConfig(queryString, type, true, isCaseSensitive, documentConsumer);
-    }
+    private static void logResults(EntityKind kind, List<SearchResult> results) {
+        for (SearchResult result : results) {
+            CodeEntity entity = result.entity();
+            String logMessage = String.format(
+                    "%s: %s, Файл: %s, Строка: %d",
+                    kind.legacyJavaType(),
+                    entity.content(),
+                    entity.location().filePath(),
+                    entity.location().line()
+            );
 
-    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive, Consumer<Document> documentConsumer) {
-        if (isFuzzy) {
-            runFuzzyQuery(queryString, type, isCaseSensitive, documentConsumer);
-        } else {
-            runQuery(queryString, type, isCaseSensitive, documentConsumer);
-        }
-    }
-
-    public static void findStringConstants(String queryString, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(queryString, "StringConstant", isFuzzy, isCaseSensitive);
-    }
-
-    public static void findClass(String className, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(className, "Class", isFuzzy, isCaseSensitive);
-    }
-
-    public static void findMethod(String methodName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(methodName, "Method", isFuzzy, isCaseSensitive);
-    }
-
-    public static void findInterface(String interfaceName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(interfaceName, "Interface", isFuzzy, isCaseSensitive);
-    }
-
-    public static void findField(String fieldName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(fieldName, "Field", isFuzzy, isCaseSensitive);
-    }
-
-    public static void findLocalVariable(String variableName, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(variableName, "LocalVariable", isFuzzy, isCaseSensitive);
-    }
-
-    public static void findLiteral(String literalValue, String type, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(literalValue, type, isFuzzy, isCaseSensitive);
-    }
-
-    private static void findWithQuery(String queryString, String type, boolean isFuzzy, boolean isCaseSensitive) {
-        findWithQuery(queryString, type, isFuzzy, isCaseSensitive, doc -> {
-            String content = doc.get("content");
-            String file = doc.get("file");
-            String line = doc.get("line");
-            String logMessage;
-            logMessage = String.format("%s: %s, Файл: %s, Строка: %s", type, content, file, line);
-            if (type.equals("LocalVariable") || type.equals("Field")) {
-                String varType = doc.get("varType");
-                logMessage = String.format("%s: %s, Тип: %s, Файл: %s, Строка: %s", type, content, varType, file, line);
+            if (kind == EntityKind.FIELD || kind == EntityKind.LOCAL_VARIABLE) {
+                logMessage = String.format(
+                        "%s: %s, Тип: %s, Файл: %s, Строка: %d",
+                        kind.legacyJavaType(),
+                        entity.content(),
+                        entity.declaredType(),
+                        entity.location().filePath(),
+                        entity.location().line()
+                );
             }
+
             logger.info(logMessage);
             logBuilder.append(logMessage).append("\n");
-        });
+        }
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
