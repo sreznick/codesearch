@@ -4,6 +4,7 @@ import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
+import org.codesearch.core.SearchTarget;
 import org.codesearch.java.JavaLanguageModule;
 import org.codesearch.java.JavaSearchService;
 import org.example.JavaSourceIndexer;
@@ -84,10 +85,9 @@ public class App {
         }
 
         try {
-            EntityKind kind = EntityKind.fromValue(args[2]);
-            SearchQuery query = new SearchQuery(args[3], kind, JavaLanguageModule.LANGUAGE, fuzzy, caseSensitive, DEFAULT_LIMIT);
+            SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive);
             JavaSearchService searchService = new JavaSearchService(Paths.get("index"));
-            JavaSearchService.SearchResponse response = searchService.searchWithMetadata(query);
+            JavaSearchService.SearchResponse response = searchService.searchWithMetadata(searchCommand.query());
             printResults(out, response);
             return 0;
         } catch (IllegalArgumentException e) {
@@ -97,6 +97,20 @@ public class App {
             err.println("Ошибка поиска: " + e.getMessage());
             return 1;
         }
+    }
+
+    private static SearchCommand parseSearchCommand(String rawKind, String rawQuery, boolean fuzzy, boolean caseSensitive) {
+        return switch (rawKind.toLowerCase()) {
+            case "field-type" -> new SearchCommand(
+                    new SearchQuery(rawQuery, EntityKind.FIELD, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, DEFAULT_LIMIT)
+            );
+            case "local-variable-type" -> new SearchCommand(
+                    new SearchQuery(rawQuery, EntityKind.LOCAL_VARIABLE, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, DEFAULT_LIMIT)
+            );
+            default -> new SearchCommand(
+                    new SearchQuery(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE, SearchTarget.CONTENT, fuzzy, caseSensitive, DEFAULT_LIMIT)
+            );
+        };
     }
 
     private static void printResults(PrintStream out, JavaSearchService.SearchResponse response) {
@@ -143,5 +157,9 @@ public class App {
         out.println("  index java src");
         out.println("  search java class TestClass");
         out.println("  search java method testMethod -f");
+        out.println("  search java field-type String");
+        out.println("  search java local-variable-type String");
     }
+
+    private record SearchCommand(SearchQuery query) {}
 }

@@ -16,6 +16,7 @@ import org.apache.lucene.store.MMapDirectory;
 import org.codesearch.core.EntityKind;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
+import org.codesearch.core.SearchTarget;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -66,13 +67,20 @@ public class JavaSearchService {
 
     private Query buildQuery(SearchQuery searchQuery) {
         EntityKind kind = searchQuery.kind();
-        String field = searchQuery.caseSensitive() ? "content" : "content_lowercase";
+        String field = resolveField(searchQuery);
         String value = searchQuery.caseSensitive() ? searchQuery.text() : searchQuery.text().toLowerCase();
 
         return new BooleanQuery.Builder()
                 .add(contentQuery(field, value, searchQuery.fuzzy()), BooleanClause.Occur.MUST)
                 .add(new TermQuery(new Term("type", kind.legacyJavaType())), BooleanClause.Occur.MUST)
                 .build();
+    }
+
+    private String resolveField(SearchQuery searchQuery) {
+        return switch (searchQuery.target()) {
+            case CONTENT -> searchQuery.caseSensitive() ? "content" : "content_lowercase";
+            case DECLARED_TYPE -> searchQuery.caseSensitive() ? "varType" : "varType_lowercase";
+        };
     }
 
     private Query contentQuery(String field, String value, boolean fuzzy) {
@@ -86,6 +94,11 @@ public class JavaSearchService {
         }
         if (!languageModule.supportedEntityKinds().contains(searchQuery.kind())) {
             throw new IllegalArgumentException("Java search does not support entity kind: " + searchQuery.kind());
+        }
+        if (searchQuery.target() == SearchTarget.DECLARED_TYPE
+                && searchQuery.kind() != EntityKind.FIELD
+                && searchQuery.kind() != EntityKind.LOCAL_VARIABLE) {
+            throw new IllegalArgumentException("Declared type search is supported only for fields and local variables");
         }
     }
 }

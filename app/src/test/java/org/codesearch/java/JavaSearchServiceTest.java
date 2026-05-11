@@ -4,6 +4,7 @@ import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
+import org.codesearch.core.SearchTarget;
 import org.example.JavaSourceIndexer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -66,5 +67,27 @@ class JavaSearchServiceTest {
         SearchQuery query = new SearchQuery("TestClass", null, "java");
 
         assertThrows(IllegalArgumentException.class, () -> SEARCH_SERVICE.search(query));
+    }
+
+    @Test
+    void shouldSearchFieldByDeclaredType() throws IOException {
+        SearchQuery query = new SearchQuery("String", EntityKind.FIELD, "java", SearchTarget.DECLARED_TYPE, false, true, 100);
+
+        List<SearchResult> results = SEARCH_SERVICE.search(query);
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(result -> result.entity().kind() == EntityKind.FIELD));
+        assertTrue(results.stream().allMatch(result -> "String".equals(result.entity().declaredType())));
+    }
+
+    @Test
+    void shouldSearchLocalVariableByDeclaredTypeIgnoringCase() throws IOException {
+        SearchQuery query = new SearchQuery("string", EntityKind.LOCAL_VARIABLE, "java", SearchTarget.DECLARED_TYPE, false, false, 100);
+
+        List<SearchResult> results = SEARCH_SERVICE.search(query);
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(result -> result.entity().kind() == EntityKind.LOCAL_VARIABLE));
+        assertTrue(results.stream().allMatch(result -> "String".equals(result.entity().declaredType())));
     }
 }

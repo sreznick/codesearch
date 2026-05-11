@@ -18,6 +18,7 @@ public final class JavaIndexDocumentMapper {
 
         if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
             document.add(new StringField("varType", entity.declaredType(), Field.Store.YES));
+            document.add(new StringField("varType_lowercase", entity.declaredType().toLowerCase(), Field.Store.NO));
         }
 
         return document;

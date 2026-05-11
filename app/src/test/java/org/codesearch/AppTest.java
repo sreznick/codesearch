@@ -30,6 +30,7 @@ class AppTest {
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("index java <path>"));
         assertTrue(outContent.toString().contains("search java <kind> <query> [-f] [-cs]"));
+        assertTrue(outContent.toString().contains("search java field-type String"));
     }
 
     @Test
@@ -60,5 +61,15 @@ class AppTest {
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Field: testField, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 7"));
+    }
+
+    @Test
+    void shouldSearchFieldByDeclaredType() {
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
+        int exitCode = App.run(new String[]{"search", "java", "field-type", "String"}, out, err);
+
+        assertEquals(0, exitCode);
+        assertTrue(outContent.toString().contains("Field: testField, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 7"));
+        assertTrue(outContent.toString().contains("Field: testFieldDuplicate, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 12"));
     }
 }
