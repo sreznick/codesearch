@@ -45,13 +45,13 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.example.CodeSearch'
+    mainClass = 'org.codesearch.App'
 }
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'org.example.CodeSearch'
+                'Main-Class': 'org.codesearch.App'
         )
     }
 }
