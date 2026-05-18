@@ -49,9 +49,12 @@ class AppTest {
         String output = outContent.toString();
         assertEquals(0, indexExitCode);
         assertEquals(0, searchExitCode);
-        assertTrue(output.contains("Индексация завершена: java -> src/test/resources"));
+        assertTrue(output.contains("Индексация завершена"));
+        assertTrue(output.contains("Путь:  src/test/resources"));
         assertTrue(output.contains("Найдено совпадений: 1"));
-        assertTrue(output.contains("Class: TestClass, Файл: src/test/resources/TestClass.java, Строка: 6"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("TestClass"));
+        assertTrue(output.contains("src/test/resources/TestClass.java:6"));
     }
 
     @Test
@@ -60,7 +63,10 @@ class AppTest {
         int exitCode = App.run(new String[]{"search", "java", "field", "testField"}, out, err);
 
         assertEquals(0, exitCode);
-        assertTrue(outContent.toString().contains("Field: testField, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 7"));
+        assertTrue(outContent.toString().contains("Field"));
+        assertTrue(outContent.toString().contains("testField"));
+        assertTrue(outContent.toString().contains("[String]"));
+        assertTrue(outContent.toString().contains("src/test/resources/TestClass.java:7"));
     }
 
     @Test
@@ -69,7 +75,18 @@ class AppTest {
         int exitCode = App.run(new String[]{"search", "java", "field-type", "String"}, out, err);
 
         assertEquals(0, exitCode);
-        assertTrue(outContent.toString().contains("Field: testField, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 7"));
-        assertTrue(outContent.toString().contains("Field: testFieldDuplicate, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 12"));
+        assertTrue(outContent.toString().contains("testField"));
+        assertTrue(outContent.toString().contains("testFieldDuplicate"));
+        assertTrue(outContent.toString().contains("[String]"));
+    }
+
+    @Test
+    void shouldPrintFriendlyMessageForEmptySearchResults() {
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
+        int exitCode = App.run(new String[]{"search", "java", "class", "MissingClass"}, out, err);
+
+        assertEquals(0, exitCode);
+        assertTrue(outContent.toString().contains("Найдено совпадений: 0"));
+        assertTrue(outContent.toString().contains("Совпадений нет."));
     }
 }

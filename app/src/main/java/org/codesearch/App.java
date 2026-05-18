@@ -16,6 +16,13 @@ import java.util.List;
 
 public class App {
     private static final int DEFAULT_LIMIT = 100;
+    private static final boolean USE_COLOR = shouldUseColor();
+    private static final String RESET = "\u001B[0m";
+    private static final String GREEN = "\u001B[32m";
+    private static final String BLUE = "\u001B[34m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String RED = "\u001B[31m";
+    private static final String DIM = "\u001B[2m";
 
     public static void main(String[] args) {
         run(args, System.out, System.err);
@@ -32,7 +39,7 @@ public class App {
             case "index" -> handleIndex(args, out, err);
             case "search" -> handleSearch(args, out, err);
             default -> {
-                err.println("Неизвестная команда: " + args[0]);
+                err.println(colorize(RED, "Неизвестная команда: ") + args[0]);
                 printHelp(out);
                 yield 1;
             }
@@ -41,33 +48,35 @@ public class App {
 
     private static int handleIndex(String[] args, PrintStream out, PrintStream err) {
         if (args.length < 3) {
-            err.println("Использование: index java <path>");
+            err.println(colorize(RED, "Использование: ") + "index java <path>");
             return 1;
         }
 
         if (!isJava(args[1])) {
-            err.println("Пока поддерживается только язык java.");
+            err.println(colorize(RED, "Пока поддерживается только язык java."));
             return 1;
         }
 
         try {
             JavaSourceIndexer.indexJavaSources(args[2]);
-            out.println("Индексация завершена: java -> " + args[2]);
+            out.println(colorize(GREEN, "Готово") + "  Индексация завершена");
+            out.println(colorize(DIM, "Язык: ") + "java");
+            out.println(colorize(DIM, "Путь:  ") + args[2]);
             return 0;
         } catch (Exception e) {
-            err.println("Ошибка индексации: " + e.getMessage());
+            err.println(colorize(RED, "Ошибка индексации: ") + e.getMessage());
             return 1;
         }
     }
 
     private static int handleSearch(String[] args, PrintStream out, PrintStream err) {
         if (args.length < 4) {
-            err.println("Использование: search java <kind> <query> [-f] [-cs]");
+            err.println(colorize(RED, "Использование: ") + "search java <kind> <query> [-f] [-cs]");
             return 1;
         }
 
         if (!isJava(args[1])) {
-            err.println("Пока поддерживается только язык java.");
+            err.println(colorize(RED, "Пока поддерживается только язык java."));
             return 1;
         }
 
@@ -79,7 +88,7 @@ public class App {
             } else if ("-cs".equalsIgnoreCase(args[i])) {
                 caseSensitive = true;
             } else {
-                err.println("Неизвестный флаг: " + args[i]);
+                err.println(colorize(RED, "Неизвестный флаг: ") + args[i]);
                 return 1;
             }
         }
@@ -91,10 +100,10 @@ public class App {
             printResults(out, response);
             return 0;
         } catch (IllegalArgumentException e) {
-            err.println("Ошибка поиска: " + e.getMessage());
+            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
             return 1;
         } catch (IOException e) {
-            err.println("Ошибка поиска: " + e.getMessage());
+            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
             return 1;
         }
     }
@@ -114,30 +123,42 @@ public class App {
     }
 
     private static void printResults(PrintStream out, JavaSearchService.SearchResponse response) {
-        out.println("Найдено совпадений: " + response.totalHits());
+        out.println(colorize(BLUE, "Найдено совпадений: ") + response.totalHits());
+
+        if (response.results().isEmpty()) {
+            out.println(colorize(YELLOW, "Совпадений нет."));
+            return;
+        }
+
+        int index = 1;
         for (SearchResult result : response.results()) {
-            out.println(formatResult(result.entity()));
+            out.println(formatResult(index, result.entity()));
+            index++;
         }
     }
 
-    private static String formatResult(CodeEntity entity) {
+    private static String formatResult(int index, CodeEntity entity) {
+        String prefix = colorize(BLUE, index + ".");
+        String kind = colorize(GREEN, entity.kind().legacyJavaType());
+        String file = colorize(DIM, entity.location().filePath() + ":" + entity.location().line());
+
         if (entity.kind() == EntityKind.FIELD || entity.kind() == EntityKind.LOCAL_VARIABLE) {
             return String.format(
-                    "%s: %s, Тип: %s, Файл: %s, Строка: %d",
-                    entity.kind().legacyJavaType(),
+                    "%s %s %s  [%s]  %s",
+                    prefix,
+                    kind,
                     entity.content(),
                     entity.declaredType(),
-                    entity.location().filePath(),
-                    entity.location().line()
+                    file
             );
         }
 
         return String.format(
-                "%s: %s, Файл: %s, Строка: %d",
-                entity.kind().legacyJavaType(),
+                "%s %s %s  %s",
+                prefix,
+                kind,
                 entity.content(),
-                entity.location().filePath(),
-                entity.location().line()
+                file
         );
     }
 
@@ -150,10 +171,11 @@ public class App {
     }
 
     private static void printHelp(PrintStream out) {
-        out.println("Команды:");
+        out.println(colorize(BLUE, "Команды"));
         out.println("  index java <path>");
         out.println("  search java <kind> <query> [-f] [-cs]");
-        out.println("Примеры:");
+        out.println();
+        out.println(colorize(BLUE, "Примеры"));
         out.println("  index java src");
         out.println("  search java class TestClass");
         out.println("  search java method testMethod -f");
@@ -162,4 +184,18 @@ public class App {
     }
 
     private record SearchCommand(SearchQuery query) {}
+
+    private static String colorize(String color, String text) {
+        return USE_COLOR ? color + text + RESET : text;
+    }
+
+    private static boolean shouldUseColor() {
+        String noColor = System.getenv("NO_COLOR");
+        if (noColor != null) {
+            return false;
+        }
+
+        String term = System.getenv("TERM");
+        return term != null && !"dumb".equalsIgnoreCase(term);
+    }
 }
