@@ -90,4 +90,33 @@ class JavaSearchServiceTest {
         assertTrue(results.stream().allMatch(result -> result.entity().kind() == EntityKind.LOCAL_VARIABLE));
         assertTrue(results.stream().allMatch(result -> "String".equals(result.entity().declaredType())));
     }
+
+    @Test
+    void shouldLimitReturnedResultsWithoutChangingTotalHits() throws IOException {
+        SearchQuery query = new SearchQuery("String", EntityKind.FIELD, "java", SearchTarget.DECLARED_TYPE, false, true, 1);
+
+        JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(query);
+
+        assertEquals(2, response.totalHits());
+        assertEquals(1, response.results().size());
+    }
+
+    @Test
+    void shouldFilterResultsByPath() throws IOException {
+        SearchQuery query = new SearchQuery(
+                "TestClass",
+                EntityKind.CLASS,
+                "java",
+                SearchTarget.CONTENT,
+                false,
+                true,
+                100,
+                "missing/path"
+        );
+
+        JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(query);
+
+        assertEquals(0, response.totalHits());
+        assertTrue(response.results().isEmpty());
+    }
 }

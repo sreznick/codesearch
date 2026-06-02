@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AppTest {
@@ -29,7 +30,7 @@ class AppTest {
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("index java <path>"));
-        assertTrue(outContent.toString().contains("search java <kind> <query> [-f] [-cs]"));
+        assertTrue(outContent.toString().contains("search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]"));
         assertTrue(outContent.toString().contains("search java field-type String"));
     }
 
@@ -78,6 +79,36 @@ class AppTest {
         assertTrue(outContent.toString().contains("testField"));
         assertTrue(outContent.toString().contains("testFieldDuplicate"));
         assertTrue(outContent.toString().contains("[String]"));
+    }
+
+    @Test
+    void shouldLimitSearchResults() {
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
+        int exitCode = App.run(new String[]{"search", "java", "field-type", "String", "--limit", "1"}, out, err);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 2"));
+        assertTrue(output.contains("testField"));
+        assertFalse(output.contains("testFieldDuplicate"));
+    }
+
+    @Test
+    void shouldFilterSearchResultsByPath() {
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass", "--path", "missing/path"}, out, err);
+
+        assertEquals(0, exitCode);
+        assertTrue(outContent.toString().contains("Найдено совпадений: 0"));
+        assertTrue(outContent.toString().contains("Совпадений нет."));
+    }
+
+    @Test
+    void shouldRejectInvalidLimit() {
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass", "--limit", "abc"}, out, err);
+
+        assertEquals(1, exitCode);
+        assertTrue(errContent.toString().contains("Лимит должен быть числом"));
     }
 
     @Test

@@ -19,12 +19,13 @@ class SearchQueryTest {
                 "String",
                 Map.of("visibility", "private")
         );
-        SearchQuery query = new SearchQuery(" userId ", EntityKind.FIELD, " JAVA ", SearchTarget.CONTENT, false, true, 25);
+        SearchQuery query = new SearchQuery(" userId ", EntityKind.FIELD, " JAVA ", SearchTarget.CONTENT, false, true, 25, " src/main ");
 
         assertEquals("java", entity.language());
         assertEquals("userId", query.text());
         assertEquals("java", query.language());
         assertEquals(SearchTarget.CONTENT, query.target());
+        assertEquals("src/main", query.pathFilter());
         assertEquals("private", entity.attributes().get("visibility"));
     }
 

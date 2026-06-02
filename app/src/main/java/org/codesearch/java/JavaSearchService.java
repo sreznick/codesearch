@@ -25,6 +25,7 @@ import java.util.List;
 
 public class JavaSearchService {
     public record SearchResponse(long totalHits, List<SearchResult> results) {}
+    private static final int MAX_RESULTS_TO_SCAN = 100000;
 
     private final Path indexPath;
     private final JavaLanguageModule languageModule;
@@ -53,16 +54,24 @@ public class JavaSearchService {
              IndexReader reader = DirectoryReader.open(directory)) {
 
             IndexSearcher searcher = new IndexSearcher(reader);
-            TopDocs topDocs = searcher.search(buildQuery(searchQuery), searchQuery.limit());
+            TopDocs topDocs = searcher.search(buildQuery(searchQuery), MAX_RESULTS_TO_SCAN);
 
             List<SearchResult> results = new ArrayList<>();
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = searcher.storedFields().document(scoreDoc.doc);
-                results.add(new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score));
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score);
+                if (matchesPathFilter(result, searchQuery.pathFilter())) {
+                    results.add(result);
+                }
             }
 
-            return new SearchResponse(topDocs.totalHits.value(), results);
+            long totalHits = searchQuery.pathFilter() == null ? topDocs.totalHits.value() : results.size();
+            return new SearchResponse(totalHits, results.stream().limit(searchQuery.limit()).toList());
         }
+    }
+
+    private boolean matchesPathFilter(SearchResult result, String pathFilter) {
+        return pathFilter == null || result.entity().location().filePath().contains(pathFilter);
     }
 
     private Query buildQuery(SearchQuery searchQuery) {

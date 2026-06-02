@@ -7,7 +7,8 @@ public record SearchQuery(
         SearchTarget target,
         boolean fuzzy,
         boolean caseSensitive,
-        int limit
+        int limit,
+        String pathFilter
 ) {
     private static final int DEFAULT_LIMIT = 100;
 
@@ -24,14 +25,19 @@ public record SearchQuery(
 
         text = text.trim();
         language = normalizeLanguage(language);
+        pathFilter = normalizePathFilter(pathFilter);
     }
 
     public SearchQuery(String text, EntityKind kind, String language) {
-        this(text, kind, language, SearchTarget.CONTENT, false, false, DEFAULT_LIMIT);
+        this(text, kind, language, SearchTarget.CONTENT, false, false, DEFAULT_LIMIT, null);
     }
 
     public SearchQuery(String text, EntityKind kind, String language, boolean fuzzy, boolean caseSensitive, int limit) {
-        this(text, kind, language, SearchTarget.CONTENT, fuzzy, caseSensitive, limit);
+        this(text, kind, language, SearchTarget.CONTENT, fuzzy, caseSensitive, limit, null);
+    }
+
+    public SearchQuery(String text, EntityKind kind, String language, SearchTarget target, boolean fuzzy, boolean caseSensitive, int limit) {
+        this(text, kind, language, target, fuzzy, caseSensitive, limit, null);
     }
 
     private static String normalizeLanguage(String value) {
@@ -40,5 +46,13 @@ public record SearchQuery(
         }
 
         return value.trim().toLowerCase();
+    }
+
+    private static String normalizePathFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
     }
 }

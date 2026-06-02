@@ -82,11 +82,30 @@ public class App {
 
         boolean fuzzy = false;
         boolean caseSensitive = false;
+        int limit = DEFAULT_LIMIT;
+        String pathFilter = null;
         for (int i = 4; i < args.length; i++) {
             if ("-f".equalsIgnoreCase(args[i])) {
                 fuzzy = true;
             } else if ("-cs".equalsIgnoreCase(args[i])) {
                 caseSensitive = true;
+            } else if ("--limit".equalsIgnoreCase(args[i]) || "-n".equalsIgnoreCase(args[i])) {
+                if (i + 1 >= args.length) {
+                    err.println(colorize(RED, "Не указан лимит результатов."));
+                    return 1;
+                }
+                try {
+                    limit = Integer.parseInt(args[++i]);
+                } catch (NumberFormatException e) {
+                    err.println(colorize(RED, "Лимит должен быть числом: ") + args[i]);
+                    return 1;
+                }
+            } else if ("--path".equalsIgnoreCase(args[i]) || "-p".equalsIgnoreCase(args[i])) {
+                if (i + 1 >= args.length) {
+                    err.println(colorize(RED, "Не указан фильтр пути."));
+                    return 1;
+                }
+                pathFilter = args[++i];
             } else {
                 err.println(colorize(RED, "Неизвестный флаг: ") + args[i]);
                 return 1;
@@ -94,7 +113,7 @@ public class App {
         }
 
         try {
-            SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive);
+            SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
             JavaSearchService searchService = new JavaSearchService(Paths.get("index"));
             JavaSearchService.SearchResponse response = searchService.searchWithMetadata(searchCommand.query());
             printResults(out, response);
@@ -108,16 +127,16 @@ public class App {
         }
     }
 
-    private static SearchCommand parseSearchCommand(String rawKind, String rawQuery, boolean fuzzy, boolean caseSensitive) {
+    private static SearchCommand parseSearchCommand(String rawKind, String rawQuery, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
         return switch (rawKind.toLowerCase()) {
             case "field-type" -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.FIELD, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, DEFAULT_LIMIT)
+                    new SearchQuery(rawQuery, EntityKind.FIELD, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
             );
             case "local-variable-type" -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.LOCAL_VARIABLE, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, DEFAULT_LIMIT)
+                    new SearchQuery(rawQuery, EntityKind.LOCAL_VARIABLE, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
             );
             default -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE, SearchTarget.CONTENT, fuzzy, caseSensitive, DEFAULT_LIMIT)
+                    new SearchQuery(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE, SearchTarget.CONTENT, fuzzy, caseSensitive, limit, pathFilter)
             );
         };
     }
@@ -173,14 +192,15 @@ public class App {
     private static void printHelp(PrintStream out) {
         out.println(colorize(BLUE, "Команды"));
         out.println("  index java <path>");
-        out.println("  search java <kind> <query> [-f] [-cs]");
+        out.println("  search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
         out.println("  index java src");
         out.println("  search java class TestClass");
         out.println("  search java method testMethod -f");
         out.println("  search java field-type String");
-        out.println("  search java local-variable-type String");
+        out.println("  search java local-variable-type String --limit 1");
+        out.println("  search java field-type String --path src/test/resources");
     }
 
     private record SearchCommand(SearchQuery query) {}
