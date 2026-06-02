@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * Класс для индексации Java-исходных кодов.
@@ -31,7 +32,17 @@ public class JavaSourceIndexer {
     private static final Logger logger = LogManager.getLogger();
 
     public static void indexJavaSources(String directoryPath) throws IOException, InterruptedException {
-        Path indexDirectoryPath = Paths.get("index");
+        indexJavaSources(directoryPath, Paths.get("index"));
+    }
+
+    public static void indexJavaSources(String directoryPath, Path indexDirectoryPath) throws IOException, InterruptedException {
+        Path sourcePath = Paths.get(directoryPath);
+        validateSourcePath(sourcePath);
+
+        List<Path> javaFiles = collectJavaFiles(sourcePath);
+        if (javaFiles.isEmpty()) {
+            throw new IllegalArgumentException("В указанном пути нет .java файлов: " + sourcePath);
+        }
 
         deleteDirectoryRecursively(indexDirectoryPath);
 
@@ -41,17 +52,14 @@ public class JavaSourceIndexer {
 
             ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
             try {
-                Files.walk(Paths.get(directoryPath))
-                        .filter(Files::isRegularFile)
-                        .filter(file -> file.toString().endsWith(".java"))
-                        .forEach(file -> executor.submit(() -> {
-                            try {
-                                indexJavaFile(file, writer);
-                                logger.info("Файл проиндексирован: {}", file);
-                            } catch (Exception e) {
-                                logger.error("Ошибка при индексации файла: {}", file, e);
-                            }
-                        }));
+                javaFiles.forEach(file -> executor.submit(() -> {
+                    try {
+                        indexJavaFile(file, writer);
+                        logger.info("Файл проиндексирован: {}", file);
+                    } catch (Exception e) {
+                        logger.error("Ошибка при индексации файла {}: {}", file, e.getMessage());
+                    }
+                }));
 
                 executor.shutdown();
                 if (!executor.awaitTermination(1, TimeUnit.HOURS)) {
@@ -59,8 +67,8 @@ public class JavaSourceIndexer {
                     executor.shutdownNow();
                 }
 
-            } catch (IOException | InterruptedException e) {
-                logger.error("Ошибка при чтении файлов для индексации.", e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw e;
             } finally {
                 if (!executor.isTerminated()) {
@@ -68,24 +76,34 @@ public class JavaSourceIndexer {
                     executor.shutdownNow();
                 }
             }
-            //logger.info("Индексация успешно завершена.");
-        } catch (IOException | InterruptedException e) {
-            logger.error("Ошибка при индексировании.", e);
-            throw e;
+        }
+    }
+
+    private static void validateSourcePath(Path sourcePath) {
+        if (!Files.exists(sourcePath)) {
+            throw new IllegalArgumentException("Путь не найден: " + sourcePath);
+        }
+        if (!Files.isReadable(sourcePath)) {
+            throw new IllegalArgumentException("Нет доступа на чтение: " + sourcePath);
+        }
+    }
+
+    private static List<Path> collectJavaFiles(Path sourcePath) throws IOException {
+        try (Stream<Path> paths = Files.walk(sourcePath)) {
+            return paths
+                    .filter(Files::isRegularFile)
+                    .filter(file -> file.toString().endsWith(".java"))
+                    .toList();
         }
     }
 
     private static void deleteDirectoryRecursively(Path path) throws IOException {
         if (Files.exists(path)) {
-            Files.walk(path)
-                    .sorted(Comparator.reverseOrder())
-                    .forEach(file -> {
-                        try {
-                            Files.delete(file);
-                        } catch (IOException e) {
-                            throw new RuntimeException("Ошибка при удалении файла: " + file, e);
-                        }
-                    });
+            try (Stream<Path> paths = Files.walk(path)) {
+                for (Path file : paths.sorted(Comparator.reverseOrder()).toList()) {
+                    Files.delete(file);
+                }
+            }
         }
     }
 

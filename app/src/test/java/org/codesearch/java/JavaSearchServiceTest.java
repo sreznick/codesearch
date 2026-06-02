@@ -8,6 +8,7 @@ import org.codesearch.core.SearchTarget;
 import org.example.JavaSourceIndexer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -118,5 +119,18 @@ class JavaSearchServiceTest {
 
         assertEquals(0, response.totalHits());
         assertTrue(response.results().isEmpty());
+    }
+
+    @Test
+    void shouldReportMissingIndex(@TempDir Path tempDir) {
+        JavaSearchService searchService = new JavaSearchService(tempDir.resolve("missing-index"));
+        SearchQuery query = new SearchQuery("TestClass", EntityKind.CLASS, "java");
+
+        JavaSearchService.IndexUnavailableException exception = assertThrows(
+                JavaSearchService.IndexUnavailableException.class,
+                () -> searchService.search(query)
+        );
+
+        assertTrue(exception.getMessage().contains("Индекс не найден"));
     }
 }

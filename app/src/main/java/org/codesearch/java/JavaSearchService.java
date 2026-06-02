@@ -1,8 +1,10 @@
 package org.codesearch.java;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -19,9 +21,11 @@ import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class JavaSearchService {
     public record SearchResponse(long totalHits, List<SearchResult> results) {}
@@ -50,6 +54,8 @@ public class JavaSearchService {
             return new SearchResponse(0, List.of());
         }
 
+        validateIndexPath();
+
         try (MMapDirectory directory = new MMapDirectory(indexPath);
              IndexReader reader = DirectoryReader.open(directory)) {
 
@@ -67,11 +73,37 @@ public class JavaSearchService {
 
             long totalHits = searchQuery.pathFilter() == null ? topDocs.totalHits.value() : results.size();
             return new SearchResponse(totalHits, results.stream().limit(searchQuery.limit()).toList());
+        } catch (IndexNotFoundException e) {
+            throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
+        } catch (CorruptIndexException e) {
+            throw new IndexUnavailableException("Индекс поврежден: " + indexPath, e);
+        } catch (IOException e) {
+            throw new IndexUnavailableException("Не удалось прочитать индекс, возможно, он поврежден: " + indexPath, e);
         }
     }
 
     private boolean matchesPathFilter(SearchResult result, String pathFilter) {
         return pathFilter == null || result.entity().location().filePath().contains(pathFilter);
+    }
+
+    private void validateIndexPath() throws IOException {
+        if (!Files.exists(indexPath)) {
+            throw new IndexUnavailableException("Индекс не найден: " + indexPath);
+        }
+        if (!Files.isDirectory(indexPath)) {
+            throw new IndexUnavailableException("Путь индекса не является директорией: " + indexPath);
+        }
+        if (isDirectoryEmpty(indexPath)) {
+            throw new IndexUnavailableException("Индекс пуст: " + indexPath);
+        }
+    }
+
+    private boolean isDirectoryEmpty(Path path) throws IndexUnavailableException {
+        try (Stream<Path> files = Files.list(path)) {
+            return files.findAny().isEmpty();
+        } catch (IOException e) {
+            throw new IndexUnavailableException("Не удалось прочитать директорию индекса: " + path, e);
+        }
     }
 
     private Query buildQuery(SearchQuery searchQuery) {
@@ -108,6 +140,16 @@ public class JavaSearchService {
                 && searchQuery.kind() != EntityKind.FIELD
                 && searchQuery.kind() != EntityKind.LOCAL_VARIABLE) {
             throw new IllegalArgumentException("Declared type search is supported only for fields and local variables");
+        }
+    }
+
+    public static class IndexUnavailableException extends IOException {
+        public IndexUnavailableException(String message) {
+            super(message);
+        }
+
+        public IndexUnavailableException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }

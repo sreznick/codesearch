@@ -2,9 +2,13 @@ package org.codesearch;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -109,6 +113,68 @@ class AppTest {
 
         assertEquals(1, exitCode);
         assertTrue(errContent.toString().contains("Лимит должен быть числом"));
+    }
+
+    @Test
+    void shouldRejectNonPositiveLimit() {
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass", "--limit", "0"}, out, err);
+
+        assertEquals(1, exitCode);
+        assertTrue(errContent.toString().contains("Лимит должен быть положительным числом"));
+    }
+
+    @Test
+    void shouldExplainMissingIndexBeforeSearch(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("missing-index");
+
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath);
+
+        String errorOutput = errContent.toString();
+        assertEquals(1, exitCode);
+        assertTrue(errorOutput.contains("Индекс не готов"));
+        assertTrue(errorOutput.contains("Индекс не найден"));
+        assertTrue(errorOutput.contains("index java <path>"));
+        assertFalse(errorOutput.contains("Exception"));
+    }
+
+    @Test
+    void shouldExplainEmptyIndexBeforeSearch(@TempDir Path tempDir) throws IOException {
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(indexPath);
+
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath);
+
+        String errorOutput = errContent.toString();
+        assertEquals(1, exitCode);
+        assertTrue(errorOutput.contains("Индекс не готов"));
+        assertTrue(errorOutput.contains("Индекс пуст"));
+        assertTrue(errorOutput.contains("index java <path>"));
+    }
+
+    @Test
+    void shouldExplainBrokenIndexBeforeSearch(@TempDir Path tempDir) throws IOException {
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(indexPath);
+        Files.writeString(indexPath.resolve("segments_1"), "not a lucene index");
+
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath);
+
+        String errorOutput = errContent.toString();
+        assertEquals(1, exitCode);
+        assertTrue(errorOutput.contains("Индекс не готов"));
+        assertTrue(errorOutput.contains("поврежден"));
+        assertTrue(errorOutput.contains("index java <path>"));
+    }
+
+    @Test
+    void shouldRejectIndexingPathWithoutJavaFiles(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+
+        int exitCode = App.run(new String[]{"index", "java", sourcePath.toString()}, out, err, tempDir.resolve("index"));
+
+        assertEquals(1, exitCode);
+        assertTrue(errContent.toString().contains("В указанном пути нет .java файлов"));
     }
 
     @Test
