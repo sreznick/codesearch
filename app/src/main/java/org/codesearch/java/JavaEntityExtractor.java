@@ -78,7 +78,9 @@ public class JavaEntityExtractor {
                         EntityKind.METHOD,
                         value.getMethodName(),
                         new EntityLocation(value.getFile(), value.getLine(), 0),
-                        JavaLanguageModule.LANGUAGE
+                        JavaLanguageModule.LANGUAGE,
+                        value.getReturnType(),
+                        Map.of("declaredType", value.getReturnType())
                 ))
                 .toList());
     }

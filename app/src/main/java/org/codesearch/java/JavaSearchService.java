@@ -108,20 +108,40 @@ public class JavaSearchService {
 
     private Query buildQuery(SearchQuery searchQuery) {
         EntityKind kind = searchQuery.kind();
-        String field = resolveField(searchQuery);
-        String value = searchQuery.caseSensitive() ? searchQuery.text() : searchQuery.text().toLowerCase();
 
         return new BooleanQuery.Builder()
-                .add(contentQuery(field, value, searchQuery.fuzzy()), BooleanClause.Occur.MUST)
+                .add(targetQuery(searchQuery), BooleanClause.Occur.MUST)
                 .add(new TermQuery(new Term("type", kind.legacyJavaType())), BooleanClause.Occur.MUST)
                 .build();
+    }
+
+    private Query targetQuery(SearchQuery searchQuery) {
+        String value = searchQuery.caseSensitive() ? searchQuery.text() : searchQuery.text().toLowerCase();
+
+        if (searchQuery.target() == SearchTarget.CONTENT) {
+            return contentQuery(resolveField(searchQuery), value, searchQuery.fuzzy());
+        }
+
+        BooleanQuery.Builder builder = new BooleanQuery.Builder()
+                .setMinimumNumberShouldMatch(1)
+                .add(contentQuery(resolveDeclaredTypeField(searchQuery), value, searchQuery.fuzzy()), BooleanClause.Occur.SHOULD)
+                .add(contentQuery(resolveLegacyDeclaredTypeField(searchQuery), value, searchQuery.fuzzy()), BooleanClause.Occur.SHOULD);
+        return builder.build();
     }
 
     private String resolveField(SearchQuery searchQuery) {
         return switch (searchQuery.target()) {
             case CONTENT -> searchQuery.caseSensitive() ? "content" : "content_lowercase";
-            case DECLARED_TYPE -> searchQuery.caseSensitive() ? "varType" : "varType_lowercase";
+            case DECLARED_TYPE -> resolveDeclaredTypeField(searchQuery);
         };
+    }
+
+    private String resolveDeclaredTypeField(SearchQuery searchQuery) {
+        return searchQuery.caseSensitive() ? "declaredType" : "declaredType_lowercase";
+    }
+
+    private String resolveLegacyDeclaredTypeField(SearchQuery searchQuery) {
+        return searchQuery.caseSensitive() ? "varType" : "varType_lowercase";
     }
 
     private Query contentQuery(String field, String value, boolean fuzzy) {
@@ -138,8 +158,9 @@ public class JavaSearchService {
         }
         if (searchQuery.target() == SearchTarget.DECLARED_TYPE
                 && searchQuery.kind() != EntityKind.FIELD
-                && searchQuery.kind() != EntityKind.LOCAL_VARIABLE) {
-            throw new IllegalArgumentException("Declared type search is supported only for fields and local variables");
+                && searchQuery.kind() != EntityKind.LOCAL_VARIABLE
+                && searchQuery.kind() != EntityKind.METHOD) {
+            throw new IllegalArgumentException("Declared type search is supported only for fields, local variables and methods");
         }
     }
 

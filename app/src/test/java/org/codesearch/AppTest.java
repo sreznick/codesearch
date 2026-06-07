@@ -86,6 +86,18 @@ class AppTest {
     }
 
     @Test
+    void shouldSearchMethodByReturnType() {
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
+        int exitCode = App.run(new String[]{"search", "java", "method-return-type", "String"}, out, err);
+
+        assertEquals(0, exitCode);
+        assertTrue(outContent.toString().contains("Найдено совпадений: 1"));
+        assertTrue(outContent.toString().contains("Method"));
+        assertTrue(outContent.toString().contains("getTestField"));
+        assertTrue(outContent.toString().contains("[String]"));
+    }
+
+    @Test
     void shouldLimitSearchResults() {
         App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
         int exitCode = App.run(new String[]{"search", "java", "field-type", "String", "--limit", "1"}, out, err);

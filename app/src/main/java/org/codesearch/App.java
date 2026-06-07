@@ -159,6 +159,9 @@ public class App {
             case "local-variable-type" -> new SearchCommand(
                     new SearchQuery(rawQuery, EntityKind.LOCAL_VARIABLE, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
             );
+            case "method-return-type" -> new SearchCommand(
+                    new SearchQuery(rawQuery, EntityKind.METHOD, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
+            );
             default -> new SearchCommand(
                     new SearchQuery(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE, SearchTarget.CONTENT, fuzzy, caseSensitive, limit, pathFilter)
             );
@@ -185,7 +188,7 @@ public class App {
         String kind = colorize(GREEN, entity.kind().legacyJavaType());
         String file = colorize(DIM, entity.location().filePath() + ":" + entity.location().line());
 
-        if (entity.kind() == EntityKind.FIELD || entity.kind() == EntityKind.LOCAL_VARIABLE) {
+        if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
             return String.format(
                     "%s %s %s  [%s]  %s",
                     prefix,
@@ -224,6 +227,7 @@ public class App {
         out.println("  search java method testMethod -f");
         out.println("  search java field-type String");
         out.println("  search java local-variable-type String --limit 1");
+        out.println("  search java method-return-type String");
         out.println("  search java field-type String --path src/test/resources");
     }
 

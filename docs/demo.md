@@ -89,6 +89,21 @@
 ./gradlew run --args="search java local-variable-type String"
 ```
 
+Для методов можно искать по возвращаемому типу:
+
+```bash
+./gradlew run --args="search java method-return-type String"
+```
+
+Пример результата:
+
+```text
+Найдено совпадений: 1
+1. Method getTestField  [String]  src/test/resources/TestClass.java:30
+```
+
+Это хороший пример отличия от обычного текстового поиска: запрос ищет не слово `String` в файле, а методы, у которых `String` является return type.
+
 ## Шаг 5. Ограничение выдачи
 
 Если совпадений много, можно показать только первые результаты:
@@ -146,10 +161,11 @@ index java <path>
 ./gradlew run --args="search java class TestClass"
 ./gradlew run --args="search java field testField"
 ./gradlew run --args="search java field-type String"
+./gradlew run --args="search java method-return-type String"
 ./gradlew run --args="search java local-variable-type String --limit 1"
 ```
 
-Этого достаточно, чтобы показать главную идею: проект ищет не просто текстовые совпадения, а сущности Java-кода с учётом структуры и типов.
+Этого достаточно, чтобы показать главную идею: проект ищет не просто текстовые совпадения, а сущности Java-кода с учётом структуры, ролей и типов.
 
 ## Про предупреждения JVM и Lucene
 

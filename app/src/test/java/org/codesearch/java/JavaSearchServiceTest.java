@@ -92,6 +92,19 @@ class JavaSearchServiceTest {
     }
 
     @Test
+    void shouldSearchMethodByReturnType() throws IOException {
+        SearchQuery query = new SearchQuery("String", EntityKind.METHOD, "java", SearchTarget.DECLARED_TYPE, false, true, 100);
+
+        List<SearchResult> results = SEARCH_SERVICE.search(query);
+
+        assertEquals(1, results.size());
+        CodeEntity entity = results.getFirst().entity();
+        assertEquals(EntityKind.METHOD, entity.kind());
+        assertEquals("getTestField", entity.content());
+        assertEquals("String", entity.declaredType());
+    }
+
+    @Test
     void shouldLimitReturnedResultsWithoutChangingTotalHits() throws IOException {
         SearchQuery query = new SearchQuery("String", EntityKind.FIELD, "java", SearchTarget.DECLARED_TYPE, false, true, 1);
 

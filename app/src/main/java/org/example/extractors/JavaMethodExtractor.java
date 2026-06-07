@@ -22,8 +22,9 @@ public class JavaMethodExtractor extends JavaBaseListener {
     @Override
     public void enterMethodDeclaration(JavaParser.MethodDeclarationContext ctx) {
         String methodName = ctx.Identifier().getText();
+        String returnType = ctx.typeSpec() == null ? "void" : ctx.typeSpec().getText();
         int lineNumber = ctx.getStart().getLine();
-        methods.add(new ExtractedMethod(currentFile, lineNumber, methodName));
+        methods.add(new ExtractedMethod(currentFile, lineNumber, methodName, returnType));
     }
 
     public List<ExtractedMethod> getMethods() {
@@ -34,11 +35,13 @@ public class JavaMethodExtractor extends JavaBaseListener {
         private final String file;
         private final int line;
         private final String methodName;
+        private final String returnType;
 
-        public ExtractedMethod(String file, int line, String methodName) {
+        public ExtractedMethod(String file, int line, String methodName, String returnType) {
             this.file = file;
             this.line = line;
             this.methodName = methodName;
+            this.returnType = returnType;
         }
 
         public String getFile() {
@@ -53,9 +56,13 @@ public class JavaMethodExtractor extends JavaBaseListener {
             return methodName;
         }
 
+        public String getReturnType() {
+            return returnType;
+        }
+
         @Override
         public String toString() {
-            return "File: " + file + ", Line: " + line + ", Method: " + methodName;
+            return "File: " + file + ", Line: " + line + ", Method: " + methodName + ", ReturnType: " + returnType;
         }
     }
 }

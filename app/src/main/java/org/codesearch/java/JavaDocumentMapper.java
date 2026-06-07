@@ -13,7 +13,7 @@ final class JavaDocumentMapper {
 
     static CodeEntity toCodeEntity(Document document) {
         Map<String, String> attributes = new HashMap<>();
-        String declaredType = document.get("varType");
+        String declaredType = readDeclaredType(document);
         if (declaredType != null && !declaredType.isBlank()) {
             attributes.put("declaredType", declaredType);
         }
@@ -30,5 +30,14 @@ final class JavaDocumentMapper {
                 declaredType,
                 attributes
         );
+    }
+
+    private static String readDeclaredType(Document document) {
+        String declaredType = document.get("declaredType");
+        if (declaredType != null && !declaredType.isBlank()) {
+            return declaredType;
+        }
+
+        return document.get("varType");
     }
 }

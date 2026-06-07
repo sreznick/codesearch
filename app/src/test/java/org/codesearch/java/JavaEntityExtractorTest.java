@@ -33,6 +33,11 @@ class JavaEntityExtractorTest {
                         && entity.content().equals("Test String")));
 
         assertTrue(entities.stream().anyMatch(entity ->
+                entity.kind() == EntityKind.METHOD
+                        && entity.content().equals("getTestField")
+                        && "String".equals(entity.declaredType())));
+
+        assertTrue(entities.stream().anyMatch(entity ->
                 entity.kind() == EntityKind.LOCAL_VARIABLE
                         && entity.content().equals("localVariable")
                         && "String".equals(entity.declaredType())));

@@ -19,7 +19,7 @@
 - базовые тесты
 - новый CLI в `app/src/main/java/org/codesearch/App`
 - новый внутренний путь индексации и поиска для Java в `app/src/main/java/org/codesearch/java`
-- поиск полей и локальных переменных по declared type
+- поиск полей, локальных переменных и методов по типу
 - лимит выдачи и фильтр результатов по пути
 - более понятные ошибки, если индекс ещё не создан или сломан
 
@@ -54,6 +54,7 @@
 ./gradlew run --args="index java src/test/resources"
 ./gradlew run --args="search java class TestClass"
 ./gradlew run --args="search java field-type String"
+./gradlew run --args="search java method-return-type String"
 ```
 
 Если индекс ещё не создан, поиск теперь должен сказать об этом нормальным сообщением и предложить сначала выполнить `index java <path>`.
