@@ -5,7 +5,6 @@ import org.codesearch.core.EntityKind;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
-import org.example.JavaSourceIndexer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

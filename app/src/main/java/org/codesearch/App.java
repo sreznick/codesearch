@@ -7,7 +7,7 @@ import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
 import org.codesearch.java.JavaLanguageModule;
 import org.codesearch.java.JavaSearchService;
-import org.example.JavaSourceIndexer;
+import org.codesearch.java.JavaSourceIndexer;
 
 import java.io.IOException;
 import java.io.PrintStream;

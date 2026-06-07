@@ -13,12 +13,12 @@
 
 ## Что уже есть
 
-- Java CLI в `app/src/main/java/org/example`
+- legacy Java CLI в `app/src/main/java/org/example`
 - индексация Java-файлов в Lucene
 - поиск по нескольким видам Java-сущностей
 - базовые тесты
 - новый CLI в `app/src/main/java/org/codesearch/App`
-- новый внутренний путь индексации и поиска для Java
+- новый внутренний путь индексации и поиска для Java в `app/src/main/java/org/codesearch/java`
 - поиск полей и локальных переменных по declared type
 - лимит выдачи и фильтр результатов по пути
 - более понятные ошибки, если индекс ещё не создан или сломан
