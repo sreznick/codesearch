@@ -242,6 +242,9 @@ public class App {
         if (noColor != null) {
             return false;
         }
+        if (System.console() == null) {
+            return false;
+        }
 
         String term = System.getenv("TERM");
         return term != null && !"dumb".equalsIgnoreCase(term);

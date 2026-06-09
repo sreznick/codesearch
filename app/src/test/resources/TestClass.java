@@ -32,3 +32,9 @@ public class TestClass {
     }
 }
 
+class testclass {
+    private int testInt = 12345;
+
+}
+
+
