@@ -38,7 +38,10 @@ class AppTest {
         assertTrue(outContent.toString().contains("codesearch index [path]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
         assertTrue(outContent.toString().contains("codesearch class TestClass"));
-        assertTrue(outContent.toString().contains("Legacy-команды"));
+        assertFalse(outContent.toString().contains("-r, --recursive"));
+        assertFalse(outContent.toString().contains("codesearch -r"));
+        assertFalse(outContent.toString().contains("Legacy-команды"));
+        assertFalse(outContent.toString().contains("codesearch search java"));
     }
 
     @Test

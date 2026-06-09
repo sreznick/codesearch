@@ -546,7 +546,6 @@ public class App {
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
         out.println(colorize(BLUE, "Опции"));
-        out.println("  -r, --recursive        совместимость со стилем grep; поиск и так рекурсивный");
         out.println("  -k, --kind KIND        искать только сущности указанного вида");
         out.println("  -n, --limit N          показать не больше N результатов");
         out.println("  -cs, --case-sensitive  учитывать регистр");
@@ -558,14 +557,9 @@ public class App {
         out.println("  codesearch TestClass");
         out.println("  codesearch class TestClass");
         out.println("  codesearch testField src --kind field");
-        out.println("  codesearch -r test src");
         out.println("  codesearch index .");
         out.println("  codesearch --cached class TestClass");
         out.println("  codesearch --cached field-type String");
-        out.println();
-        out.println(colorize(BLUE, "Legacy-команды"));
-        out.println("  codesearch index java <path>");
-        out.println("  codesearch search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]");
     }
 
     private static void printQuickSearchUsage(PrintStream err) {

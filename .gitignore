@@ -34,3 +34,7 @@ build
 # Generated Lucene indexes
 index/
 app/index/
+
+
+# Unpacked application distributions
+codesearch/

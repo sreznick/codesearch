@@ -181,22 +181,6 @@ unzip app/build/distributions/codesearch.zip
 ./codesearch/bin/codesearch class TestClass /path/to/java/project
 ```
 
-Именно этот zip можно прикрепить к GitHub Release.
 
-## 8. Минимальный набор команд для показа
 
-```bash
-./gradlew test
-./gradlew installDist
-export PATH="$PATH:$PWD/app/build/install/codesearch/bin"
-codesearch class TestClass app/src/test/resources
-codesearch field testField app/src/test/resources
-codesearch index app/src/test/resources
-codesearch --cached class TestClass
-codesearch --cached field-type String
-codesearch --cached method-return-type String
-codesearch --cached local-variable-type String --limit 1
-./gradlew distZip
-```
-
-Этого достаточно, чтобы показать проект простыми словами: `codesearch` разбирает Java-код, создаёт индекс и позволяет искать классы, методы, поля и типы точнее, чем обычный текстовый поиск.
+`Codesearch` разбирает Java-код, создаёт индекс и позволяет искать классы, методы, поля и типы точнее, чем обычный текстовый поиск.
