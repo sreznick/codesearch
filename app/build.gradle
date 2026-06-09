@@ -70,6 +70,7 @@ tasks.named('test') {
 }
 
 tasks.named('run') {
+    workingDir = rootProject.projectDir
     standardInput = System.in
     jvmArgs '--enable-native-access=ALL-UNNAMED',
             "-Djava.util.logging.config.file=${layout.projectDirectory.file('config/java-logging.properties').asFile.absolutePath}"
