@@ -29,3 +29,8 @@ replay_pid*
 
 # Ignore Gradle build output directory
 build
+
+
+# Generated Lucene indexes
+index/
+app/index/
