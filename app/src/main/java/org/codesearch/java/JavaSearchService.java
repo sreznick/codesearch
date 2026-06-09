@@ -10,6 +10,7 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
@@ -80,6 +81,55 @@ public class JavaSearchService {
         } catch (IOException e) {
             throw new IndexUnavailableException("Не удалось прочитать индекс, возможно, он поврежден: " + indexPath, e);
         }
+    }
+
+    public SearchResponse searchContaining(String text, EntityKind kind, String language, boolean caseSensitive, int limit, String pathFilter) throws IOException {
+        validateContainsQuery(text, kind, language, limit);
+
+        if (language != null && !languageModule.language().equals(language)) {
+            return new SearchResponse(0, List.of());
+        }
+
+        validateIndexPath();
+
+        String needle = caseSensitive ? text.trim() : text.trim().toLowerCase();
+        try (MMapDirectory directory = new MMapDirectory(indexPath);
+             IndexReader reader = DirectoryReader.open(directory)) {
+
+            IndexSearcher searcher = new IndexSearcher(reader);
+            TopDocs topDocs = searcher.search(new MatchAllDocsQuery(), MAX_RESULTS_TO_SCAN);
+
+            List<SearchResult> matches = new ArrayList<>();
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                Document document = searcher.storedFields().document(scoreDoc.doc);
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score);
+                if (matchesKind(result, kind)
+                        && matchesPathFilter(result, pathFilter)
+                        && containsText(result, needle, caseSensitive)) {
+                    matches.add(result);
+                }
+            }
+
+            return new SearchResponse(matches.size(), matches.stream().limit(limit).toList());
+        } catch (IndexNotFoundException e) {
+            throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
+        } catch (CorruptIndexException e) {
+            throw new IndexUnavailableException("Индекс поврежден: " + indexPath, e);
+        } catch (IOException e) {
+            throw new IndexUnavailableException("Не удалось прочитать индекс, возможно, он поврежден: " + indexPath, e);
+        }
+    }
+
+    private boolean matchesKind(SearchResult result, EntityKind kind) {
+        return kind == null || result.entity().kind() == kind;
+    }
+
+    private boolean containsText(SearchResult result, String needle, boolean caseSensitive) {
+        String haystack = result.entity().content();
+        if (!caseSensitive) {
+            haystack = haystack.toLowerCase();
+        }
+        return haystack.contains(needle);
     }
 
     private boolean matchesPathFilter(SearchResult result, String pathFilter) {
@@ -161,6 +211,21 @@ public class JavaSearchService {
                 && searchQuery.kind() != EntityKind.LOCAL_VARIABLE
                 && searchQuery.kind() != EntityKind.METHOD) {
             throw new IllegalArgumentException("Declared type search is supported only for fields, local variables and methods");
+        }
+    }
+
+    private void validateContainsQuery(String text, EntityKind kind, String language, int limit) {
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("Query text must not be blank");
+        }
+        if (limit < 1) {
+            throw new IllegalArgumentException("Limit must be positive");
+        }
+        if (language != null && !languageModule.language().equals(language)) {
+            return;
+        }
+        if (kind != null && !languageModule.supportedEntityKinds().contains(kind)) {
+            throw new IllegalArgumentException("Java search does not support entity kind: " + kind);
         }
     }
 

@@ -48,12 +48,41 @@
 Дальше можно проиндексировать тестовые Java-файлы и выполнить несколько поисковых запросов:
 
 ```bash
-./gradlew run --args="index java src/test/resources"
-./gradlew run --args="search java class TestClass"
+./gradlew run --args="TestClass src/test/resources"
+./gradlew run --args="class TestClass src/test/resources"
+./gradlew run --args="field testField src/test/resources"
 ./gradlew run --args="search java field-type String"
 ./gradlew run --args="search java method-return-type String"
 ```
 
+Основной режим похож на `grep -r`: он принимает запрос и необязательный путь, сам индексирует указанный Java-код во временный индекс и ищет по содержимому найденных сущностей. Если первым аргументом указать вид сущности, например `class` или `field`, поиск будет ограничен этим видом. Старые команды `index` и `search` остаются для точных структурных запросов и работы с постоянным индексом, например поиска полей по declared type.
+
 Если индекс ещё не создан, поиск теперь должен сказать об этом нормальным сообщением и предложить сначала выполнить `index java <path>`.
 
 Более полный сценарий для проверки лежит в [docs/demo.md](docs/demo.md).
+
+## Сборка архива для скачивания
+
+```bash
+./gradlew distZip
+```
+
+Готовый архив:
+
+```bash
+app/build/distributions/codesearch.zip
+```
+
+Проверка после распаковки:
+
+```bash
+unzip codesearch.zip
+./codesearch/bin/codesearch class TestClass /path/to/java/project
+```
+
+Чтобы запускать как обычную команду:
+
+```bash
+export PATH="$PATH:/path/to/codesearch/bin"
+codesearch class TestClass .
+```

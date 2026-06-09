@@ -33,9 +33,10 @@ class AppTest {
         int exitCode = App.run(new String[]{}, out, err);
 
         assertEquals(0, exitCode);
-        assertTrue(outContent.toString().contains("index java <path>"));
-        assertTrue(outContent.toString().contains("search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]"));
-        assertTrue(outContent.toString().contains("search java field-type String"));
+        assertTrue(outContent.toString().contains("codesearch [options] <query> [path]"));
+        assertTrue(outContent.toString().contains("codesearch [options] <kind> <query> [path]"));
+        assertTrue(outContent.toString().contains("codesearch class TestClass"));
+        assertTrue(outContent.toString().contains("Legacy-команды"));
     }
 
     @Test
@@ -44,6 +45,80 @@ class AppTest {
 
         assertEquals(1, exitCode);
         assertTrue(errContent.toString().contains("Пока поддерживается только язык java."));
+    }
+
+    @Test
+    void shouldRunGrepStyleSearchWithKindFilter(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String magicToken = "needle";
+
+                    public void magicMethod() {
+                    }
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"field", "magic", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Field"));
+        assertTrue(output.contains("magicToken"));
+        assertFalse(output.contains("magicMethod"));
+    }
+
+    @Test
+    void shouldRunGrepAliasCaseInsensitiveByDefault(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"grep", "-r", "sample", sourcePath.toString(), "--kind", "class"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldAcceptLanguagePrefixInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"java", "class", "SampleSearch", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("SampleSearch"));
     }
 
     @Test

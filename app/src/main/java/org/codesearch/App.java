@@ -11,9 +11,13 @@ import org.codesearch.java.JavaSourceIndexer;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class App {
     private static final int DEFAULT_LIMIT = 100;
@@ -47,10 +51,9 @@ public class App {
         return switch (command) {
             case "index" -> handleIndex(args, out, err, indexPath);
             case "search" -> handleSearch(args, out, err, indexPath);
+            case "grep" -> handleQuickSearch(args, out, err, indexPath, 1);
             default -> {
-                err.println(colorize(RED, "Неизвестная команда: ") + args[0]);
-                printHelp(out);
-                yield 1;
+                yield handleQuickSearch(args, out, err, indexPath, 0);
             }
         };
     }
@@ -82,6 +85,142 @@ public class App {
         } catch (IOException e) {
             err.println(colorize(RED, "Ошибка индексации: ") + e.getMessage());
             return 1;
+        }
+    }
+
+    private static int handleQuickSearch(String[] args, PrintStream out, PrintStream err, Path indexPath, int startIndex) {
+        QuickSearchCommand command;
+        try {
+            command = parseQuickSearchCommand(args, startIndex);
+        } catch (IllegalArgumentException e) {
+            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            printQuickSearchUsage(err);
+            return 1;
+        }
+
+        if (!isJava(command.language())) {
+            err.println(colorize(RED, "Пока поддерживается только язык java."));
+            return 1;
+        }
+
+        Path quickIndexPath = null;
+        try {
+            quickIndexPath = Files.createTempDirectory("codesearch-quick-index");
+            JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
+            JavaSearchService searchService = new JavaSearchService(quickIndexPath);
+            JavaSearchService.SearchResponse response = searchService.searchContaining(
+                    command.query(),
+                    command.kind(),
+                    command.language(),
+                    command.caseSensitive(),
+                    command.limit(),
+                    null
+            );
+            printResults(out, response);
+            return 0;
+        } catch (IllegalArgumentException e) {
+            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            return 1;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            err.println(colorize(RED, "Ошибка поиска: ") + "индексация была прервана.");
+            return 1;
+        } catch (IOException e) {
+            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            return 1;
+        } finally {
+            deleteDirectoryQuietly(quickIndexPath);
+        }
+    }
+
+    private static QuickSearchCommand parseQuickSearchCommand(String[] args, int startIndex) {
+        String language = JavaLanguageModule.LANGUAGE;
+        EntityKind kind = null;
+        boolean caseSensitive = false;
+        int limit = DEFAULT_LIMIT;
+        List<String> operands = new ArrayList<>();
+
+        for (int i = startIndex; i < args.length; i++) {
+            String arg = args[i];
+            if ("-r".equalsIgnoreCase(arg) || "--recursive".equalsIgnoreCase(arg)) {
+                continue;
+            }
+            if ("-cs".equalsIgnoreCase(arg) || "--case-sensitive".equalsIgnoreCase(arg)) {
+                caseSensitive = true;
+                continue;
+            }
+            if ("--lang".equalsIgnoreCase(arg) || "-l".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан язык.");
+                }
+                language = args[++i].trim().toLowerCase();
+                continue;
+            }
+            if ("--kind".equalsIgnoreCase(arg) || "-k".equalsIgnoreCase(arg) || "--type".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан тип сущности.");
+                }
+                kind = EntityKind.fromValue(args[++i]);
+                continue;
+            }
+            if ("--limit".equalsIgnoreCase(arg) || "-n".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан лимит результатов.");
+                }
+                try {
+                    limit = Integer.parseInt(args[++i]);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Лимит должен быть числом: " + args[i], e);
+                }
+                if (limit < 1) {
+                    throw new IllegalArgumentException("Лимит должен быть положительным числом.");
+                }
+                continue;
+            }
+            if (arg.startsWith("-")) {
+                throw new IllegalArgumentException("Неизвестный флаг: " + arg);
+            }
+            operands.add(arg);
+        }
+
+        if (!operands.isEmpty() && isJava(operands.getFirst())) {
+            language = operands.removeFirst().trim().toLowerCase();
+        }
+
+        String query;
+        String sourcePath = ".";
+        if (operands.size() == 1) {
+            query = operands.getFirst();
+        } else if (operands.size() == 2) {
+            EntityKind operandKind = parseEntityKindOrNull(operands.getFirst());
+            if (kind == null && operandKind != null) {
+                kind = operandKind;
+                query = operands.get(1);
+            } else {
+                query = operands.getFirst();
+                sourcePath = operands.get(1);
+            }
+        } else if (operands.size() == 3) {
+            EntityKind operandKind = parseEntityKindOrNull(operands.getFirst());
+            if (kind == null && operandKind != null) {
+                kind = operandKind;
+                query = operands.get(1);
+                sourcePath = operands.get(2);
+            } else {
+                throw new IllegalArgumentException("Нужно указать запрос и путь.");
+            }
+        } else {
+            throw new IllegalArgumentException("Нужно указать запрос.");
+        }
+
+        return new QuickSearchCommand(query, sourcePath, language, kind, caseSensitive, limit);
+    }
+
+    private static EntityKind parseEntityKindOrNull(String value) {
+        try {
+            return EntityKind.fromValue(value);
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 
@@ -218,20 +357,48 @@ public class App {
 
     private static void printHelp(PrintStream out) {
         out.println(colorize(BLUE, "Команды"));
-        out.println("  index java <path>");
-        out.println("  search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]");
+        out.println("  codesearch [options] <query> [path]");
+        out.println("  codesearch [options] <kind> <query> [path]");
+        out.println();
+        out.println(colorize(BLUE, "Опции"));
+        out.println("  -r, --recursive        совместимость со стилем grep; поиск и так рекурсивный");
+        out.println("  -k, --kind KIND        искать только сущности указанного вида");
+        out.println("  -n, --limit N          показать не больше N результатов");
+        out.println("  -cs, --case-sensitive  учитывать регистр");
+        out.println("  --lang java            язык; сейчас поддерживается только java");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
-        out.println("  index java src");
-        out.println("  search java class TestClass");
-        out.println("  search java method testMethod -f");
-        out.println("  search java field-type String");
-        out.println("  search java local-variable-type String --limit 1");
-        out.println("  search java method-return-type String");
-        out.println("  search java field-type String --path src/test/resources");
+        out.println("  codesearch TestClass");
+        out.println("  codesearch class TestClass");
+        out.println("  codesearch testField src --kind field");
+        out.println("  codesearch -r test src");
+        out.println();
+        out.println(colorize(BLUE, "Legacy-команды"));
+        out.println("  codesearch index java <path>");
+        out.println("  codesearch search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]");
+    }
+
+    private static void printQuickSearchUsage(PrintStream err) {
+        err.println(colorize(DIM, "Использование: ") + "codesearch [options] <query> [path]");
+    }
+
+    private static void deleteDirectoryQuietly(Path path) {
+        if (path == null || !Files.exists(path)) {
+            return;
+        }
+
+        try (Stream<Path> paths = Files.walk(path)) {
+            for (Path file : paths.sorted(Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(file);
+            }
+        } catch (IOException ignored) {
+            // Temporary quick-search indexes are best-effort cleanup only.
+        }
     }
 
     private record SearchCommand(SearchQuery query) {}
+
+    private record QuickSearchCommand(String query, String sourcePath, String language, EntityKind kind, boolean caseSensitive, int limit) {}
 
     private static String colorize(String color, String text) {
         return USE_COLOR ? color + text + RESET : text;
