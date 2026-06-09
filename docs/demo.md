@@ -1,194 +1,202 @@
-# Демонстрационный сценарий
+# Демо codesearch
 
-Сейчас основной сценарий такой: берём Java-код, индексируем его, потом ищем не просто текст, а конкретные сущности языка.
+Этот файл показывает основной сценарий: как запустить проект, как искать в стиле `grep`, как создать постоянный индекс и как собрать архив для скачивания.
 
-## Перед запуском
+В примерах используется тестовый Java-файл:
 
-Нужен JDK 21.
+```bash
+app/src/test/resources/TestClass.java
+```
 
-Сначала лучше проверить тесты:
+## 1. Проверить проект
 
 ```bash
 ./gradlew test
 ```
 
-Если тесты прошли, можно запускать CLI.
+Если тесты прошли, CLI можно запускать.
 
-## Быстрый grep-подобный режим
+## 2. Быстрый поиск без установки
 
-Для быстрого поиска можно использовать короткую форму:
-
-```bash
-./gradlew run --args="test src/test/resources"
-```
-
-Она похожа на `grep -r "test" src/test/resources`: CLI сам индексирует указанный путь во временный индекс и ищет по содержимому найденных Java-сущностей. Если путь не указан, используется текущая директория.
-
-Можно ограничить поиск конкретным видом сущности:
+Через Gradle:
 
 ```bash
-./gradlew run --args="field testField src/test/resources"
-```
-
-В installed/dist-сборке та же команда будет выглядеть короче:
-
-```bash
-codesearch field testField src/test/resources
-```
-
-## Шаг 1. Индексация Java-кода
-
-Для быстрой проверки можно использовать тестовые файлы из проекта:
-
-```bash
-./gradlew run --args="index java src/test/resources"
+./gradlew run --args="TestClass app/src/test/resources"
 ```
 
 Ожидаемый смысл результата:
 
 ```text
-Готово  Индексация завершена
-Язык: java
-Путь:  src/test/resources
-```
-
-После этого рядом с приложением появится локальная директория индекса. Её не нужно коммитить в git.
-
-## Шаг 2. Поиск класса
-
-```bash
-./gradlew run --args="search java class TestClass"
-```
-
-Что проверяем:
-- CLI читает уже созданный индекс
-- ищет именно Java-класс
-- показывает файл и строку
-
-Пример результата:
-
-```text
 Найдено совпадений: 1
-1. Class TestClass  src/test/resources/TestClass.java:6
+1. Class TestClass  app/src/test/resources/TestClass.java:6
 ```
 
-## Шаг 3. Поиск поля по имени
+Ограничить поиск только классами:
 
 ```bash
-./gradlew run --args="search java field testField"
+./gradlew run --args="class TestClass app/src/test/resources"
 ```
 
-Здесь важно, что результат содержит не только имя поля, но и его declared type:
-
-```text
-Найдено совпадений: 1
-1. Field testField  [String]  src/test/resources/TestClass.java:7
-```
-
-Обычный `grep` нашёл бы строку с `testField`, но не понимал бы, что это именно поле Java-класса и что его тип `String`.
-
-## Шаг 4. Поиск по типу
+Ограничить поиск только полями:
 
 ```bash
-./gradlew run --args="search java field-type String"
+./gradlew run --args="field testField app/src/test/resources"
 ```
-
-Это уже более показательный сценарий. Мы ищем не имя поля, а поля, объявленные как `String`.
 
 Пример результата:
 
 ```text
 Найдено совпадений: 2
-1. Field testField  [String]  src/test/resources/TestClass.java:7
-2. Field testFieldDuplicate  [String]  src/test/resources/TestClass.java:12
+1. Field testField  [String]  app/src/test/resources/TestClass.java:7
+2. Field testFieldDuplicate  [String]  app/src/test/resources/TestClass.java:12
 ```
 
-Для локальных переменных работает похожий запрос:
+Это одноразовый режим. Он создаёт временный индекс, ищет и удаляет временный индекс после завершения.
+
+## 3. Собрать локальную команду codesearch
 
 ```bash
-./gradlew run --args="search java local-variable-type String"
+./gradlew installDist
 ```
 
-Для методов можно искать по возвращаемому типу:
+Проверить:
 
 ```bash
-./gradlew run --args="search java method-return-type String"
+app/build/install/codesearch/bin/codesearch --help
+```
+
+Запустить поиск:
+
+```bash
+app/build/install/codesearch/bin/codesearch class TestClass app/src/test/resources
+```
+
+Для удобства можно добавить `bin` в `PATH`:
+
+```bash
+export PATH="$PATH:$PWD/app/build/install/codesearch/bin"
+codesearch class TestClass app/src/test/resources
+```
+
+## 4. Постоянный индекс
+
+Если нужно выполнять много запросов по одному проекту, лучше один раз создать индекс:
+
+```bash
+codesearch index app/src/test/resources
+```
+
+После этого запросы с `--cached` будут читать готовый индекс:
+
+```bash
+codesearch --cached class TestClass
+codesearch --cached field testField
+codesearch --cached method getTestField
+```
+
+`--cached` быстрее для повторных запросов, потому что не обходит и не индексирует файлы заново.
+
+Если исходники изменились, индекс нужно пересоздать:
+
+```bash
+codesearch index app/src/test/resources
+```
+
+## 5. Поиск по типам
+
+Найти поля типа `String`:
+
+```bash
+codesearch --cached field-type String
 ```
 
 Пример результата:
 
 ```text
-Найдено совпадений: 1
-1. Method getTestField  [String]  src/test/resources/TestClass.java:30
+Найдено совпадений: 2
+1. Field testField  [String]  app/src/test/resources/TestClass.java:7
+2. Field testFieldDuplicate  [String]  app/src/test/resources/TestClass.java:12
 ```
 
-Это хороший пример отличия от обычного текстового поиска: запрос ищет не слово `String` в файле, а методы, у которых `String` является return type.
-
-## Шаг 5. Ограничение выдачи
-
-Если совпадений много, можно показать только первые результаты:
+Найти методы, которые возвращают `String`:
 
 ```bash
-./gradlew run --args="search java field-type String --limit 1"
+codesearch --cached method-return-type String
 ```
 
-Счётчик всё равно показывает полное число совпадений, но в списке будет только один результат.
-
-## Шаг 6. Фильтр по пути
-
-Можно искать только в файлах, путь которых содержит нужную часть:
+Найти локальные переменные типа `String`:
 
 ```bash
-./gradlew run --args="search java class TestClass --path src/test/resources"
+codesearch --cached local-variable-type String
 ```
 
-Если указать путь, который не подходит ни одному результату, CLI должен спокойно вернуть пустую выдачу:
+Это главное отличие от обычного `grep`: запрос ищет не просто слово `String` в тексте, а конкретные Java-сущности с таким типом.
+
+## 6. Лимит и фильтр по пути
+
+Показать только один результат:
 
 ```bash
-./gradlew run --args="search java class TestClass --path missing/path"
+codesearch --cached field-type String --limit 1
 ```
 
-Ожидаемый смысл:
+Искать только в файлах, путь которых содержит нужную часть:
+
+```bash
+codesearch --cached class TestClass --path app/src/test/resources
+```
+
+Если фильтр не подходит ни одному результату:
+
+```bash
+codesearch --cached class TestClass --path missing/path
+```
+
+Ожидаемый результат:
 
 ```text
 Найдено совпадений: 0
 Совпадений нет.
 ```
 
-## Если поиск запустить до индексации
+## 7. Архив для скачивания
 
-Команда:
+Собрать zip:
 
 ```bash
-./gradlew run --args="search java class TestClass"
+./gradlew distZip
 ```
 
-до создания индекса должна завершиться ошибкой и подсказать, что сначала нужно выполнить:
+Архив появится здесь:
 
-```text
-index java <path>
+```bash
+app/build/distributions/codesearch.zip
 ```
 
-Это нормально. Поиск работает по Lucene-индексу, поэтому сначала нужно один раз выполнить индексацию.
+Проверка архива:
 
-## Что показывать на защите
+```bash
+unzip app/build/distributions/codesearch.zip
+./codesearch/bin/codesearch --help
+./codesearch/bin/codesearch class TestClass /path/to/java/project
+```
 
-Минимальный набор команд:
+Именно этот zip можно прикрепить к GitHub Release.
+
+## 8. Минимальный набор команд для показа
 
 ```bash
 ./gradlew test
-./gradlew run --args="index java src/test/resources"
-./gradlew run --args="search java class TestClass"
-./gradlew run --args="search java field testField"
-./gradlew run --args="search java field-type String"
-./gradlew run --args="search java method-return-type String"
-./gradlew run --args="search java local-variable-type String --limit 1"
+./gradlew installDist
+export PATH="$PATH:$PWD/app/build/install/codesearch/bin"
+codesearch class TestClass app/src/test/resources
+codesearch field testField app/src/test/resources
+codesearch index app/src/test/resources
+codesearch --cached class TestClass
+codesearch --cached field-type String
+codesearch --cached method-return-type String
+codesearch --cached local-variable-type String --limit 1
+./gradlew distZip
 ```
 
-Этого достаточно, чтобы показать главную идею: проект ищет не просто текстовые совпадения, а сущности Java-кода с учётом структуры, ролей и типов.
-
-## Про предупреждения JVM и Lucene
-
-При запуске могут появляться предупреждения вроде `restricted method` или `Java vector incubator module is not readable`.
-
-Это не ошибки CLI. Они приходят от JVM/Lucene и не мешают индексации или поиску.
+Этого достаточно, чтобы показать проект простыми словами: `codesearch` разбирает Java-код, создаёт индекс и позволяет искать классы, методы, поля и типы точнее, чем обычный текстовый поиск.

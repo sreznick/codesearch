@@ -147,8 +147,10 @@ public class JavaEntityExtractor {
 
     private <T> T parse(String content, JavaBaseListener extractor, ParseResultMapper<T> callback) {
         JavaLexer lexer = new JavaLexer(CharStreams.fromString(content));
+        lexer.removeErrorListeners();
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         JavaParser parser = new JavaParser(tokens);
+        parser.removeErrorListeners();
 
         ParseTree tree = parser.compilationUnit();
         ParseTreeWalker walker = new ParseTreeWalker();

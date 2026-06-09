@@ -1,67 +1,132 @@
 # codesearch
 
-Это проект про поиск по исходному коду не как по тексту, а как по структуре языка.
+`codesearch` - это CLI для поиска по Java-коду.
 
-Идея такая:
-- разбирать код через `ANTLR`
-- складывать найденные сущности в `Lucene`
-- потом искать не просто строки, а, например, переменные, методы, поля, строковые константы и так далее
+Он похож на `grep`, но ищет не только текстовые совпадения. Программа разбирает Java-файлы, достаёт из них сущности языка и кладёт их в Lucene-индекс. Поэтому можно искать, например, классы, методы, поля, локальные переменные, строки, литералы и объявления с конкретным типом.
 
-Эта ветка нужна, чтобы привести Java-часть в более внятный вид: почистить внутреннюю архитектуру, сделать новый CLI и добавить несколько полезных возможностей поверх уже существующего поиска.
+## Что есть сейчас
 
-## Что уже есть
+- поиск по Java-файлам
+- grep-подобный режим: `codesearch <query> [path]`
+- поиск по виду сущности: `codesearch class TestClass .`
+- постоянный индекс для быстрых повторных запросов
+- поиск полей, локальных переменных и методов по declared type / return type
+- фильтр результатов по пути
+- ограничение количества результатов
+- zip-дистрибутив, который можно выложить на GitHub Releases
 
-- legacy Java CLI в `app/src/main/java/org/example`
-- индексация Java-файлов в Lucene
-- поиск по нескольким видам Java-сущностей
-- базовые тесты
-- новый CLI в `app/src/main/java/org/codesearch/App`
-- новый внутренний путь индексации и поиска для Java в `app/src/main/java/org/codesearch/java`
-- поиск полей, локальных переменных и методов по типу
-- лимит выдачи и фильтр результатов по пути
-- более понятные ошибки, если индекс ещё не создан или сломан
+## Требования
 
-## Эта ветка
+Нужен JDK 21.
 
-План на эту ветку такой:
-1. оставить `main` как стабильную стартовую точку
-2. привести Java-поиск и Java-индексацию к более чистой внутренней структуре
-3. добавить полезные Java-фичи, которые можно показать как развитие проекта
-4. оставить общий `core` как основу для дальнейшего расширения, но не делать мердж языков главной целью этой работы
-
-## Документы
-
-- [Дорожная карта](docs/roadmap.md)
-- [Демонстрационный сценарий](docs/demo.md)
-
-## Первый запуск
-
-Нужно:
-- JDK 21
-
-После клонирования проекта сначала стоит проверить, что всё собирается:
+Проверить проект:
 
 ```bash
 ./gradlew test
 ```
 
-Дальше можно проиндексировать тестовые Java-файлы и выполнить несколько поисковых запросов:
+## Быстрый запуск через Gradle
+
+Можно запускать CLI прямо из проекта:
 
 ```bash
-./gradlew run --args="TestClass src/test/resources"
-./gradlew run --args="class TestClass src/test/resources"
-./gradlew run --args="field testField src/test/resources"
-./gradlew run --args="search java field-type String"
-./gradlew run --args="search java method-return-type String"
+./gradlew run --args="TestClass app/src/test/resources"
+./gradlew run --args="class TestClass app/src/test/resources"
+./gradlew run --args="field testField app/src/test/resources"
 ```
 
-Основной режим похож на `grep -r`: он принимает запрос и необязательный путь, сам индексирует указанный Java-код во временный индекс и ищет по содержимому найденных сущностей. Если первым аргументом указать вид сущности, например `class` или `field`, поиск будет ограничен этим видом. Старые команды `index` и `search` остаются для точных структурных запросов и работы с постоянным индексом, например поиска полей по declared type.
+Первый вариант ищет `TestClass` по всем найденным Java-сущностям. Второй ограничивает поиск классами. Третий ищет поля.
 
-Если индекс ещё не создан, поиск теперь должен сказать об этом нормальным сообщением и предложить сначала выполнить `index java <path>`.
+Если путь не указать, используется текущая директория:
 
-Более полный сценарий для проверки лежит в [docs/demo.md](docs/demo.md).
+```bash
+./gradlew run --args="class TestClass"
+```
 
-## Сборка архива для скачивания
+## Как запускать как codesearch
+
+Собрать локальную installed-версию:
+
+```bash
+./gradlew installDist
+```
+
+Запустить:
+
+```bash
+app/build/install/codesearch/bin/codesearch --help
+app/build/install/codesearch/bin/codesearch class TestClass app/src/test/resources
+```
+
+Чтобы команда была доступна как обычная программа:
+
+```bash
+export PATH="$PATH:$PWD/app/build/install/codesearch/bin"
+codesearch class TestClass app/src/test/resources
+```
+
+## Два режима работы
+
+### 1. Быстрый одноразовый поиск
+
+```bash
+codesearch <query> [path]
+codesearch <kind> <query> [path]
+```
+
+Примеры:
+
+```bash
+codesearch TestClass .
+codesearch class TestClass .
+codesearch field testField .
+codesearch method getTestField .
+```
+
+В этом режиме программа сама создаёт временный индекс для указанного пути, выполняет поиск и удаляет временный индекс после завершения. Это удобно как `grep -r`, когда нужен один быстрый запрос.
+
+### 2. Поиск по постоянному индексу
+
+Сначала создать индекс:
+
+```bash
+codesearch index .
+```
+
+Потом выполнять быстрые повторные запросы:
+
+```bash
+codesearch --cached class TestClass
+codesearch --cached field testField
+codesearch --cached field-type String
+codesearch --cached method-return-type String
+codesearch --cached local-variable-type String
+```
+
+`--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
+
+## Полезные опции
+
+```bash
+codesearch class TestClass . --limit 5
+codesearch --cached class TestClass --path app/src/test/resources
+codesearch class testclass . -cs
+```
+
+- `--limit` или `-n` ограничивает количество строк в выдаче
+- `--path` фильтрует результаты по части пути в режиме `--cached`
+- `-cs` включает case-sensitive поиск
+- `--kind` или `-k` задаёт вид сущности, если не хочется писать его первым аргументом
+
+Пример с `--kind`:
+
+```bash
+codesearch TestClass . --kind class
+```
+
+## Архив для скачивания
+
+Собрать zip:
 
 ```bash
 ./gradlew distZip
@@ -73,16 +138,33 @@
 app/build/distributions/codesearch.zip
 ```
 
-Проверка после распаковки:
+После распаковки:
 
 ```bash
 unzip codesearch.zip
+./codesearch/bin/codesearch --help
 ./codesearch/bin/codesearch class TestClass /path/to/java/project
 ```
 
-Чтобы запускать как обычную команду:
+Такой архив можно прикрепить к GitHub Release, чтобы пользователь скачал его, распаковал и запускал `codesearch` из `bin/`.
 
-```bash
-export PATH="$PATH:/path/to/codesearch/bin"
-codesearch class TestClass .
-```
+## Как это работает внутри
+
+1. CLI получает запрос и путь.
+2. Индексатор обходит Java-файлы.
+3. Служебные директории вроде `build`, `.git`, `.gradle`, `target`, `node_modules` пропускаются.
+4. Java-код разбирается через ANTLR.
+5. Найденные сущности превращаются в документы Lucene.
+6. Поиск выполняется по индексу.
+7. В выдаче показываются вид сущности, имя, тип при наличии, файл и строка.
+
+## Ограничения
+
+- сейчас поддерживается Java
+- если используется `--cached`, индекс нужно пересоздавать после изменений в коде
+- парсер может не понимать часть нового Java-синтаксиса, но такие ошибки не должны засорять обычный вывод
+- это не замена `grep` для любого текста, а поиск по сущностям Java-кода
+
+## Демо
+
+Пошаговые примеры лежат в [docs/demo.md](docs/demo.md).

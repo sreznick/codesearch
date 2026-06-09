@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,16 @@ import java.util.stream.Stream;
 public class JavaSourceIndexer {
 
     private static final Logger logger = LogManager.getLogger();
+    private static final Set<String> EXCLUDED_DIRECTORY_NAMES = Set.of(
+            ".git",
+            ".gradle",
+            ".idea",
+            "build",
+            "dist",
+            "node_modules",
+            "out",
+            "target"
+    );
 
     public static void indexJavaSources(String directoryPath) throws IOException, InterruptedException {
         indexJavaSources(directoryPath, Paths.get("index"));
@@ -55,7 +66,7 @@ public class JavaSourceIndexer {
                         indexJavaFile(file, writer);
                         logger.info("Файл проиндексирован: {}", file);
                     } catch (Exception e) {
-                        logger.error("Ошибка при индексации файла {}: {}", file, e.getMessage());
+                        logger.debug("Файл пропущен при индексации {}: {}", file, e.getMessage());
                     }
                 }));
 
@@ -91,8 +102,19 @@ public class JavaSourceIndexer {
             return paths
                     .filter(Files::isRegularFile)
                     .filter(file -> file.toString().endsWith(".java"))
+                    .filter(JavaSourceIndexer::isIndexablePath)
                     .toList();
         }
+    }
+
+    private static boolean isIndexablePath(Path file) {
+        for (Path part : file.normalize()) {
+            if (EXCLUDED_DIRECTORY_NAMES.contains(part.toString())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void deleteDirectoryRecursively(Path path) throws IOException {

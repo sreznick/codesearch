@@ -35,6 +35,8 @@ class AppTest {
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("codesearch [options] <query> [path]"));
         assertTrue(outContent.toString().contains("codesearch [options] <kind> <query> [path]"));
+        assertTrue(outContent.toString().contains("codesearch index [path]"));
+        assertTrue(outContent.toString().contains("codesearch --cached"));
         assertTrue(outContent.toString().contains("codesearch class TestClass"));
         assertTrue(outContent.toString().contains("Legacy-команды"));
     }
@@ -119,6 +121,79 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Class"));
         assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldIgnoreBuildOutputInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("project");
+        Path sourceFile = sourcePath.resolve("src/test/resources/TestClass.java");
+        Path buildFile = sourcePath.resolve("build/resources/test/TestClass.java");
+        Files.createDirectories(sourceFile.getParent());
+        Files.createDirectories(buildFile.getParent());
+        String content = """
+                public class TestClass {
+                }
+                """;
+        Files.writeString(sourceFile, content);
+        Files.writeString(buildFile, content);
+
+        int exitCode = App.run(
+                new String[]{"class", "TestClass", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("src/test/resources/TestClass.java:1"));
+        assertFalse(output.contains("build/resources/test/TestClass.java"));
+    }
+
+    @Test
+    void shouldIndexAndSearchCachedWithShortCommands(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String cachedField = "value";
+                }
+                """);
+
+        int indexExitCode = App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int searchExitCode = App.run(new String[]{"--cached", "class", "SampleSearch"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, indexExitCode);
+        assertEquals(0, searchExitCode);
+        assertTrue(output.contains("Индексация завершена"));
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldSearchCachedDeclaredType(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String cachedField = "value";
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "field-type", "String"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Field"));
+        assertTrue(output.contains("cachedField"));
+        assertTrue(output.contains("[String]"));
     }
 
     @Test
