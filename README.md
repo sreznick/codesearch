@@ -14,6 +14,7 @@
 - поиск переменных по совместимому типу с простым выводом `var`
 - JSON-вывод для скриптов, CI и внешних инструментов
 - вывод фрагмента кода вокруг найденной строки
+- статистика постоянного индекса
 - фильтр результатов по пути
 - ограничение количества результатов
 - zip-дистрибутив, чтобы в дальнейшем скачивать пакет и использовать как grep-подобный инструмент
@@ -109,9 +110,35 @@ codesearch --cached variable-assignable-to Appendable
 codesearch --cached variable-assignable-to Appendable --explain
 codesearch --cached annotation DemoController --json
 codesearch --cached method getTestField --snippet
+codesearch stats
 ```
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
+
+## Статистика индекса
+
+После создания постоянного индекса можно посмотреть, сколько файлов и Java-сущностей попало в индекс:
+
+```bash
+codesearch stats
+codesearch stats --path app/src/test/resources
+```
+
+Пример вывода:
+
+```text
+Статистика индекса
+Язык: java
+Файлов: 1
+Сущностей: 51
+
+По видам сущностей
+  Class:           5
+  Interface:       1
+  Method:          6
+  Field:           7
+  LocalVariable:   8
+```
 
 ## Поиск аннотаций
 

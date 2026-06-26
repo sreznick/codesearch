@@ -24,12 +24,17 @@ import org.codesearch.core.SearchTarget;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class JavaSearchService {
     public record SearchResponse(long totalHits, List<SearchResult> results) {}
+    public record IndexStats(long totalEntities, long totalFiles, Map<EntityKind, Long> entitiesByKind) {}
     private static final int MAX_RESULTS_TO_SCAN = 100000;
 
     private final Path indexPath;
@@ -155,6 +160,45 @@ public class JavaSearchService {
 
             long totalHits = pathFilter == null ? topDocs.totalHits.value() : results.size();
             return new SearchResponse(totalHits, results.stream().limit(limit).toList());
+        } catch (IndexNotFoundException e) {
+            throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
+        } catch (CorruptIndexException e) {
+            throw new IndexUnavailableException("Индекс поврежден: " + indexPath, e);
+        } catch (IOException e) {
+            throw new IndexUnavailableException("Не удалось прочитать индекс, возможно, он поврежден: " + indexPath, e);
+        }
+    }
+
+    public IndexStats stats(String pathFilter) throws IOException {
+        validateIndexPath();
+
+        try (MMapDirectory directory = new MMapDirectory(indexPath);
+             IndexReader reader = DirectoryReader.open(directory)) {
+
+            IndexSearcher searcher = new IndexSearcher(reader);
+            TopDocs topDocs = searcher.search(new MatchAllDocsQuery(), MAX_RESULTS_TO_SCAN);
+
+            Set<String> files = new HashSet<>();
+            Map<EntityKind, Long> counts = new EnumMap<>(EntityKind.class);
+            long totalEntities = 0;
+
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                Document document = searcher.storedFields().document(scoreDoc.doc);
+                String file = document.get(JavaIndexFields.FILE);
+                if (pathFilter != null && (file == null || !file.contains(pathFilter))) {
+                    continue;
+                }
+
+                totalEntities++;
+                if (file != null && !file.isBlank()) {
+                    files.add(file);
+                }
+
+                EntityKind kind = EntityKind.fromValue(document.get(JavaIndexFields.TYPE));
+                counts.merge(kind, 1L, Long::sum);
+            }
+
+            return new IndexStats(totalEntities, files.size(), Map.copyOf(counts));
         } catch (IndexNotFoundException e) {
             throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
         } catch (CorruptIndexException e) {

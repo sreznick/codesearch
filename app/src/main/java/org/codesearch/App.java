@@ -53,6 +53,7 @@ public class App {
         String command = args[0].toLowerCase();
         return switch (command) {
             case "index" -> handleIndex(args, out, err, indexPath);
+            case "stats" -> handleStats(args, out, err, indexPath);
             case "search" -> handleSearch(args, out, err, indexPath);
             case "grep" -> handleQuickSearch(args, out, err, indexPath, 1);
             case "--cached", "cached" -> handleCachedSearch(args, out, err, indexPath, 1);
@@ -113,6 +114,69 @@ public class App {
         }
 
         throw new IllegalArgumentException("слишком много аргументов.");
+    }
+
+    private static int handleStats(String[] args, PrintStream out, PrintStream err, Path indexPath) {
+        StatsCommand command;
+        try {
+            command = parseStatsCommand(args);
+        } catch (IllegalArgumentException e) {
+            err.println(colorize(RED, "Ошибка статистики: ") + e.getMessage());
+            err.println(colorize(DIM, "Использование: ") + "codesearch stats [--path PATH]");
+            return 1;
+        }
+
+        if (!isJava(command.language())) {
+            err.println(colorize(RED, "Пока поддерживается только язык java."));
+            return 1;
+        }
+
+        try {
+            JavaSearchService searchService = new JavaSearchService(indexPath);
+            JavaSearchService.IndexStats stats = searchService.stats(command.pathFilter());
+            printStats(out, stats, command.pathFilter());
+            return 0;
+        } catch (JavaSearchService.IndexUnavailableException e) {
+            err.println(colorize(RED, "Индекс не готов: ") + e.getMessage());
+            err.println(colorize(DIM, "Сначала выполните: ") + "codesearch index [path]");
+            return 1;
+        } catch (IOException e) {
+            err.println(colorize(RED, "Ошибка чтения индекса: ") + e.getMessage());
+            return 1;
+        }
+    }
+
+    private static StatsCommand parseStatsCommand(String[] args) {
+        String language = JavaLanguageModule.LANGUAGE;
+        String pathFilter = null;
+
+        for (int i = 1; i < args.length; i++) {
+            String arg = args[i];
+            if ("--lang".equalsIgnoreCase(arg) || "-l".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан язык.");
+                }
+                language = args[++i].trim().toLowerCase();
+                continue;
+            }
+            if ("--path".equalsIgnoreCase(arg) || "-p".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан фильтр пути.");
+                }
+                pathFilter = args[++i];
+                continue;
+            }
+            if (isJava(arg)) {
+                language = arg.trim().toLowerCase();
+                continue;
+            }
+            if (arg.startsWith("-")) {
+                throw new IllegalArgumentException("Неизвестный флаг: " + arg);
+            }
+            throw new IllegalArgumentException("Неизвестный аргумент: " + arg);
+        }
+
+        return new StatsCommand(language, pathFilter);
     }
 
     private static int handleQuickSearch(String[] args, PrintStream out, PrintStream err, Path indexPath, int startIndex) {
@@ -627,6 +691,24 @@ public class App {
                 || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
+    private static void printStats(PrintStream out, JavaSearchService.IndexStats stats, String pathFilter) {
+        out.println(colorize(BLUE, "Статистика индекса"));
+        out.println(colorize(DIM, "Язык: ") + "java");
+        if (pathFilter != null && !pathFilter.isBlank()) {
+            out.println(colorize(DIM, "Фильтр пути: ") + pathFilter);
+        }
+        out.println("Файлов: " + stats.totalFiles());
+        out.println("Сущностей: " + stats.totalEntities());
+        out.println();
+        out.println(colorize(BLUE, "По видам сущностей"));
+        for (EntityKind kind : EntityKind.values()) {
+            long count = stats.entitiesByKind().getOrDefault(kind, 0L);
+            if (count > 0) {
+                out.printf("  %-16s %d%n", kind.legacyJavaType() + ":", count);
+            }
+        }
+    }
+
     private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, boolean json, SnippetOptions snippet, String assignableTargetType) {
         if (json) {
             printJsonResults(out, response, explain, snippet, assignableTargetType);
@@ -906,6 +988,7 @@ public class App {
         out.println("  codesearch [options] <query> [path]");
         out.println("  codesearch [options] <kind> <query> [path]");
         out.println("  codesearch index [path]");
+        out.println("  codesearch stats [--path PATH]");
         out.println("  codesearch --cached [options] <query> [path-filter]");
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
@@ -937,6 +1020,7 @@ public class App {
         out.println("  codesearch annotation DemoController");
         out.println("  codesearch testField src --kind field");
         out.println("  codesearch index .");
+        out.println("  codesearch stats");
         out.println("  codesearch --cached class TestClass");
         out.println("  codesearch --cached field-type String");
         out.println("  codesearch --cached variable-assignable-to Appendable");
@@ -1009,6 +1093,8 @@ public class App {
     private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain, boolean json, SnippetOptions snippet) implements SearchCommandSpec {}
 
     private record IndexCommand(String language, String sourcePath) {}
+
+    private record StatsCommand(String language, String pathFilter) {}
 
     private record SearchKind(EntityKind kind, SearchTarget target) {}
 

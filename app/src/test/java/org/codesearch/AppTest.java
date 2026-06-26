@@ -36,8 +36,10 @@ class AppTest {
         assertTrue(outContent.toString().contains("codesearch [options] <query> [path]"));
         assertTrue(outContent.toString().contains("codesearch [options] <kind> <query> [path]"));
         assertTrue(outContent.toString().contains("codesearch index [path]"));
+        assertTrue(outContent.toString().contains("codesearch stats [--path PATH]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
         assertTrue(outContent.toString().contains("codesearch class TestClass"));
+        assertTrue(outContent.toString().contains("codesearch stats"));
         assertTrue(outContent.toString().contains("annotation <name>"));
         assertTrue(outContent.toString().contains("codesearch annotation DemoController"));
         assertTrue(outContent.toString().contains("field-type <type>"));
@@ -206,6 +208,62 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Class"));
         assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldPrintIndexStats(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String cachedField = "value";
+
+                    public void run() {
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"stats"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Статистика индекса"));
+        assertTrue(output.contains("Язык: java"));
+        assertTrue(output.contains("Файлов: 1"));
+        assertTrue(output.contains("Сущностей:"));
+        assertTrue(output.contains("Class:"));
+        assertTrue(output.contains("Field:"));
+        assertTrue(output.contains("Method:"));
+    }
+
+    @Test
+    void shouldPrintIndexStatsWithPathFilter(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("First.java"), """
+                public class FirstSearch {
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Second.java"), """
+                public class SecondSearch {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"stats", "--path", "First.java"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Фильтр пути: First.java"));
+        assertTrue(output.contains("Файлов: 1"));
+        assertTrue(output.contains("Сущностей: 1"));
     }
 
     @Test
@@ -694,6 +752,19 @@ class AppTest {
         assertTrue(errorOutput.contains("Индекс не найден"));
         assertTrue(errorOutput.contains("index java <path>"));
         assertFalse(errorOutput.contains("Exception"));
+    }
+
+    @Test
+    void shouldExplainMissingIndexBeforeStats(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("missing-index");
+
+        int exitCode = App.run(new String[]{"stats"}, out, err, indexPath);
+
+        String errorOutput = errContent.toString();
+        assertEquals(1, exitCode);
+        assertTrue(errorOutput.contains("Индекс не готов"));
+        assertTrue(errorOutput.contains("Индекс не найден"));
+        assertTrue(errorOutput.contains("codesearch index [path]"));
     }
 
     @Test

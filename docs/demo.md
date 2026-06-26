@@ -102,7 +102,37 @@ codesearch --cached method getTestField
 codesearch index app/src/test/resources
 ```
 
-## 5. Поиск аннотаций
+## 5. Статистика индекса
+
+После индексации можно посмотреть, что попало в индекс:
+
+```bash
+codesearch stats
+```
+
+Пример результата:
+
+```text
+Статистика индекса
+Язык: java
+Файлов: 1
+Сущностей: 51
+
+По видам сущностей
+  Class:           5
+  Interface:       1
+  Method:          6
+  Field:           7
+  LocalVariable:   8
+```
+
+Если нужно посмотреть статистику только по части проекта:
+
+```bash
+codesearch stats --path app/src/test/resources
+```
+
+## 6. Поиск аннотаций
 
 Найти Java-аннотацию:
 
@@ -125,7 +155,7 @@ class AnnotationFixture {
 1. Annotation DemoController on Class AnnotationFixture  app/src/test/resources/TestClass.java:49
 ```
 
-## 6. JSON-вывод
+## 7. JSON-вывод
 
 Для ручного просмотра обычный вывод удобнее. Но если результат нужно передать в скрипт, CI или другой инструмент, лучше включить JSON:
 
@@ -165,7 +195,7 @@ codesearch --cached variable-assignable-to Appendable --explain --json
 
 Тогда объяснение попадёт в поле `explanation`.
 
-## 7. Поиск по типам
+## 8. Поиск по типам
 
 Найти поля типа `String`:
 
@@ -299,7 +329,7 @@ codesearch --cached variable-assignable-to Animal --explain
 explain: var -> Dog -> Animal
 ```
 
-## 8. Лимит и фильтр по пути
+## 9. Лимит и фильтр по пути
 
 Показать только один результат:
 
@@ -326,7 +356,7 @@ codesearch --cached class TestClass --path missing/path
 Совпадений нет.
 ```
 
-## 9. Фрагмент кода вокруг результата
+## 10. Фрагмент кода вокруг результата
 
 Можно вывести не только файл и строку, но и несколько строк исходного кода вокруг найденной сущности:
 
@@ -351,7 +381,7 @@ codesearch method getTestField app/src/test/resources -B 1 -A 4
       33 |         return testField;
 ```
 
-## 10. Архив для скачивания
+## 11. Архив для скачивания
 
 Собрать zip:
 
