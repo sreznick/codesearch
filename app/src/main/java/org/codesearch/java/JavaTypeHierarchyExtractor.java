@@ -29,7 +29,7 @@ final class JavaTypeHierarchyExtractor extends JavaBaseListener {
         for (Path file : javaFiles) {
             try {
                 extractor.parseFile(file);
-            } catch (Exception e) {
+            } catch (IOException | RuntimeException e) {
                 logger.debug("Иерархия типов не извлечена из {}: {}", file, e.getMessage());
             }
         }

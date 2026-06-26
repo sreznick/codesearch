@@ -28,16 +28,8 @@ public record SearchQuery(
         pathFilter = normalizePathFilter(pathFilter);
     }
 
-    public SearchQuery(String text, EntityKind kind, String language) {
-        this(text, kind, language, SearchTarget.CONTENT, false, false, DEFAULT_LIMIT, null);
-    }
-
-    public SearchQuery(String text, EntityKind kind, String language, boolean fuzzy, boolean caseSensitive, int limit) {
-        this(text, kind, language, SearchTarget.CONTENT, fuzzy, caseSensitive, limit, null);
-    }
-
-    public SearchQuery(String text, EntityKind kind, String language, SearchTarget target, boolean fuzzy, boolean caseSensitive, int limit) {
-        this(text, kind, language, target, fuzzy, caseSensitive, limit, null);
+    public static Builder builder(String text, EntityKind kind, String language) {
+        return new Builder(text, kind, language);
     }
 
     private static String normalizeLanguage(String value) {
@@ -54,5 +46,51 @@ public record SearchQuery(
         }
 
         return value.trim();
+    }
+
+    public static final class Builder {
+        private final String text;
+        private final EntityKind kind;
+        private final String language;
+        private SearchTarget target = SearchTarget.CONTENT;
+        private boolean fuzzy;
+        private boolean caseSensitive;
+        private int limit = DEFAULT_LIMIT;
+        private String pathFilter;
+
+        private Builder(String text, EntityKind kind, String language) {
+            this.text = text;
+            this.kind = kind;
+            this.language = language;
+        }
+
+        public Builder target(SearchTarget target) {
+            this.target = target;
+            return this;
+        }
+
+        public Builder fuzzy(boolean fuzzy) {
+            this.fuzzy = fuzzy;
+            return this;
+        }
+
+        public Builder caseSensitive(boolean caseSensitive) {
+            this.caseSensitive = caseSensitive;
+            return this;
+        }
+
+        public Builder limit(int limit) {
+            this.limit = limit;
+            return this;
+        }
+
+        public Builder pathFilter(String pathFilter) {
+            this.pathFilter = pathFilter;
+            return this;
+        }
+
+        public SearchQuery build() {
+            return new SearchQuery(text, kind, language, target, fuzzy, caseSensitive, limit, pathFilter);
+        }
     }
 }

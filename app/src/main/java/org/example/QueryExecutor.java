@@ -63,7 +63,11 @@ public class QueryExecutor {
 
         try {
             JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(
-                    new SearchQuery(queryString, kind, "java", isFuzzy, isCaseSensitive, 100000)
+                    SearchQuery.builder(queryString, kind, "java")
+                            .fuzzy(isFuzzy)
+                            .caseSensitive(isCaseSensitive)
+                            .limit(100000)
+                            .build()
             );
             logQuerySummary(queryString, isFuzzy, response.totalHits());
             logResults(kind, response.results());

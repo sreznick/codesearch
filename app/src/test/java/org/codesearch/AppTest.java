@@ -316,9 +316,10 @@ class AppTest {
     }
 
     @Test
-    void shouldIndexAndSearchThroughSharedCli() {
-        int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int searchExitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err);
+    void shouldIndexAndSearchThroughSharedCli(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int searchExitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath);
 
         String output = outContent.toString();
         assertEquals(0, indexExitCode);
@@ -332,9 +333,10 @@ class AppTest {
     }
 
     @Test
-    void shouldPrintDeclaredTypeForField() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "field", "testField"}, out, err);
+    void shouldPrintDeclaredTypeForField(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "field", "testField"}, out, err, indexPath);
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Field"));
@@ -344,9 +346,10 @@ class AppTest {
     }
 
     @Test
-    void shouldSearchFieldByDeclaredType() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "field-type", "String"}, out, err);
+    void shouldSearchFieldByDeclaredType(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "field-type", "String"}, out, err, indexPath);
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("testField"));
@@ -355,9 +358,10 @@ class AppTest {
     }
 
     @Test
-    void shouldSearchMethodByReturnType() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "method-return-type", "String"}, out, err);
+    void shouldSearchMethodByReturnType(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "method-return-type", "String"}, out, err, indexPath);
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Найдено совпадений: 1"));
@@ -367,9 +371,10 @@ class AppTest {
     }
 
     @Test
-    void shouldSearchVariablesAssignableToTypeThroughLegacySearchCommand() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "variable-assignable-to", "Appendable"}, out, err);
+    void shouldSearchVariablesAssignableToTypeThroughLegacySearchCommand(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "variable-assignable-to", "Appendable"}, out, err, indexPath);
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Найдено совпадений: 1"));
@@ -378,9 +383,10 @@ class AppTest {
     }
 
     @Test
-    void shouldLimitSearchResults() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "field-type", "String", "--limit", "1"}, out, err);
+    void shouldLimitSearchResults(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "field-type", "String", "--limit", "1"}, out, err, indexPath);
 
         String output = outContent.toString();
         assertEquals(0, exitCode);
@@ -390,9 +396,10 @@ class AppTest {
     }
 
     @Test
-    void shouldFilterSearchResultsByPath() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass", "--path", "missing/path"}, out, err);
+    void shouldFilterSearchResultsByPath(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass", "--path", "missing/path"}, out, err, indexPath);
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Найдено совпадений: 0"));
@@ -470,9 +477,10 @@ class AppTest {
     }
 
     @Test
-    void shouldPrintFriendlyMessageForEmptySearchResults() {
-        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
-        int exitCode = App.run(new String[]{"search", "java", "class", "MissingClass"}, out, err);
+    void shouldPrintFriendlyMessageForEmptySearchResults(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "class", "MissingClass"}, out, err, indexPath);
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Найдено совпадений: 0"));

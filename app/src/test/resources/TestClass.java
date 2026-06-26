@@ -33,5 +33,3 @@ public class TestClass {
         return testField;
     }
 }
-
-

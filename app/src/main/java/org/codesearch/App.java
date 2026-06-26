@@ -150,7 +150,7 @@ public class App {
             err.println(colorize(RED, "Ошибка поиска: ") + "индексация была прервана.");
             return 1;
         } catch (IOException e) {
-            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            err.println(colorize(RED, "Ошибка чтения или записи индекса: ") + e.getMessage());
             return 1;
         } finally {
             deleteDirectoryQuietly(quickIndexPath);
@@ -185,16 +185,12 @@ public class App {
                 );
             } else if (command.target() == SearchTarget.DECLARED_TYPE) {
                 response = searchService.searchWithMetadata(
-                        new SearchQuery(
-                                command.query(),
-                                command.kind(),
-                                command.language(),
-                                SearchTarget.DECLARED_TYPE,
-                                false,
-                                command.caseSensitive(),
-                                command.limit(),
-                                command.pathFilter()
-                        )
+                        SearchQuery.builder(command.query(), command.kind(), command.language())
+                                .target(SearchTarget.DECLARED_TYPE)
+                                .caseSensitive(command.caseSensitive())
+                                .limit(command.limit())
+                                .pathFilter(command.pathFilter())
+                                .build()
                 );
             } else {
                 response = searchService.searchContaining(
@@ -209,14 +205,14 @@ public class App {
             printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
-            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
             return 1;
         } catch (JavaSearchService.IndexUnavailableException e) {
             err.println(colorize(RED, "Индекс не готов: ") + e.getMessage());
             err.println(colorize(DIM, "Сначала выполните: ") + "codesearch index [path]");
             return 1;
         } catch (IOException e) {
-            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            err.println(colorize(RED, "Ошибка чтения индекса: ") + e.getMessage());
             return 1;
         }
     }
@@ -488,14 +484,14 @@ public class App {
             printResults(out, response, explain, isAssignableTypeSearch(args[2]) ? args[3] : null);
             return 0;
         } catch (IllegalArgumentException e) {
-            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
             return 1;
         } catch (JavaSearchService.IndexUnavailableException e) {
             err.println(colorize(RED, "Индекс не готов: ") + e.getMessage());
             err.println(colorize(DIM, "Сначала выполните: ") + "index java <path>");
             return 1;
         } catch (IOException e) {
-            err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
+            err.println(colorize(RED, "Ошибка чтения индекса: ") + e.getMessage());
             return 1;
         }
     }
@@ -503,18 +499,33 @@ public class App {
     private static SearchCommand parseSearchCommand(String rawKind, String rawQuery, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
         return switch (rawKind.toLowerCase()) {
             case "field-type" -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.FIELD, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
+                    metadataQuery(rawQuery, EntityKind.FIELD, fuzzy, caseSensitive, limit, pathFilter)
             );
             case "local-variable-type" -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.LOCAL_VARIABLE, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
+                    metadataQuery(rawQuery, EntityKind.LOCAL_VARIABLE, fuzzy, caseSensitive, limit, pathFilter)
             );
             case "method-return-type" -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.METHOD, JavaLanguageModule.LANGUAGE, SearchTarget.DECLARED_TYPE, fuzzy, caseSensitive, limit, pathFilter)
+                    metadataQuery(rawQuery, EntityKind.METHOD, fuzzy, caseSensitive, limit, pathFilter)
             );
             default -> new SearchCommand(
-                    new SearchQuery(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE, SearchTarget.CONTENT, fuzzy, caseSensitive, limit, pathFilter)
+                    SearchQuery.builder(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE)
+                            .fuzzy(fuzzy)
+                            .caseSensitive(caseSensitive)
+                            .limit(limit)
+                            .pathFilter(pathFilter)
+                            .build()
             );
         };
+    }
+
+    private static SearchQuery metadataQuery(String rawQuery, EntityKind kind, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
+        return SearchQuery.builder(rawQuery, kind, JavaLanguageModule.LANGUAGE)
+                .target(SearchTarget.DECLARED_TYPE)
+                .fuzzy(fuzzy)
+                .caseSensitive(caseSensitive)
+                .limit(limit)
+                .pathFilter(pathFilter)
+                .build();
     }
 
     private static boolean isAssignableTypeSearch(String rawKind) {

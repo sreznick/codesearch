@@ -38,7 +38,7 @@ public class JavaEntityExtractor {
         this.typeHierarchy = typeHierarchy;
     }
 
-    public List<CodeEntity> extractEntities(Path file) throws Exception {
+    public List<CodeEntity> extractEntities(Path file) throws IOException {
         String content = Files.readString(file);
         String filePath = file.toString();
 
@@ -187,14 +187,14 @@ public class JavaEntityExtractor {
     private Map<String, String> typedAttributes(String originalType, String declaredType) {
         Map<String, String> attributes = new HashMap<>();
         if (declaredType != null && !declaredType.isBlank()) {
-            attributes.put("declaredType", declaredType);
+            attributes.put(JavaEntityAttributes.DECLARED_TYPE, declaredType);
             if ("var".equals(originalType) && !"var".equals(declaredType)) {
-                attributes.put("typeInference", "var -> " + declaredType);
+                attributes.put(JavaEntityAttributes.TYPE_INFERENCE, "var -> " + declaredType);
             }
             if (!"var".equals(declaredType)) {
                 Set<String> assignableTypes = typeHierarchy.assignableTypes(declaredType);
                 if (!assignableTypes.isEmpty()) {
-                    attributes.put("assignableTypes", JavaTypeResolver.serializeTypes(assignableTypes));
+                    attributes.put(JavaEntityAttributes.ASSIGNABLE_TYPES, JavaTypeResolver.serializeTypes(assignableTypes));
                 }
             }
         }

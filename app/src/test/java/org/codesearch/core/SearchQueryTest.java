@@ -19,7 +19,11 @@ class SearchQueryTest {
                 "String",
                 Map.of("visibility", "private")
         );
-        SearchQuery query = new SearchQuery(" userId ", EntityKind.FIELD, " JAVA ", SearchTarget.CONTENT, false, true, 25, " src/main ");
+        SearchQuery query = SearchQuery.builder(" userId ", EntityKind.FIELD, " JAVA ")
+                .caseSensitive(true)
+                .limit(25)
+                .pathFilter(" src/main ")
+                .build();
 
         assertEquals("java", entity.language());
         assertEquals("userId", query.text());
@@ -31,7 +35,7 @@ class SearchQueryTest {
 
     @Test
     void shouldTreatBlankLanguageAsAnyLanguage() {
-        SearchQuery query = new SearchQuery("test", EntityKind.METHOD, "   ");
+        SearchQuery query = SearchQuery.builder("test", EntityKind.METHOD, "   ").build();
 
         assertNull(query.language());
         assertEquals(100, query.limit());
@@ -39,7 +43,7 @@ class SearchQueryTest {
 
     @Test
     void shouldRejectInvalidQueryValues() {
-        assertThrows(IllegalArgumentException.class, () -> new SearchQuery("  ", EntityKind.CLASS, "java"));
-        assertThrows(IllegalArgumentException.class, () -> new SearchQuery("name", EntityKind.CLASS, "java", false, false, 0));
+        assertThrows(IllegalArgumentException.class, () -> SearchQuery.builder("  ", EntityKind.CLASS, "java").build());
+        assertThrows(IllegalArgumentException.class, () -> SearchQuery.builder("name", EntityKind.CLASS, "java").limit(0).build());
     }
 }

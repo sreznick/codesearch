@@ -131,7 +131,7 @@ public class JavaSearchService {
 
         String searchableType = JavaTypeResolver.searchableTypeName(type);
         String value = caseSensitive ? searchableType : searchableType.toLowerCase();
-        String field = caseSensitive ? "assignableType" : "assignableType_lowercase";
+        String field = caseSensitive ? JavaIndexFields.ASSIGNABLE_TYPE : JavaIndexFields.ASSIGNABLE_TYPE_LOWERCASE;
 
         Query query = new BooleanQuery.Builder()
                 .add(new TermQuery(new Term(field, value)), BooleanClause.Occur.MUST)
@@ -167,8 +167,8 @@ public class JavaSearchService {
     private Query variableKindQuery() {
         return new BooleanQuery.Builder()
                 .setMinimumNumberShouldMatch(1)
-                .add(new TermQuery(new Term("type", EntityKind.FIELD.legacyJavaType())), BooleanClause.Occur.SHOULD)
-                .add(new TermQuery(new Term("type", EntityKind.LOCAL_VARIABLE.legacyJavaType())), BooleanClause.Occur.SHOULD)
+                .add(new TermQuery(new Term(JavaIndexFields.TYPE, EntityKind.FIELD.legacyJavaType())), BooleanClause.Occur.SHOULD)
+                .add(new TermQuery(new Term(JavaIndexFields.TYPE, EntityKind.LOCAL_VARIABLE.legacyJavaType())), BooleanClause.Occur.SHOULD)
                 .build();
     }
 
@@ -213,7 +213,7 @@ public class JavaSearchService {
 
         return new BooleanQuery.Builder()
                 .add(targetQuery(searchQuery), BooleanClause.Occur.MUST)
-                .add(new TermQuery(new Term("type", kind.legacyJavaType())), BooleanClause.Occur.MUST)
+                .add(new TermQuery(new Term(JavaIndexFields.TYPE, kind.legacyJavaType())), BooleanClause.Occur.MUST)
                 .build();
     }
 
@@ -236,18 +236,18 @@ public class JavaSearchService {
 
     private String resolveField(SearchQuery searchQuery) {
         return switch (searchQuery.target()) {
-            case CONTENT -> searchQuery.caseSensitive() ? "content" : "content_lowercase";
+            case CONTENT -> searchQuery.caseSensitive() ? JavaIndexFields.CONTENT : JavaIndexFields.CONTENT_LOWERCASE;
             case DECLARED_TYPE -> resolveDeclaredTypeField(searchQuery);
-            case ASSIGNABLE_TYPE -> searchQuery.caseSensitive() ? "assignableType" : "assignableType_lowercase";
+            case ASSIGNABLE_TYPE -> searchQuery.caseSensitive() ? JavaIndexFields.ASSIGNABLE_TYPE : JavaIndexFields.ASSIGNABLE_TYPE_LOWERCASE;
         };
     }
 
     private String resolveDeclaredTypeField(SearchQuery searchQuery) {
-        return searchQuery.caseSensitive() ? "declaredType" : "declaredType_lowercase";
+        return searchQuery.caseSensitive() ? JavaIndexFields.DECLARED_TYPE : JavaIndexFields.DECLARED_TYPE_LOWERCASE;
     }
 
     private String resolveLegacyDeclaredTypeField(SearchQuery searchQuery) {
-        return searchQuery.caseSensitive() ? "varType" : "varType_lowercase";
+        return searchQuery.caseSensitive() ? JavaIndexFields.LEGACY_VAR_TYPE : JavaIndexFields.LEGACY_VAR_TYPE_LOWERCASE;
     }
 
     private Query contentQuery(String field, String value, boolean fuzzy) {

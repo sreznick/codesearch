@@ -4,6 +4,7 @@ import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JavaEntityExtractorTest {
     @Test
-    void shouldExtractCoreEntitiesFromJavaFile() throws Exception {
+    void shouldExtractCoreEntitiesFromJavaFile() throws IOException {
         JavaEntityExtractor extractor = new JavaEntityExtractor();
 
         List<CodeEntity> entities = extractor.extractEntities(Path.of("src/test/resources/TestClass.java"));
@@ -57,7 +58,7 @@ class JavaEntityExtractorTest {
     }
 
     @Test
-    void shouldExtractExpectedKindsFromTestFixture() throws Exception {
+    void shouldExtractExpectedKindsFromTestFixture() throws IOException {
         JavaEntityExtractor extractor = new JavaEntityExtractor();
 
         List<CodeEntity> entities = extractor.extractEntities(Path.of("src/test/resources/TestClass.java"));

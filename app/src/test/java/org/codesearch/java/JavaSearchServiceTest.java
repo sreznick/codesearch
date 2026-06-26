@@ -28,7 +28,7 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldFindClassAsCoreSearchResult() throws IOException {
-        SearchQuery query = new SearchQuery("TestClass", EntityKind.CLASS, "java");
+        SearchQuery query = query("TestClass", EntityKind.CLASS).build();
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
@@ -43,7 +43,7 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldCarryDeclaredTypeForField() throws IOException {
-        SearchQuery query = new SearchQuery("testField", EntityKind.FIELD, "java");
+        SearchQuery query = query("testField", EntityKind.FIELD).build();
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
@@ -56,7 +56,7 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldReturnNothingForOtherLanguage() throws IOException {
-        SearchQuery query = new SearchQuery("TestClass", EntityKind.CLASS, "go");
+        SearchQuery query = SearchQuery.builder("TestClass", EntityKind.CLASS, "go").build();
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
@@ -65,14 +65,17 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldRejectQueryWithoutKind() {
-        SearchQuery query = new SearchQuery("TestClass", null, "java");
+        SearchQuery query = query("TestClass", null).build();
 
         assertThrows(IllegalArgumentException.class, () -> SEARCH_SERVICE.search(query));
     }
 
     @Test
     void shouldSearchFieldByDeclaredType() throws IOException {
-        SearchQuery query = new SearchQuery("String", EntityKind.FIELD, "java", SearchTarget.DECLARED_TYPE, false, true, 100);
+        SearchQuery query = query("String", EntityKind.FIELD)
+                .target(SearchTarget.DECLARED_TYPE)
+                .caseSensitive(true)
+                .build();
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
@@ -83,7 +86,9 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldSearchLocalVariableByDeclaredTypeIgnoringCase() throws IOException {
-        SearchQuery query = new SearchQuery("string", EntityKind.LOCAL_VARIABLE, "java", SearchTarget.DECLARED_TYPE, false, false, 100);
+        SearchQuery query = query("string", EntityKind.LOCAL_VARIABLE)
+                .target(SearchTarget.DECLARED_TYPE)
+                .build();
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
@@ -94,7 +99,10 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldSearchMethodByReturnType() throws IOException {
-        SearchQuery query = new SearchQuery("String", EntityKind.METHOD, "java", SearchTarget.DECLARED_TYPE, false, true, 100);
+        SearchQuery query = query("String", EntityKind.METHOD)
+                .target(SearchTarget.DECLARED_TYPE)
+                .caseSensitive(true)
+                .build();
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
@@ -222,7 +230,11 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldLimitReturnedResultsWithoutChangingTotalHits() throws IOException {
-        SearchQuery query = new SearchQuery("String", EntityKind.FIELD, "java", SearchTarget.DECLARED_TYPE, false, true, 1);
+        SearchQuery query = query("String", EntityKind.FIELD)
+                .target(SearchTarget.DECLARED_TYPE)
+                .caseSensitive(true)
+                .limit(1)
+                .build();
 
         JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(query);
 
@@ -232,16 +244,10 @@ class JavaSearchServiceTest {
 
     @Test
     void shouldFilterResultsByPath() throws IOException {
-        SearchQuery query = new SearchQuery(
-                "TestClass",
-                EntityKind.CLASS,
-                "java",
-                SearchTarget.CONTENT,
-                false,
-                true,
-                100,
-                "missing/path"
-        );
+        SearchQuery query = query("TestClass", EntityKind.CLASS)
+                .caseSensitive(true)
+                .pathFilter("missing/path")
+                .build();
 
         JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(query);
 
@@ -252,7 +258,7 @@ class JavaSearchServiceTest {
     @Test
     void shouldReportMissingIndex(@TempDir Path tempDir) {
         JavaSearchService searchService = new JavaSearchService(tempDir.resolve("missing-index"));
-        SearchQuery query = new SearchQuery("TestClass", EntityKind.CLASS, "java");
+        SearchQuery query = query("TestClass", EntityKind.CLASS).build();
 
         JavaSearchService.IndexUnavailableException exception = assertThrows(
                 JavaSearchService.IndexUnavailableException.class,
@@ -260,5 +266,9 @@ class JavaSearchServiceTest {
         );
 
         assertTrue(exception.getMessage().contains("Индекс не найден"));
+    }
+
+    private static SearchQuery.Builder query(String text, EntityKind kind) {
+        return SearchQuery.builder(text, kind, "java");
     }
 }

@@ -10,32 +10,32 @@ public final class JavaIndexDocumentMapper {
 
     public static Document toDocument(CodeEntity entity) {
         Document document = new Document();
-        document.add(new StringField("content", entity.content(), Field.Store.YES));
-        document.add(new StringField("content_lowercase", entity.content().toLowerCase(), Field.Store.NO));
-        document.add(new StringField("file", entity.location().filePath(), Field.Store.YES));
-        document.add(new StringField("line", String.valueOf(entity.location().line()), Field.Store.YES));
-        document.add(new StringField("type", entity.kind().legacyJavaType(), Field.Store.YES));
+        document.add(new StringField(JavaIndexFields.CONTENT, entity.content(), Field.Store.YES));
+        document.add(new StringField(JavaIndexFields.CONTENT_LOWERCASE, entity.content().toLowerCase(), Field.Store.NO));
+        document.add(new StringField(JavaIndexFields.FILE, entity.location().filePath(), Field.Store.YES));
+        document.add(new StringField(JavaIndexFields.LINE, String.valueOf(entity.location().line()), Field.Store.YES));
+        document.add(new StringField(JavaIndexFields.TYPE, entity.kind().legacyJavaType(), Field.Store.YES));
 
         if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
-            document.add(new StringField("declaredType", entity.declaredType(), Field.Store.YES));
-            document.add(new StringField("declaredType_lowercase", entity.declaredType().toLowerCase(), Field.Store.NO));
-            document.add(new StringField("varType", entity.declaredType(), Field.Store.YES));
-            document.add(new StringField("varType_lowercase", entity.declaredType().toLowerCase(), Field.Store.NO));
+            document.add(new StringField(JavaIndexFields.DECLARED_TYPE, entity.declaredType(), Field.Store.YES));
+            document.add(new StringField(JavaIndexFields.DECLARED_TYPE_LOWERCASE, entity.declaredType().toLowerCase(), Field.Store.NO));
+            document.add(new StringField(JavaIndexFields.LEGACY_VAR_TYPE, entity.declaredType(), Field.Store.YES));
+            document.add(new StringField(JavaIndexFields.LEGACY_VAR_TYPE_LOWERCASE, entity.declaredType().toLowerCase(), Field.Store.NO));
         }
 
-        String assignableTypes = entity.attributes().get("assignableTypes");
+        String assignableTypes = entity.attributes().get(JavaEntityAttributes.ASSIGNABLE_TYPES);
         if (assignableTypes != null && !assignableTypes.isBlank()) {
             for (String assignableType : assignableTypes.split(",")) {
                 if (!assignableType.isBlank()) {
-                    document.add(new StringField("assignableType", assignableType, Field.Store.YES));
-                    document.add(new StringField("assignableType_lowercase", assignableType.toLowerCase(), Field.Store.NO));
+                    document.add(new StringField(JavaIndexFields.ASSIGNABLE_TYPE, assignableType, Field.Store.YES));
+                    document.add(new StringField(JavaIndexFields.ASSIGNABLE_TYPE_LOWERCASE, assignableType.toLowerCase(), Field.Store.NO));
                 }
             }
         }
 
-        String typeInference = entity.attributes().get("typeInference");
+        String typeInference = entity.attributes().get(JavaEntityAttributes.TYPE_INFERENCE);
         if (typeInference != null && !typeInference.isBlank()) {
-            document.add(new StringField("typeInference", typeInference, Field.Store.YES));
+            document.add(new StringField(JavaIndexFields.TYPE_INFERENCE, typeInference, Field.Store.YES));
         }
 
         return document;

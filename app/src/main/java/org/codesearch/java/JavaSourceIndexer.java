@@ -66,8 +66,8 @@ public class JavaSourceIndexer {
                     try {
                         indexJavaFile(file, writer, typeHierarchy);
                         logger.info("Файл проиндексирован: {}", file);
-                    } catch (Exception e) {
-                        logger.debug("Файл пропущен при индексации {}: {}", file, e.getMessage());
+                    } catch (IOException | RuntimeException e) {
+                        logger.debug("Файл пропущен при индексации {}: {}", file, e.getMessage(), e);
                     }
                 }));
 
@@ -128,7 +128,7 @@ public class JavaSourceIndexer {
         }
     }
 
-    private static void indexJavaFile(Path file, IndexWriter writer, JavaTypeHierarchy typeHierarchy) throws Exception {
+    private static void indexJavaFile(Path file, IndexWriter writer, JavaTypeHierarchy typeHierarchy) throws IOException {
         JavaEntityExtractor extractor = new JavaEntityExtractor(typeHierarchy);
         List<CodeEntity> entities = extractor.extractEntities(file);
 
