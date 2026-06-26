@@ -4,6 +4,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
 import org.codesearch.core.EntityLocation;
@@ -28,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class JavaEntityExtractor {
+    private static final Logger logger = LogManager.getLogger(JavaEntityExtractor.class);
+
     private final JavaTypeHierarchy typeHierarchy;
 
     public JavaEntityExtractor() {
@@ -43,14 +47,23 @@ public class JavaEntityExtractor {
         String filePath = file.toString();
 
         List<CodeEntity> entities = new ArrayList<>();
-        entities.addAll(extractStringConstants(content, filePath));
-        entities.addAll(extractClasses(content, filePath));
-        entities.addAll(extractMethods(content, filePath));
-        entities.addAll(extractInterfaces(content, filePath));
-        entities.addAll(extractFields(content, filePath));
-        entities.addAll(extractLocalVariables(content, filePath));
-        entities.addAll(extractLiterals(content, filePath));
+        entities.addAll(extractSafely(filePath, "string constants", () -> extractStringConstants(content, filePath)));
+        entities.addAll(extractSafely(filePath, "classes", () -> extractClasses(content, filePath)));
+        entities.addAll(extractSafely(filePath, "methods", () -> extractMethods(content, filePath)));
+        entities.addAll(extractSafely(filePath, "interfaces", () -> extractInterfaces(content, filePath)));
+        entities.addAll(extractSafely(filePath, "fields", () -> extractFields(content, filePath)));
+        entities.addAll(extractSafely(filePath, "local variables", () -> extractLocalVariables(content, filePath)));
+        entities.addAll(extractSafely(filePath, "literals", () -> extractLiterals(content, filePath)));
         return entities;
+    }
+
+    private List<CodeEntity> extractSafely(String filePath, String extractionName, ExtractionStep extractionStep) {
+        try {
+            return extractionStep.extract();
+        } catch (RuntimeException e) {
+            logger.debug("Не удалось извлечь {} из {}: {}", extractionName, filePath, e.getMessage(), e);
+            return List.of();
+        }
     }
 
     private List<CodeEntity> extractStringConstants(String content, String filePath) {
@@ -204,5 +217,10 @@ public class JavaEntityExtractor {
     @FunctionalInterface
     private interface ParseResultMapper<T> {
         T map(JavaBaseListener extractor);
+    }
+
+    @FunctionalInterface
+    private interface ExtractionStep {
+        List<CodeEntity> extract();
     }
 }

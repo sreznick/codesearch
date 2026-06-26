@@ -162,6 +162,23 @@ class AppTest {
     }
 
     @Test
+    void shouldIndexClassEvenWhenOtherExtractorsSkipUnsupportedCode(@TempDir Path tempDir) {
+        int exitCode = App.run(
+                new String[]{"class", "ConsoleAppTest", "src/test/java/org/example"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("ConsoleAppTest"));
+        assertTrue(output.contains("src/test/java/org/example/ConsoleAppTest.java:10"));
+    }
+
+    @Test
     void shouldIndexAndSearchCachedWithShortCommands(@TempDir Path tempDir) throws IOException {
         Path sourcePath = tempDir.resolve("sources");
         Path indexPath = tempDir.resolve("index");
