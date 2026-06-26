@@ -229,6 +229,25 @@ class JavaSearchServiceTest {
     }
 
     @Test
+    void shouldSearchFixtureVariableAssignableToAnimal() throws IOException {
+        JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchAssignableVariables(
+                "Animal",
+                "java",
+                true,
+                100,
+                null
+        );
+
+        assertEquals(1, response.totalHits());
+        CodeEntity entity = response.results().getFirst().entity();
+        assertEquals(EntityKind.LOCAL_VARIABLE, entity.kind());
+        assertEquals("dog", entity.content());
+        assertEquals("Dog", entity.declaredType());
+        assertTrue(entity.attributes().get("assignableTypes").contains("Animal"));
+        assertEquals("var -> Dog", entity.attributes().get("typeInference"));
+    }
+
+    @Test
     void shouldLimitReturnedResultsWithoutChangingTotalHits() throws IOException {
         SearchQuery query = query("String", EntityKind.FIELD)
                 .target(SearchTarget.DECLARED_TYPE)

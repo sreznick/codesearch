@@ -33,3 +33,15 @@ public class TestClass {
         return testField;
     }
 }
+
+class Animal {
+}
+
+class Dog extends Animal {
+}
+
+class DogUsage {
+    void run() {
+        var dog = new Dog();
+    }
+}
