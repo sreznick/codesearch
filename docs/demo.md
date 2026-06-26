@@ -130,7 +130,33 @@ codesearch --cached method-return-type String
 codesearch --cached local-variable-type String
 ```
 
-Это главное отличие от обычного `grep`: запрос ищет не просто слово `String` в тексте, а конкретные Java-сущности с таким типом.
+Найти переменные, которые можно использовать как `Appendable`:
+
+```bash
+codesearch --cached variable-assignable-to Appendable
+```
+
+В тестовом файле есть пример:
+
+```java
+var inferredBuilder = new StringBuilder("hello");
+```
+
+Здесь тип переменной выводится как `StringBuilder`, а `StringBuilder` реализует `Appendable`, поэтому переменная находится по запросу выше.
+
+Похожий пример со строкой:
+
+```java
+var inferredText = "hello";
+```
+
+Она находится по запросу:
+
+```bash
+codesearch --cached variable-assignable-to CharSequence
+```
+
+Запрос ищет не просто слово `String` или `Appendable` в тексте, а конкретные Java-сущности с учетом простого вывода типов и совместимости с интерфейсами.
 
 ## 6. Лимит и фильтр по пути
 

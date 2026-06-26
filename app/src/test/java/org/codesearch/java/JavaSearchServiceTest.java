@@ -86,7 +86,7 @@ class JavaSearchServiceTest {
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
-        assertEquals(2, results.size());
+        assertEquals(3, results.size());
         assertTrue(results.stream().allMatch(result -> result.entity().kind() == EntityKind.LOCAL_VARIABLE));
         assertTrue(results.stream().allMatch(result -> "String".equals(result.entity().declaredType())));
     }
@@ -102,6 +102,40 @@ class JavaSearchServiceTest {
         assertEquals(EntityKind.METHOD, entity.kind());
         assertEquals("getTestField", entity.content());
         assertEquals("String", entity.declaredType());
+    }
+
+    @Test
+    void shouldSearchVariablesAssignableToInterface() throws IOException {
+        JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchAssignableVariables(
+                "Appendable",
+                "java",
+                true,
+                100,
+                null
+        );
+
+        assertEquals(1, response.totalHits());
+        CodeEntity entity = response.results().getFirst().entity();
+        assertEquals(EntityKind.LOCAL_VARIABLE, entity.kind());
+        assertEquals("inferredBuilder", entity.content());
+        assertEquals("StringBuilder", entity.declaredType());
+        assertTrue(entity.attributes().get("assignableTypes").contains("Appendable"));
+    }
+
+    @Test
+    void shouldSearchInferredStringVariableAsCharSequence() throws IOException {
+        JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchAssignableVariables(
+                "CharSequence",
+                "java",
+                true,
+                100,
+                null
+        );
+
+        assertTrue(response.results().stream().anyMatch(result ->
+                result.entity().kind() == EntityKind.LOCAL_VARIABLE
+                        && result.entity().content().equals("inferredText")
+                        && result.entity().declaredType().equals("String")));
     }
 
     @Test

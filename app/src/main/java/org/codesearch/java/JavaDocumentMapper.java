@@ -17,6 +17,10 @@ final class JavaDocumentMapper {
         if (declaredType != null && !declaredType.isBlank()) {
             attributes.put("declaredType", declaredType);
         }
+        String assignableTypes = String.join(",", document.getValues("assignableType"));
+        if (!assignableTypes.isBlank()) {
+            attributes.put("assignableTypes", assignableTypes);
+        }
 
         return new CodeEntity(
                 EntityKind.fromValue(document.get("type")),

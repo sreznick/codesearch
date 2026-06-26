@@ -200,6 +200,30 @@ class AppTest {
     }
 
     @Test
+    void shouldSearchCachedVariablesAssignableToType(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    public void run() {
+                        var builder = new StringBuilder("hello");
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "variable-assignable-to", "Appendable"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("LocalVariable"));
+        assertTrue(output.contains("builder"));
+        assertTrue(output.contains("[StringBuilder]"));
+    }
+
+    @Test
     void shouldIndexAndSearchThroughSharedCli() {
         int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
         int searchExitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err);
@@ -248,6 +272,17 @@ class AppTest {
         assertTrue(outContent.toString().contains("Method"));
         assertTrue(outContent.toString().contains("getTestField"));
         assertTrue(outContent.toString().contains("[String]"));
+    }
+
+    @Test
+    void shouldSearchVariablesAssignableToTypeThroughLegacySearchCommand() {
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
+        int exitCode = App.run(new String[]{"search", "java", "variable-assignable-to", "Appendable"}, out, err);
+
+        assertEquals(0, exitCode);
+        assertTrue(outContent.toString().contains("Найдено совпадений: 1"));
+        assertTrue(outContent.toString().contains("inferredBuilder"));
+        assertTrue(outContent.toString().contains("[StringBuilder]"));
     }
 
     @Test

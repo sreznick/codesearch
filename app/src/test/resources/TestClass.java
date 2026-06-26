@@ -13,6 +13,8 @@ public class TestClass {
 
     public void testMethod() {
         String localVariable = "Test Local Variable";
+        var inferredText = "hello";
+        var inferredBuilder = new StringBuilder("hello");
         System.out.println("Test Method called");
     }
 
@@ -31,6 +33,5 @@ public class TestClass {
         return testField;
     }
 }
-
 
 

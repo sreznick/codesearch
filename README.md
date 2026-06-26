@@ -11,6 +11,7 @@
 - поиск по виду сущности: `codesearch class TestClass .`
 - постоянный индекс для быстрых повторных запросов
 - поиск полей, локальных переменных и методов по declared type / return type
+- поиск переменных по совместимому типу с простым выводом `var`
 - фильтр результатов по пути
 - ограничение количества результатов
 - zip-дистрибутив, чтобы в дальнейшем скачивать пакет и использовать как grep-подобный инструмент
@@ -101,9 +102,37 @@ codesearch --cached field testField
 codesearch --cached field-type String
 codesearch --cached method-return-type String
 codesearch --cached local-variable-type String
+codesearch --cached variable-assignable-to Appendable
 ```
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
+
+## Поиск по совместимому типу
+
+Обычный поиск по типам ищет точное объявление:
+
+```bash
+codesearch --cached local-variable-type String
+```
+
+Если нужен более семантический поиск, можно искать переменные, которые совместимы с заданным типом:
+
+```bash
+codesearch --cached variable-assignable-to Appendable
+codesearch --cached variable-assignable-to CharSequence
+```
+
+Например, для кода:
+
+```java
+var text = "hello";
+var builder = new StringBuilder("hello");
+```
+
+`text` найдётся как `CharSequence`, потому что для строкового литерала выводится тип `String`, а `String` реализует `CharSequence`.
+
+`builder` найдётся как `Appendable`, потому что `StringBuilder` реализует `Appendable`.
+
 
 ## Полезные опции
 

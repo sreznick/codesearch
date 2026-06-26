@@ -23,6 +23,16 @@ public final class JavaIndexDocumentMapper {
             document.add(new StringField("varType_lowercase", entity.declaredType().toLowerCase(), Field.Store.NO));
         }
 
+        String assignableTypes = entity.attributes().get("assignableTypes");
+        if (assignableTypes != null && !assignableTypes.isBlank()) {
+            for (String assignableType : assignableTypes.split(",")) {
+                if (!assignableType.isBlank()) {
+                    document.add(new StringField("assignableType", assignableType, Field.Store.YES));
+                    document.add(new StringField("assignableType_lowercase", assignableType.toLowerCase(), Field.Store.NO));
+                }
+            }
+        }
+
         return document;
     }
 }

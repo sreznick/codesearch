@@ -120,6 +120,58 @@ public class JavaSearchService {
         }
     }
 
+    public SearchResponse searchAssignableVariables(String type, String language, boolean caseSensitive, int limit, String pathFilter) throws IOException {
+        validateAssignableTypeQuery(type, language, limit);
+
+        if (language != null && !languageModule.language().equals(language)) {
+            return new SearchResponse(0, List.of());
+        }
+
+        validateIndexPath();
+
+        String searchableType = JavaTypeResolver.searchableTypeName(type);
+        String value = caseSensitive ? searchableType : searchableType.toLowerCase();
+        String field = caseSensitive ? "assignableType" : "assignableType_lowercase";
+
+        Query query = new BooleanQuery.Builder()
+                .add(new TermQuery(new Term(field, value)), BooleanClause.Occur.MUST)
+                .add(variableKindQuery(), BooleanClause.Occur.MUST)
+                .build();
+
+        try (MMapDirectory directory = new MMapDirectory(indexPath);
+             IndexReader reader = DirectoryReader.open(directory)) {
+
+            IndexSearcher searcher = new IndexSearcher(reader);
+            TopDocs topDocs = searcher.search(query, MAX_RESULTS_TO_SCAN);
+
+            List<SearchResult> results = new ArrayList<>();
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                Document document = searcher.storedFields().document(scoreDoc.doc);
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score);
+                if (matchesPathFilter(result, pathFilter)) {
+                    results.add(result);
+                }
+            }
+
+            long totalHits = pathFilter == null ? topDocs.totalHits.value() : results.size();
+            return new SearchResponse(totalHits, results.stream().limit(limit).toList());
+        } catch (IndexNotFoundException e) {
+            throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
+        } catch (CorruptIndexException e) {
+            throw new IndexUnavailableException("Индекс поврежден: " + indexPath, e);
+        } catch (IOException e) {
+            throw new IndexUnavailableException("Не удалось прочитать индекс, возможно, он поврежден: " + indexPath, e);
+        }
+    }
+
+    private Query variableKindQuery() {
+        return new BooleanQuery.Builder()
+                .setMinimumNumberShouldMatch(1)
+                .add(new TermQuery(new Term("type", EntityKind.FIELD.legacyJavaType())), BooleanClause.Occur.SHOULD)
+                .add(new TermQuery(new Term("type", EntityKind.LOCAL_VARIABLE.legacyJavaType())), BooleanClause.Occur.SHOULD)
+                .build();
+    }
+
     private boolean matchesKind(SearchResult result, EntityKind kind) {
         return kind == null || result.entity().kind() == kind;
     }
@@ -171,6 +223,9 @@ public class JavaSearchService {
         if (searchQuery.target() == SearchTarget.CONTENT) {
             return contentQuery(resolveField(searchQuery), value, searchQuery.fuzzy());
         }
+        if (searchQuery.target() != SearchTarget.DECLARED_TYPE) {
+            throw new IllegalArgumentException("Unsupported search target for metadata search: " + searchQuery.target());
+        }
 
         BooleanQuery.Builder builder = new BooleanQuery.Builder()
                 .setMinimumNumberShouldMatch(1)
@@ -183,6 +238,7 @@ public class JavaSearchService {
         return switch (searchQuery.target()) {
             case CONTENT -> searchQuery.caseSensitive() ? "content" : "content_lowercase";
             case DECLARED_TYPE -> resolveDeclaredTypeField(searchQuery);
+            case ASSIGNABLE_TYPE -> searchQuery.caseSensitive() ? "assignableType" : "assignableType_lowercase";
         };
     }
 
@@ -202,6 +258,9 @@ public class JavaSearchService {
     private void validateQuery(SearchQuery searchQuery) {
         if (searchQuery.kind() == null) {
             throw new IllegalArgumentException("Java search requires entity kind");
+        }
+        if (searchQuery.target() == SearchTarget.ASSIGNABLE_TYPE) {
+            throw new IllegalArgumentException("Assignable type search uses a dedicated variable search");
         }
         if (!languageModule.supportedEntityKinds().contains(searchQuery.kind())) {
             throw new IllegalArgumentException("Java search does not support entity kind: " + searchQuery.kind());
@@ -226,6 +285,18 @@ public class JavaSearchService {
         }
         if (kind != null && !languageModule.supportedEntityKinds().contains(kind)) {
             throw new IllegalArgumentException("Java search does not support entity kind: " + kind);
+        }
+    }
+
+    private void validateAssignableTypeQuery(String type, String language, int limit) {
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("Assignable type must not be blank");
+        }
+        if (limit < 1) {
+            throw new IllegalArgumentException("Limit must be positive");
+        }
+        if (language != null && !languageModule.language().equals(language)) {
+            return;
         }
     }
 

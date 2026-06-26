@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JavaEntityExtractor {
     public List<CodeEntity> extractEntities(Path file) throws Exception {
@@ -74,13 +76,13 @@ public class JavaEntityExtractor {
         extractor.setCurrentFile(filePath);
 
         return parse(content, extractor, parsed -> ((JavaMethodExtractor) parsed).getMethods().stream()
-                .map(value -> new CodeEntity(
+                .map(value -> typedEntity(
                         EntityKind.METHOD,
                         value.getMethodName(),
-                        new EntityLocation(value.getFile(), value.getLine(), 0),
-                        JavaLanguageModule.LANGUAGE,
+                        value.getFile(),
+                        value.getLine(),
                         value.getReturnType(),
-                        Map.of("declaredType", value.getReturnType())
+                        null
                 ))
                 .toList());
     }
@@ -104,13 +106,13 @@ public class JavaEntityExtractor {
         extractor.setCurrentFile(filePath);
 
         return parse(content, extractor, parsed -> ((JavaFieldExtractor) parsed).getFields().stream()
-                .map(value -> new CodeEntity(
+                .map(value -> typedEntity(
                         EntityKind.FIELD,
                         value.getFieldName(),
-                        new EntityLocation(value.getFile(), value.getLine(), 0),
-                        JavaLanguageModule.LANGUAGE,
+                        value.getFile(),
+                        value.getLine(),
                         value.getType(),
-                        Map.of("declaredType", value.getType())
+                        null
                 ))
                 .toList());
     }
@@ -120,13 +122,13 @@ public class JavaEntityExtractor {
         extractor.setCurrentFile(filePath);
 
         return parse(content, extractor, parsed -> ((JavaLocalVariableExtractor) parsed).getVariables().stream()
-                .map(value -> new CodeEntity(
+                .map(value -> typedEntity(
                         EntityKind.LOCAL_VARIABLE,
                         value.getVariableName(),
-                        new EntityLocation(value.getFile(), value.getLine(), 0),
-                        JavaLanguageModule.LANGUAGE,
+                        value.getFile(),
+                        value.getLine(),
                         value.getType(),
-                        Map.of("declaredType", value.getType())
+                        value.getInitializer()
                 ))
                 .toList());
     }
@@ -157,6 +159,30 @@ public class JavaEntityExtractor {
         walker.walk(extractor, tree);
 
         return callback.map(extractor);
+    }
+
+    private CodeEntity typedEntity(EntityKind kind, String content, String file, int line, String declaredType, String initializer) {
+        String resolvedType = JavaTypeResolver.resolveDeclaredType(declaredType, initializer);
+        return new CodeEntity(
+                kind,
+                content,
+                new EntityLocation(file, line, 0),
+                JavaLanguageModule.LANGUAGE,
+                resolvedType,
+                typedAttributes(resolvedType)
+        );
+    }
+
+    private Map<String, String> typedAttributes(String declaredType) {
+        Map<String, String> attributes = new HashMap<>();
+        if (declaredType != null && !declaredType.isBlank()) {
+            attributes.put("declaredType", declaredType);
+            Set<String> assignableTypes = JavaTypeResolver.assignableTypes(declaredType);
+            if (!assignableTypes.isEmpty()) {
+                attributes.put("assignableTypes", JavaTypeResolver.serializeTypes(assignableTypes));
+            }
+        }
+        return attributes;
     }
 
     @FunctionalInterface

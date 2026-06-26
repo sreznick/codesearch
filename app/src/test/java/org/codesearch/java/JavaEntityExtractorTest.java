@@ -41,6 +41,18 @@ class JavaEntityExtractorTest {
                 entity.kind() == EntityKind.LOCAL_VARIABLE
                         && entity.content().equals("localVariable")
                         && "String".equals(entity.declaredType())));
+
+        assertTrue(entities.stream().anyMatch(entity ->
+                entity.kind() == EntityKind.LOCAL_VARIABLE
+                        && entity.content().equals("inferredText")
+                        && "String".equals(entity.declaredType())
+                        && entity.attributes().get("assignableTypes").contains("CharSequence")));
+
+        assertTrue(entities.stream().anyMatch(entity ->
+                entity.kind() == EntityKind.LOCAL_VARIABLE
+                        && entity.content().equals("inferredBuilder")
+                        && "StringBuilder".equals(entity.declaredType())
+                        && entity.attributes().get("assignableTypes").contains("Appendable")));
     }
 
     @Test

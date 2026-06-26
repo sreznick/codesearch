@@ -175,7 +175,15 @@ public class App {
         try {
             JavaSearchService searchService = new JavaSearchService(indexPath);
             JavaSearchService.SearchResponse response;
-            if (command.target() == SearchTarget.DECLARED_TYPE) {
+            if (command.target() == SearchTarget.ASSIGNABLE_TYPE) {
+                response = searchService.searchAssignableVariables(
+                        command.query(),
+                        command.language(),
+                        command.caseSensitive(),
+                        command.limit(),
+                        command.pathFilter()
+                );
+            } else if (command.target() == SearchTarget.DECLARED_TYPE) {
                 response = searchService.searchWithMetadata(
                         new SearchQuery(
                                 command.query(),
@@ -391,6 +399,7 @@ public class App {
             case "field-type" -> new SearchKind(EntityKind.FIELD, SearchTarget.DECLARED_TYPE);
             case "local-variable-type" -> new SearchKind(EntityKind.LOCAL_VARIABLE, SearchTarget.DECLARED_TYPE);
             case "method-return-type" -> new SearchKind(EntityKind.METHOD, SearchTarget.DECLARED_TYPE);
+            case "variable-assignable-to", "assignable-type" -> new SearchKind(null, SearchTarget.ASSIGNABLE_TYPE);
             default -> {
                 EntityKind kind = parseEntityKindOrNull(value);
                 yield kind == null ? null : new SearchKind(kind, SearchTarget.CONTENT);
@@ -454,9 +463,20 @@ public class App {
         }
 
         try {
-            SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
             JavaSearchService searchService = new JavaSearchService(indexPath);
-            JavaSearchService.SearchResponse response = searchService.searchWithMetadata(searchCommand.query());
+            JavaSearchService.SearchResponse response;
+            if (isAssignableTypeSearch(args[2])) {
+                response = searchService.searchAssignableVariables(
+                        args[3],
+                        JavaLanguageModule.LANGUAGE,
+                        caseSensitive,
+                        limit,
+                        pathFilter
+                );
+            } else {
+                SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
+                response = searchService.searchWithMetadata(searchCommand.query());
+            }
             printResults(out, response);
             return 0;
         } catch (IllegalArgumentException e) {
@@ -487,6 +507,11 @@ public class App {
                     new SearchQuery(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE, SearchTarget.CONTENT, fuzzy, caseSensitive, limit, pathFilter)
             );
         };
+    }
+
+    private static boolean isAssignableTypeSearch(String rawKind) {
+        return "variable-assignable-to".equalsIgnoreCase(rawKind)
+                || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
     private static void printResults(PrintStream out, JavaSearchService.SearchResponse response) {
@@ -560,6 +585,7 @@ public class App {
         out.println("  codesearch index .");
         out.println("  codesearch --cached class TestClass");
         out.println("  codesearch --cached field-type String");
+        out.println("  codesearch --cached variable-assignable-to Appendable");
     }
 
     private static void printQuickSearchUsage(PrintStream err) {
