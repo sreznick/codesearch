@@ -132,15 +132,8 @@ public class App {
             quickIndexPath = Files.createTempDirectory("codesearch-quick-index");
             JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
             JavaSearchService searchService = new JavaSearchService(quickIndexPath);
-            JavaSearchService.SearchResponse response = searchService.searchContaining(
-                    command.query(),
-                    command.kind(),
-                    command.language(),
-                    command.caseSensitive(),
-                    command.limit(),
-                    null
-            );
-            printResults(out, response, false, null);
+            JavaSearchService.SearchResponse response = executeSearch(searchService, command);
+            printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
@@ -174,34 +167,7 @@ public class App {
 
         try {
             JavaSearchService searchService = new JavaSearchService(indexPath);
-            JavaSearchService.SearchResponse response;
-            if (command.target() == SearchTarget.ASSIGNABLE_TYPE) {
-                response = searchService.searchAssignableVariables(
-                        command.query(),
-                        command.language(),
-                        command.caseSensitive(),
-                        command.limit(),
-                        command.pathFilter()
-                );
-            } else if (command.target() == SearchTarget.DECLARED_TYPE) {
-                response = searchService.searchWithMetadata(
-                        SearchQuery.builder(command.query(), command.kind(), command.language())
-                                .target(SearchTarget.DECLARED_TYPE)
-                                .caseSensitive(command.caseSensitive())
-                                .limit(command.limit())
-                                .pathFilter(command.pathFilter())
-                                .build()
-                );
-            } else {
-                response = searchService.searchContaining(
-                        command.query(),
-                        command.kind(),
-                        command.language(),
-                        command.caseSensitive(),
-                        command.limit(),
-                        command.pathFilter()
-                );
-            }
+            JavaSearchService.SearchResponse response = executeSearch(searchService, command);
             printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
@@ -217,15 +183,52 @@ public class App {
         }
     }
 
+    private static JavaSearchService.SearchResponse executeSearch(JavaSearchService searchService, SearchCommandSpec command) throws IOException {
+        if (command.target() == SearchTarget.ASSIGNABLE_TYPE) {
+            return searchService.searchAssignableVariables(
+                    command.query(),
+                    command.language(),
+                    command.caseSensitive(),
+                    command.limit(),
+                    command.pathFilter()
+            );
+        }
+        if (command.target() == SearchTarget.DECLARED_TYPE) {
+            return searchService.searchWithMetadata(
+                    SearchQuery.builder(command.query(), command.kind(), command.language())
+                            .target(SearchTarget.DECLARED_TYPE)
+                            .caseSensitive(command.caseSensitive())
+                            .limit(command.limit())
+                            .pathFilter(command.pathFilter())
+                            .build()
+            );
+        }
+
+        return searchService.searchContaining(
+                command.query(),
+                command.kind(),
+                command.language(),
+                command.caseSensitive(),
+                command.limit(),
+                command.pathFilter()
+        );
+    }
+
     private static QuickSearchCommand parseQuickSearchCommand(String[] args, int startIndex) {
         String language = JavaLanguageModule.LANGUAGE;
         EntityKind kind = null;
+        SearchTarget target = SearchTarget.CONTENT;
         boolean caseSensitive = false;
         int limit = DEFAULT_LIMIT;
+        boolean explain = false;
         List<String> operands = new ArrayList<>();
 
         for (int i = startIndex; i < args.length; i++) {
             String arg = args[i];
+            if ("--explain".equalsIgnoreCase(arg)) {
+                explain = true;
+                continue;
+            }
             if ("-r".equalsIgnoreCase(arg) || "--recursive".equalsIgnoreCase(arg)) {
                 continue;
             }
@@ -276,18 +279,20 @@ public class App {
         if (operands.size() == 1) {
             query = operands.getFirst();
         } else if (operands.size() == 2) {
-            EntityKind operandKind = parseEntityKindOrNull(operands.getFirst());
-            if (kind == null && operandKind != null) {
-                kind = operandKind;
+            SearchKind searchKind = parseSearchKindOrNull(operands.getFirst());
+            if (kind == null && searchKind != null) {
+                kind = searchKind.kind();
+                target = searchKind.target();
                 query = operands.get(1);
             } else {
                 query = operands.getFirst();
                 sourcePath = operands.get(1);
             }
         } else if (operands.size() == 3) {
-            EntityKind operandKind = parseEntityKindOrNull(operands.getFirst());
-            if (kind == null && operandKind != null) {
-                kind = operandKind;
+            SearchKind searchKind = parseSearchKindOrNull(operands.getFirst());
+            if (kind == null && searchKind != null) {
+                kind = searchKind.kind();
+                target = searchKind.target();
                 query = operands.get(1);
                 sourcePath = operands.get(2);
             } else {
@@ -297,7 +302,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new QuickSearchCommand(query, sourcePath, language, kind, caseSensitive, limit);
+        return new QuickSearchCommand(query, sourcePath, language, kind, target, caseSensitive, limit, explain);
     }
 
     private static CachedSearchCommand parseCachedSearchCommand(String[] args, int startIndex) {
@@ -687,9 +692,34 @@ public class App {
 
     private record SearchCommand(SearchQuery query) {}
 
-    private record QuickSearchCommand(String query, String sourcePath, String language, EntityKind kind, boolean caseSensitive, int limit) {}
+    private interface SearchCommandSpec {
+        String query();
+        String language();
+        EntityKind kind();
+        SearchTarget target();
+        boolean caseSensitive();
+        int limit();
+        String pathFilter();
+        boolean explain();
+    }
 
-    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain) {}
+    private record QuickSearchCommand(
+            String query,
+            String sourcePath,
+            String language,
+            EntityKind kind,
+            SearchTarget target,
+            boolean caseSensitive,
+            int limit,
+            boolean explain
+    ) implements SearchCommandSpec {
+        @Override
+        public String pathFilter() {
+            return null;
+        }
+    }
+
+    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain) implements SearchCommandSpec {}
 
     private record IndexCommand(String language, String sourcePath) {}
 

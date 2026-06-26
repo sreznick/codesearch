@@ -254,6 +254,35 @@ class AppTest {
     }
 
     @Test
+    void shouldRunQuickAssignableTypeSearchWithExplain(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    public void run() {
+                        var builder = new StringBuilder("hello");
+                    }
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"variable-assignable-to", "Appendable", sourcePath.toString(), "--explain"},
+                out,
+                err,
+                tempDir.resolve("unused-index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("builder"));
+        assertTrue(output.contains("[StringBuilder]"));
+        assertTrue(output.contains("explain: var -> StringBuilder -> Appendable"));
+        assertFalse(errContent.toString().contains("Путь не найден: Appendable"));
+        assertFalse(errContent.toString().contains("Неизвестный флаг: --explain"));
+    }
+
+    @Test
     void shouldExplainProjectInterfaceImplementation(@TempDir Path tempDir) throws IOException {
         Path sourcePath = tempDir.resolve("sources");
         Path indexPath = tempDir.resolve("index");
