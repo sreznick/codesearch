@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 public class App {
     private static final int DEFAULT_LIMIT = 100;
+    private static final int DEFAULT_SNIPPET_CONTEXT = 2;
     private static final Path DEFAULT_INDEX_PATH = Paths.get("index");
     private static final boolean USE_COLOR = shouldUseColor();
     private static final String RESET = "\u001B[0m";
@@ -135,7 +136,7 @@ public class App {
             JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
             JavaSearchService searchService = new JavaSearchService(quickIndexPath);
             JavaSearchService.SearchResponse response = executeSearch(searchService, command);
-            printResults(out, response, command.explain(), command.json(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
+            printResults(out, response, command.explain(), command.json(), command.snippet(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
@@ -170,7 +171,7 @@ public class App {
         try {
             JavaSearchService searchService = new JavaSearchService(indexPath);
             JavaSearchService.SearchResponse response = executeSearch(searchService, command);
-            printResults(out, response, command.explain(), command.json(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
+            printResults(out, response, command.explain(), command.json(), command.snippet(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
@@ -224,10 +225,27 @@ public class App {
         int limit = DEFAULT_LIMIT;
         boolean explain = false;
         boolean json = false;
+        SnippetBuilder snippet = new SnippetBuilder();
         List<String> operands = new ArrayList<>();
 
         for (int i = startIndex; i < args.length; i++) {
             String arg = args[i];
+            if ("--snippet".equalsIgnoreCase(arg)) {
+                snippet.enableDefaultContext();
+                continue;
+            }
+            if ("-A".equals(arg) || "--after".equalsIgnoreCase(arg)) {
+                snippet.after(parseRequiredSnippetLineCount(args, ++i, arg));
+                continue;
+            }
+            if ("-B".equals(arg) || "--before".equalsIgnoreCase(arg)) {
+                snippet.before(parseRequiredSnippetLineCount(args, ++i, arg));
+                continue;
+            }
+            if ("-C".equals(arg) || "--context".equalsIgnoreCase(arg)) {
+                snippet.context(parseRequiredSnippetLineCount(args, ++i, arg));
+                continue;
+            }
             if ("--json".equalsIgnoreCase(arg)) {
                 json = true;
                 continue;
@@ -309,7 +327,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new QuickSearchCommand(query, sourcePath, language, kind, target, caseSensitive, limit, explain, json);
+        return new QuickSearchCommand(query, sourcePath, language, kind, target, caseSensitive, limit, explain, json, snippet.build());
     }
 
     private static CachedSearchCommand parseCachedSearchCommand(String[] args, int startIndex) {
@@ -321,10 +339,27 @@ public class App {
         String pathFilter = null;
         boolean explain = false;
         boolean json = false;
+        SnippetBuilder snippet = new SnippetBuilder();
         List<String> operands = new ArrayList<>();
 
         for (int i = startIndex; i < args.length; i++) {
             String arg = args[i];
+            if ("--snippet".equalsIgnoreCase(arg)) {
+                snippet.enableDefaultContext();
+                continue;
+            }
+            if ("-A".equals(arg) || "--after".equalsIgnoreCase(arg)) {
+                snippet.after(parseRequiredSnippetLineCount(args, ++i, arg));
+                continue;
+            }
+            if ("-B".equals(arg) || "--before".equalsIgnoreCase(arg)) {
+                snippet.before(parseRequiredSnippetLineCount(args, ++i, arg));
+                continue;
+            }
+            if ("-C".equals(arg) || "--context".equalsIgnoreCase(arg)) {
+                snippet.context(parseRequiredSnippetLineCount(args, ++i, arg));
+                continue;
+            }
             if ("--json".equalsIgnoreCase(arg)) {
                 json = true;
                 continue;
@@ -409,7 +444,22 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain, json);
+        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain, json, snippet.build());
+    }
+
+    private static int parseRequiredSnippetLineCount(String[] args, int valueIndex, String flag) {
+        if (valueIndex >= args.length) {
+            throw new IllegalArgumentException("Не указано количество строк для " + flag + ".");
+        }
+        try {
+            int value = Integer.parseInt(args[valueIndex]);
+            if (value < 0) {
+                throw new IllegalArgumentException("Количество строк для " + flag + " не может быть отрицательным.");
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Количество строк для " + flag + " должно быть числом: " + args[valueIndex], e);
+        }
     }
 
     private static SearchKind parseSearchKindOrNull(String value) {
@@ -435,7 +485,7 @@ public class App {
 
     private static int handleSearch(String[] args, PrintStream out, PrintStream err, Path indexPath) {
         if (args.length < 4) {
-            err.println(colorize(RED, "Использование: ") + "search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH] [--json]");
+            err.println(colorize(RED, "Использование: ") + "search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH] [--snippet] [--json]");
             return 1;
         }
 
@@ -450,11 +500,35 @@ public class App {
         String pathFilter = null;
         boolean explain = false;
         boolean json = false;
+        SnippetBuilder snippet = new SnippetBuilder();
         for (int i = 4; i < args.length; i++) {
             if ("-f".equalsIgnoreCase(args[i])) {
                 fuzzy = true;
             } else if ("-cs".equalsIgnoreCase(args[i])) {
                 caseSensitive = true;
+            } else if ("--snippet".equalsIgnoreCase(args[i])) {
+                snippet.enableDefaultContext();
+            } else if ("-A".equals(args[i]) || "--after".equalsIgnoreCase(args[i])) {
+                try {
+                    snippet.after(parseRequiredSnippetLineCount(args, ++i, args[i - 1]));
+                } catch (IllegalArgumentException e) {
+                    err.println(colorize(RED, "Ошибка контекста: ") + e.getMessage());
+                    return 1;
+                }
+            } else if ("-B".equals(args[i]) || "--before".equalsIgnoreCase(args[i])) {
+                try {
+                    snippet.before(parseRequiredSnippetLineCount(args, ++i, args[i - 1]));
+                } catch (IllegalArgumentException e) {
+                    err.println(colorize(RED, "Ошибка контекста: ") + e.getMessage());
+                    return 1;
+                }
+            } else if ("-C".equals(args[i]) || "--context".equalsIgnoreCase(args[i])) {
+                try {
+                    snippet.context(parseRequiredSnippetLineCount(args, ++i, args[i - 1]));
+                } catch (IllegalArgumentException e) {
+                    err.println(colorize(RED, "Ошибка контекста: ") + e.getMessage());
+                    return 1;
+                }
             } else if ("--json".equalsIgnoreCase(args[i])) {
                 json = true;
             } else if ("--explain".equalsIgnoreCase(args[i])) {
@@ -501,7 +575,7 @@ public class App {
                 SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
                 response = searchService.searchWithMetadata(searchCommand.query());
             }
-            printResults(out, response, explain, json, isAssignableTypeSearch(args[2]) ? args[3] : null);
+            printResults(out, response, explain, json, snippet.build(), isAssignableTypeSearch(args[2]) ? args[3] : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
@@ -553,9 +627,9 @@ public class App {
                 || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
-    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, boolean json, String assignableTargetType) {
+    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, boolean json, SnippetOptions snippet, String assignableTargetType) {
         if (json) {
-            printJsonResults(out, response, explain, assignableTargetType);
+            printJsonResults(out, response, explain, snippet, assignableTargetType);
             return;
         }
 
@@ -574,11 +648,12 @@ public class App {
                         out.println(colorize(DIM, "   explain: ") + line)
                 );
             }
+            printSnippet(out, result.entity(), snippet);
             index++;
         }
     }
 
-    private static void printJsonResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, String assignableTargetType) {
+    private static void printJsonResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, SnippetOptions snippet, String assignableTargetType) {
         StringBuilder json = new StringBuilder();
         json.append("{\n");
         json.append("  \"totalHits\": ").append(response.totalHits()).append(",\n");
@@ -586,7 +661,7 @@ public class App {
 
         for (int i = 0; i < response.results().size(); i++) {
             SearchResult result = response.results().get(i);
-            appendJsonResult(json, result, explain, assignableTargetType);
+            appendJsonResult(json, result, explain, snippet, assignableTargetType);
             if (i + 1 < response.results().size()) {
                 json.append(",");
             }
@@ -598,7 +673,7 @@ public class App {
         out.println(json);
     }
 
-    private static void appendJsonResult(StringBuilder json, SearchResult result, boolean explain, String assignableTargetType) {
+    private static void appendJsonResult(StringBuilder json, SearchResult result, boolean explain, SnippetOptions snippet, String assignableTargetType) {
         CodeEntity entity = result.entity();
         json.append("    {\n");
         json.append("      \"kind\": ").append(jsonString(entity.kind().legacyJavaType())).append(",\n");
@@ -611,6 +686,10 @@ public class App {
         appendJsonAttributes(json, entity.attributes());
         json.append(",\n");
         appendJsonExplanation(json, explain ? explainResult(entity, assignableTargetType) : List.of());
+        if (snippet.enabled()) {
+            json.append(",\n");
+            appendJsonSnippet(json, entity, snippet);
+        }
         json.append("\n");
         json.append("    }");
     }
@@ -654,6 +733,75 @@ public class App {
             return;
         }
         json.append("]");
+    }
+
+    private static void appendJsonSnippet(StringBuilder json, CodeEntity entity, SnippetOptions snippet) {
+        json.append("      \"snippet\": [");
+        List<SnippetLine> lines;
+        try {
+            lines = readSnippetLines(entity, snippet);
+        } catch (IOException e) {
+            lines = List.of();
+        }
+
+        if (!lines.isEmpty()) {
+            json.append("\n");
+            for (int i = 0; i < lines.size(); i++) {
+                SnippetLine line = lines.get(i);
+                json.append("        {")
+                        .append("\"line\": ").append(line.number()).append(", ")
+                        .append("\"match\": ").append(line.match()).append(", ")
+                        .append("\"text\": ").append(jsonString(line.text()))
+                        .append("}");
+                if (i + 1 < lines.size()) {
+                    json.append(",");
+                }
+                json.append("\n");
+            }
+            json.append("      ]");
+            return;
+        }
+        json.append("]");
+    }
+
+    private static void printSnippet(PrintStream out, CodeEntity entity, SnippetOptions snippet) {
+        if (!snippet.enabled()) {
+            return;
+        }
+
+        try {
+            for (SnippetLine line : readSnippetLines(entity, snippet)) {
+                String marker = line.match() ? ">" : " ";
+                out.printf("   %s %4d | %s%n", marker, line.number(), line.text());
+            }
+        } catch (IOException e) {
+            out.println(colorize(DIM, "   snippet: ") + "не удалось прочитать " + entity.location().filePath());
+        }
+    }
+
+    private static List<SnippetLine> readSnippetLines(CodeEntity entity, SnippetOptions snippet) throws IOException {
+        if (!snippet.enabled()) {
+            return List.of();
+        }
+
+        Path filePath = Paths.get(entity.location().filePath());
+        List<String> fileLines = Files.readAllLines(filePath);
+        int matchLine = entity.location().line();
+        if (matchLine < 1 || matchLine > fileLines.size()) {
+            return List.of();
+        }
+
+        int start = Math.max(1, matchLine - snippet.before());
+        int end = Math.min(fileLines.size(), matchLine + snippet.after());
+        List<SnippetLine> snippetLines = new ArrayList<>();
+        for (int lineNumber = start; lineNumber <= end; lineNumber++) {
+            snippetLines.add(new SnippetLine(
+                    lineNumber,
+                    fileLines.get(lineNumber - 1),
+                    lineNumber == matchLine
+            ));
+        }
+        return snippetLines;
     }
 
     private static List<String> explainResult(CodeEntity entity, String assignableTargetType) {
@@ -777,6 +925,10 @@ public class App {
         out.println("  -p, --path PATH        фильтр пути для --cached");
         out.println("  --explain              показать, почему результат подошел под запрос");
         out.println("  --json                 вывести результат в JSON для скриптов и интеграций");
+        out.println("  --snippet              показать фрагмент кода вокруг результата");
+        out.println("  -A, --after N          показать N строк после результата");
+        out.println("  -B, --before N         показать N строк до результата");
+        out.println("  -C, --context N        показать N строк до и после результата");
         out.println("  --lang java            язык; сейчас поддерживается только java");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
@@ -791,6 +943,7 @@ public class App {
         out.println("  codesearch --cached variable-assignable-to Printable --explain");
         out.println("  codesearch --cached variable-assignable-to Animal --explain");
         out.println("  codesearch --cached annotation DemoController --json");
+        out.println("  codesearch method getTestField --snippet");
         out.println();
         out.println(colorize(BLUE, "Семантический поиск по типам"));
         out.println("  variable-assignable-to учитывает простое выведение var, JDK-типы,");
@@ -832,6 +985,7 @@ public class App {
         String pathFilter();
         boolean explain();
         boolean json();
+        SnippetOptions snippet();
     }
 
     private record QuickSearchCommand(
@@ -843,7 +997,8 @@ public class App {
             boolean caseSensitive,
             int limit,
             boolean explain,
-            boolean json
+            boolean json,
+            SnippetOptions snippet
     ) implements SearchCommandSpec {
         @Override
         public String pathFilter() {
@@ -851,11 +1006,49 @@ public class App {
         }
     }
 
-    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain, boolean json) implements SearchCommandSpec {}
+    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain, boolean json, SnippetOptions snippet) implements SearchCommandSpec {}
 
     private record IndexCommand(String language, String sourcePath) {}
 
     private record SearchKind(EntityKind kind, SearchTarget target) {}
+
+    private record SnippetOptions(boolean enabled, int before, int after) {}
+
+    private record SnippetLine(int number, String text, boolean match) {}
+
+    private static class SnippetBuilder {
+        private boolean enabled;
+        private int before;
+        private int after;
+
+        void enableDefaultContext() {
+            enabled = true;
+            if (before == 0 && after == 0) {
+                before = DEFAULT_SNIPPET_CONTEXT;
+                after = DEFAULT_SNIPPET_CONTEXT;
+            }
+        }
+
+        void before(int lines) {
+            enabled = true;
+            before = lines;
+        }
+
+        void after(int lines) {
+            enabled = true;
+            after = lines;
+        }
+
+        void context(int lines) {
+            enabled = true;
+            before = lines;
+            after = lines;
+        }
+
+        SnippetOptions build() {
+            return new SnippetOptions(enabled, before, after);
+        }
+    }
 
     private static String colorize(String color, String text) {
         return USE_COLOR ? color + text + RESET : text;

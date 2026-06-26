@@ -46,7 +46,10 @@ class AppTest {
         assertTrue(outContent.toString().contains("variable-assignable-to <type>"));
         assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Printable --explain"));
         assertTrue(outContent.toString().contains("--json"));
+        assertTrue(outContent.toString().contains("--snippet"));
+        assertTrue(outContent.toString().contains("-C, --context N"));
         assertTrue(outContent.toString().contains("codesearch --cached annotation DemoController --json"));
+        assertTrue(outContent.toString().contains("codesearch method getTestField --snippet"));
         assertTrue(outContent.toString().contains("implements/extends"));
         assertTrue(outContent.toString().contains("var -> Dog -> Animal"));
         assertFalse(outContent.toString().contains("-r, --recursive"));
@@ -467,6 +470,93 @@ class AppTest {
         assertTrue(output.contains("\"explanation\": ["));
         assertTrue(output.contains("\"var -> StringBuilder -> Appendable\""));
         assertTrue(output.contains("\"совместимые типы: StringBuilder, Appendable"));
+    }
+
+    @Test
+    void shouldPrintSnippetForQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String beforeField = "before";
+                    private String targetField = "value";
+                    private String afterField = "after";
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"field", "targetField", sourcePath.toString(), "--snippet"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Field targetField"));
+        assertTrue(output.contains("2 |     private String beforeField"));
+        assertTrue(output.contains(">    3 |     private String targetField"));
+        assertTrue(output.contains("4 |     private String afterField"));
+    }
+
+    @Test
+    void shouldRespectSnippetContextFlags(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String beforeField = "before";
+                    private String targetField = "value";
+                    private String afterField = "after";
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"field", "targetField", sourcePath.toString(), "-B", "1", "-A", "0"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("2 |     private String beforeField"));
+        assertTrue(output.contains(">    3 |     private String targetField"));
+        assertFalse(output.contains("4 |     private String afterField"));
+    }
+
+    @Test
+    void shouldIncludeSnippetInJson(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String targetField = "value";
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"field", "targetField", sourcePath.toString(), "--context", "0", "--json"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("\"snippet\": ["));
+        assertTrue(output.contains("\"line\": 2"));
+        assertTrue(output.contains("\"match\": true"));
+        assertTrue(output.contains("\"text\": \"    private String targetField = \\\"value\\\";\""));
+    }
+
+    @Test
+    void shouldRejectInvalidSnippetContext() {
+        int exitCode = App.run(new String[]{"class", "TestClass", "--context", "abc"}, out, err);
+
+        assertEquals(1, exitCode);
+        assertTrue(errContent.toString().contains("Количество строк для --context должно быть числом"));
     }
 
     @Test

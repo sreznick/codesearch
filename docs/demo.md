@@ -326,7 +326,32 @@ codesearch --cached class TestClass --path missing/path
 Совпадений нет.
 ```
 
-## 9. Архив для скачивания
+## 9. Фрагмент кода вокруг результата
+
+Можно вывести не только файл и строку, но и несколько строк исходного кода вокруг найденной сущности:
+
+```bash
+codesearch method getTestField app/src/test/resources --snippet
+```
+
+По умолчанию показываются две строки до и две строки после результата. Если нужен другой размер контекста, можно использовать grep-подобные флаги:
+
+```bash
+codesearch method getTestField app/src/test/resources -C 3
+codesearch method getTestField app/src/test/resources -B 1 -A 4
+```
+
+Пример результата:
+
+```text
+Найдено совпадений: 1
+1. Method getTestField  [String]  app/src/test/resources/TestClass.java:32
+      31 |
+   >  32 |     public String getTestField() {
+      33 |         return testField;
+```
+
+## 10. Архив для скачивания
 
 Собрать zip:
 

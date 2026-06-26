@@ -13,6 +13,7 @@
 - поиск полей, локальных переменных и методов по declared type / return type
 - поиск переменных по совместимому типу с простым выводом `var`
 - JSON-вывод для скриптов, CI и внешних инструментов
+- вывод фрагмента кода вокруг найденной строки
 - фильтр результатов по пути
 - ограничение количества результатов
 - zip-дистрибутив, чтобы в дальнейшем скачивать пакет и использовать как grep-подобный инструмент
@@ -107,6 +108,7 @@ codesearch --cached annotation DemoController
 codesearch --cached variable-assignable-to Appendable
 codesearch --cached variable-assignable-to Appendable --explain
 codesearch --cached annotation DemoController --json
+codesearch --cached method getTestField --snippet
 ```
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
@@ -226,6 +228,7 @@ explain: var -> Dog -> Animal
 codesearch class TestClass . --limit 5
 codesearch --cached class TestClass --path app/src/test/resources
 codesearch class testclass . -cs
+codesearch method getTestField . --context 2
 ```
 
 - `--limit` или `-n` ограничивает количество строк в выдаче
@@ -233,11 +236,37 @@ codesearch class testclass . -cs
 - `-cs` включает case-sensitive поиск
 - `--kind` или `-k` задаёт вид сущности, если не хочется писать его первым аргументом
 - `--explain` показывает, за счет какой цепочки типов результат подошел под запрос
+- `--snippet` показывает фрагмент исходного кода вокруг найденной строки
+- `-A`, `-B`, `-C` работают как в `grep`: строки после, до или вокруг результата
 
 Пример с `--kind`:
 
 ```bash
 codesearch TestClass . --kind class
+```
+
+## Фрагмент кода в выдаче
+
+Если нужно сразу увидеть найденное место в контексте, можно включить snippet:
+
+```bash
+codesearch method getTestField app/src/test/resources --snippet
+```
+
+По умолчанию показываются две строки до и две строки после результата. Количество строк можно задать явно:
+
+```bash
+codesearch method getTestField app/src/test/resources -C 3
+codesearch method getTestField app/src/test/resources -B 1 -A 4
+```
+
+Пример вывода:
+
+```text
+1. Method getTestField  [String]  app/src/test/resources/TestClass.java:32
+      31 |
+   >  32 |     public String getTestField() {
+      33 |         return testField;
 ```
 
 ## JSON-вывод
