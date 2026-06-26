@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class App {
@@ -134,7 +135,7 @@ public class App {
             JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
             JavaSearchService searchService = new JavaSearchService(quickIndexPath);
             JavaSearchService.SearchResponse response = executeSearch(searchService, command);
-            printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
+            printResults(out, response, command.explain(), command.json(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
@@ -169,7 +170,7 @@ public class App {
         try {
             JavaSearchService searchService = new JavaSearchService(indexPath);
             JavaSearchService.SearchResponse response = executeSearch(searchService, command);
-            printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
+            printResults(out, response, command.explain(), command.json(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
@@ -222,10 +223,15 @@ public class App {
         boolean caseSensitive = false;
         int limit = DEFAULT_LIMIT;
         boolean explain = false;
+        boolean json = false;
         List<String> operands = new ArrayList<>();
 
         for (int i = startIndex; i < args.length; i++) {
             String arg = args[i];
+            if ("--json".equalsIgnoreCase(arg)) {
+                json = true;
+                continue;
+            }
             if ("--explain".equalsIgnoreCase(arg)) {
                 explain = true;
                 continue;
@@ -303,7 +309,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new QuickSearchCommand(query, sourcePath, language, kind, target, caseSensitive, limit, explain);
+        return new QuickSearchCommand(query, sourcePath, language, kind, target, caseSensitive, limit, explain, json);
     }
 
     private static CachedSearchCommand parseCachedSearchCommand(String[] args, int startIndex) {
@@ -314,10 +320,15 @@ public class App {
         int limit = DEFAULT_LIMIT;
         String pathFilter = null;
         boolean explain = false;
+        boolean json = false;
         List<String> operands = new ArrayList<>();
 
         for (int i = startIndex; i < args.length; i++) {
             String arg = args[i];
+            if ("--json".equalsIgnoreCase(arg)) {
+                json = true;
+                continue;
+            }
             if ("--explain".equalsIgnoreCase(arg)) {
                 explain = true;
                 continue;
@@ -398,7 +409,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain);
+        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain, json);
     }
 
     private static SearchKind parseSearchKindOrNull(String value) {
@@ -424,7 +435,7 @@ public class App {
 
     private static int handleSearch(String[] args, PrintStream out, PrintStream err, Path indexPath) {
         if (args.length < 4) {
-            err.println(colorize(RED, "Использование: ") + "search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH]");
+            err.println(colorize(RED, "Использование: ") + "search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH] [--json]");
             return 1;
         }
 
@@ -438,11 +449,14 @@ public class App {
         int limit = DEFAULT_LIMIT;
         String pathFilter = null;
         boolean explain = false;
+        boolean json = false;
         for (int i = 4; i < args.length; i++) {
             if ("-f".equalsIgnoreCase(args[i])) {
                 fuzzy = true;
             } else if ("-cs".equalsIgnoreCase(args[i])) {
                 caseSensitive = true;
+            } else if ("--json".equalsIgnoreCase(args[i])) {
+                json = true;
             } else if ("--explain".equalsIgnoreCase(args[i])) {
                 explain = true;
             } else if ("--limit".equalsIgnoreCase(args[i]) || "-n".equalsIgnoreCase(args[i])) {
@@ -487,7 +501,7 @@ public class App {
                 SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
                 response = searchService.searchWithMetadata(searchCommand.query());
             }
-            printResults(out, response, explain, isAssignableTypeSearch(args[2]) ? args[3] : null);
+            printResults(out, response, explain, json, isAssignableTypeSearch(args[2]) ? args[3] : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
@@ -539,7 +553,12 @@ public class App {
                 || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
-    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, String assignableTargetType) {
+    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, boolean json, String assignableTargetType) {
+        if (json) {
+            printJsonResults(out, response, explain, assignableTargetType);
+            return;
+        }
+
         out.println(colorize(BLUE, "Найдено совпадений: ") + response.totalHits());
 
         if (response.results().isEmpty()) {
@@ -557,6 +576,84 @@ public class App {
             }
             index++;
         }
+    }
+
+    private static void printJsonResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, String assignableTargetType) {
+        StringBuilder json = new StringBuilder();
+        json.append("{\n");
+        json.append("  \"totalHits\": ").append(response.totalHits()).append(",\n");
+        json.append("  \"results\": [\n");
+
+        for (int i = 0; i < response.results().size(); i++) {
+            SearchResult result = response.results().get(i);
+            appendJsonResult(json, result, explain, assignableTargetType);
+            if (i + 1 < response.results().size()) {
+                json.append(",");
+            }
+            json.append("\n");
+        }
+
+        json.append("  ]\n");
+        json.append("}");
+        out.println(json);
+    }
+
+    private static void appendJsonResult(StringBuilder json, SearchResult result, boolean explain, String assignableTargetType) {
+        CodeEntity entity = result.entity();
+        json.append("    {\n");
+        json.append("      \"kind\": ").append(jsonString(entity.kind().legacyJavaType())).append(",\n");
+        json.append("      \"name\": ").append(jsonString(entity.content())).append(",\n");
+        json.append("      \"language\": ").append(jsonString(entity.language())).append(",\n");
+        json.append("      \"file\": ").append(jsonString(entity.location().filePath())).append(",\n");
+        json.append("      \"line\": ").append(entity.location().line()).append(",\n");
+        json.append("      \"declaredType\": ").append(jsonStringOrNull(entity.declaredType())).append(",\n");
+        json.append("      \"score\": ").append(result.score()).append(",\n");
+        appendJsonAttributes(json, entity.attributes());
+        json.append(",\n");
+        appendJsonExplanation(json, explain ? explainResult(entity, assignableTargetType) : List.of());
+        json.append("\n");
+        json.append("    }");
+    }
+
+    private static void appendJsonAttributes(StringBuilder json, Map<String, String> attributes) {
+        json.append("      \"attributes\": {");
+        if (!attributes.isEmpty()) {
+            json.append("\n");
+            List<Map.Entry<String, String>> entries = attributes.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .toList();
+            for (int i = 0; i < entries.size(); i++) {
+                Map.Entry<String, String> entry = entries.get(i);
+                json.append("        ")
+                        .append(jsonString(entry.getKey()))
+                        .append(": ")
+                        .append(jsonString(entry.getValue()));
+                if (i + 1 < entries.size()) {
+                    json.append(",");
+                }
+                json.append("\n");
+            }
+            json.append("      }");
+            return;
+        }
+        json.append("}");
+    }
+
+    private static void appendJsonExplanation(StringBuilder json, List<String> explanation) {
+        json.append("      \"explanation\": [");
+        if (!explanation.isEmpty()) {
+            json.append("\n");
+            for (int i = 0; i < explanation.size(); i++) {
+                json.append("        ").append(jsonString(explanation.get(i)));
+                if (i + 1 < explanation.size()) {
+                    json.append(",");
+                }
+                json.append("\n");
+            }
+            json.append("      ]");
+            return;
+        }
+        json.append("]");
     }
 
     private static List<String> explainResult(CodeEntity entity, String assignableTargetType) {
@@ -679,6 +776,7 @@ public class App {
         out.println("  --cached               искать по постоянному индексу без переиндексации");
         out.println("  -p, --path PATH        фильтр пути для --cached");
         out.println("  --explain              показать, почему результат подошел под запрос");
+        out.println("  --json                 вывести результат в JSON для скриптов и интеграций");
         out.println("  --lang java            язык; сейчас поддерживается только java");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
@@ -692,6 +790,7 @@ public class App {
         out.println("  codesearch --cached variable-assignable-to Appendable");
         out.println("  codesearch --cached variable-assignable-to Printable --explain");
         out.println("  codesearch --cached variable-assignable-to Animal --explain");
+        out.println("  codesearch --cached annotation DemoController --json");
         out.println();
         out.println(colorize(BLUE, "Семантический поиск по типам"));
         out.println("  variable-assignable-to учитывает простое выведение var, JDK-типы,");
@@ -732,6 +831,7 @@ public class App {
         int limit();
         String pathFilter();
         boolean explain();
+        boolean json();
     }
 
     private record QuickSearchCommand(
@@ -742,7 +842,8 @@ public class App {
             SearchTarget target,
             boolean caseSensitive,
             int limit,
-            boolean explain
+            boolean explain,
+            boolean json
     ) implements SearchCommandSpec {
         @Override
         public String pathFilter() {
@@ -750,7 +851,7 @@ public class App {
         }
     }
 
-    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain) implements SearchCommandSpec {}
+    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain, boolean json) implements SearchCommandSpec {}
 
     private record IndexCommand(String language, String sourcePath) {}
 
@@ -771,5 +872,37 @@ public class App {
 
         String term = System.getenv("TERM");
         return term != null && !"dumb".equalsIgnoreCase(term);
+    }
+
+    private static String jsonStringOrNull(String value) {
+        if (value == null) {
+            return "null";
+        }
+        return jsonString(value);
+    }
+
+    private static String jsonString(String value) {
+        StringBuilder escaped = new StringBuilder("\"");
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            switch (ch) {
+                case '"' -> escaped.append("\\\"");
+                case '\\' -> escaped.append("\\\\");
+                case '\b' -> escaped.append("\\b");
+                case '\f' -> escaped.append("\\f");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (ch < 0x20) {
+                        escaped.append(String.format("\\u%04x", (int) ch));
+                    } else {
+                        escaped.append(ch);
+                    }
+                }
+            }
+        }
+        escaped.append("\"");
+        return escaped.toString();
     }
 }

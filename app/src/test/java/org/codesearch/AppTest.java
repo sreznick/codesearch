@@ -45,6 +45,8 @@ class AppTest {
         assertTrue(outContent.toString().contains("method-return-type <type>"));
         assertTrue(outContent.toString().contains("variable-assignable-to <type>"));
         assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Printable --explain"));
+        assertTrue(outContent.toString().contains("--json"));
+        assertTrue(outContent.toString().contains("codesearch --cached annotation DemoController --json"));
         assertTrue(outContent.toString().contains("implements/extends"));
         assertTrue(outContent.toString().contains("var -> Dog -> Animal"));
         assertFalse(outContent.toString().contains("-r, --recursive"));
@@ -368,6 +370,103 @@ class AppTest {
         assertTrue(output.contains("[Dog]"));
         assertTrue(output.contains("explain: var -> Dog -> Animal"));
         assertTrue(output.contains("совместимые типы: Dog, Object, Animal"));
+    }
+
+    @Test
+    void shouldPrintQuickSearchResultsAsJson(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String jsonField = "value";
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"field", "jsonField", sourcePath.toString(), "--json"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.trim().startsWith("{"));
+        assertTrue(output.contains("\"totalHits\": 1"));
+        assertTrue(output.contains("\"kind\": \"Field\""));
+        assertTrue(output.contains("\"name\": \"jsonField\""));
+        assertTrue(output.contains("\"declaredType\": \"String\""));
+        assertFalse(output.contains("Найдено совпадений"));
+    }
+
+    @Test
+    void shouldPrintCachedSearchResultsAsJson(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                @DemoController
+                class SampleSearch {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"--cached", "annotation", "DemoController", "--json"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("\"totalHits\": 1"));
+        assertTrue(output.contains("\"kind\": \"Annotation\""));
+        assertTrue(output.contains("\"name\": \"DemoController\""));
+        assertTrue(output.contains("\"annotationTargetKind\": \"Class\""));
+        assertTrue(output.contains("\"annotationTargetName\": \"SampleSearch\""));
+    }
+
+    @Test
+    void shouldPrintEmptySearchResultAsJson(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("index");
+        App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"search", "java", "class", "MissingClass", "--json"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("\"totalHits\": 0"));
+        assertTrue(output.contains("\"results\": ["));
+        assertFalse(output.contains("Совпадений нет"));
+    }
+
+    @Test
+    void shouldIncludeExplanationInJson(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    public void run() {
+                        var builder = new StringBuilder("hello");
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(
+                new String[]{"--cached", "variable-assignable-to", "Appendable", "--explain", "--json"},
+                out,
+                err,
+                indexPath
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("\"explanation\": ["));
+        assertTrue(output.contains("\"var -> StringBuilder -> Appendable\""));
+        assertTrue(output.contains("\"совместимые типы: StringBuilder, Appendable"));
     }
 
     @Test

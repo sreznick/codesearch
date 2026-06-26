@@ -125,7 +125,47 @@ class AnnotationFixture {
 1. Annotation DemoController on Class AnnotationFixture  app/src/test/resources/TestClass.java:49
 ```
 
-## 6. Поиск по типам
+## 6. JSON-вывод
+
+Для ручного просмотра обычный вывод удобнее. Но если результат нужно передать в скрипт, CI или другой инструмент, лучше включить JSON:
+
+```bash
+codesearch --cached annotation DemoController --json
+```
+
+Пример результата:
+
+```json
+{
+  "totalHits": 1,
+  "results": [
+    {
+      "kind": "Annotation",
+      "name": "DemoController",
+      "language": "java",
+      "file": "app/src/test/resources/TestClass.java",
+      "line": 49,
+      "declaredType": null,
+      "score": 1.0,
+      "attributes": {
+        "annotationTargetKind": "Class",
+        "annotationTargetName": "AnnotationFixture"
+      },
+      "explanation": []
+    }
+  ]
+}
+```
+
+`--json` можно использовать и с `--explain`:
+
+```bash
+codesearch --cached variable-assignable-to Appendable --explain --json
+```
+
+Тогда объяснение попадёт в поле `explanation`.
+
+## 7. Поиск по типам
 
 Найти поля типа `String`:
 
@@ -259,7 +299,7 @@ codesearch --cached variable-assignable-to Animal --explain
 explain: var -> Dog -> Animal
 ```
 
-## 7. Лимит и фильтр по пути
+## 8. Лимит и фильтр по пути
 
 Показать только один результат:
 
@@ -286,7 +326,7 @@ codesearch --cached class TestClass --path missing/path
 Совпадений нет.
 ```
 
-## 8. Архив для скачивания
+## 9. Архив для скачивания
 
 Собрать zip:
 

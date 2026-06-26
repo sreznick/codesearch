@@ -12,6 +12,7 @@
 - постоянный индекс для быстрых повторных запросов
 - поиск полей, локальных переменных и методов по declared type / return type
 - поиск переменных по совместимому типу с простым выводом `var`
+- JSON-вывод для скриптов, CI и внешних инструментов
 - фильтр результатов по пути
 - ограничение количества результатов
 - zip-дистрибутив, чтобы в дальнейшем скачивать пакет и использовать как grep-подобный инструмент
@@ -105,6 +106,7 @@ codesearch --cached local-variable-type String
 codesearch --cached annotation DemoController
 codesearch --cached variable-assignable-to Appendable
 codesearch --cached variable-assignable-to Appendable --explain
+codesearch --cached annotation DemoController --json
 ```
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
@@ -237,6 +239,41 @@ codesearch class testclass . -cs
 ```bash
 codesearch TestClass . --kind class
 ```
+
+## JSON-вывод
+
+Если результат нужно обработать скриптом, удобнее не парсить обычный консольный текст, а включить JSON:
+
+```bash
+codesearch --cached annotation DemoController --json
+codesearch field testField app/src/test/resources --json
+```
+
+Формат специально простой: общее количество совпадений и массив найденных сущностей.
+
+```json
+{
+  "totalHits": 1,
+  "results": [
+    {
+      "kind": "Annotation",
+      "name": "DemoController",
+      "language": "java",
+      "file": "app/src/test/resources/TestClass.java",
+      "line": 49,
+      "declaredType": null,
+      "score": 1.0,
+      "attributes": {
+        "annotationTargetKind": "Class",
+        "annotationTargetName": "AnnotationFixture"
+      },
+      "explanation": []
+    }
+  ]
+}
+```
+
+`--json` можно совмещать с `--explain`. Тогда объяснение попадёт в поле `explanation`, и его можно читать уже не глазами, а из другого инструмента.
 
 ## Архив для скачивания
 
