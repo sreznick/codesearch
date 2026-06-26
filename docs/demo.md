@@ -205,6 +205,36 @@ codesearch --cached variable-assignable-to Printable --explain
 explain: var -> Report -> Printable
 ```
 
+### Наследование классов
+
+Похожий сценарий работает для `extends`:
+
+```java
+class Animal {
+}
+
+class Dog extends Animal {
+}
+
+class DogUsage {
+    void run() {
+        var dog = new Dog();
+    }
+}
+```
+
+После индексации:
+
+```bash
+codesearch --cached variable-assignable-to Animal --explain
+```
+
+В объяснении:
+
+```text
+explain: var -> Dog -> Animal
+```
+
 ## 6. Лимит и фильтр по пути
 
 Показать только один результат:

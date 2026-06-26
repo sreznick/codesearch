@@ -174,6 +174,26 @@ codesearch --cached variable-assignable-to Printable --explain
 explain: var -> Report -> Printable
 ```
 
+То же работает для простого наследования классов:
+
+```java
+class Animal {
+}
+
+class Dog extends Animal {
+}
+
+var dog = new Dog();
+```
+
+```bash
+codesearch --cached variable-assignable-to Animal --explain
+```
+
+```text
+explain: var -> Dog -> Animal
+```
+
 ## Полезные опции
 
 ```bash

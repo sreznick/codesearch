@@ -38,12 +38,14 @@ final class JavaTypeHierarchyExtractor extends JavaBaseListener {
 
     @Override
     public void enterClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
-        if (ctx.IMPLEMENTS() == null || ctx.typeList() == null) {
-            return;
+        String className = JavaTypeResolver.searchableTypeName(ctx.Identifier().getText());
+        if (ctx.EXTENDS() != null && ctx.typeSpec() != null) {
+            addParent(className, ctx.typeSpec().getText());
         }
 
-        String className = JavaTypeResolver.searchableTypeName(ctx.Identifier().getText());
-        addParents(className, ctx.typeList());
+        if (ctx.IMPLEMENTS() != null && ctx.typeList() != null) {
+            addParents(className, ctx.typeList());
+        }
     }
 
     @Override
@@ -72,12 +74,19 @@ final class JavaTypeHierarchyExtractor extends JavaBaseListener {
             return;
         }
 
-        Set<String> parents = directParents.computeIfAbsent(child, ignored -> new LinkedHashSet<>());
         for (JavaParser.TypeSpecContext typeSpec : typeList.typeSpec()) {
-            String parent = JavaTypeResolver.searchableTypeName(typeSpec.getText());
-            if (parent != null && !parent.isBlank()) {
-                parents.add(parent);
-            }
+            addParent(child, typeSpec.getText());
+        }
+    }
+
+    private void addParent(String child, String rawParent) {
+        if (child == null || child.isBlank()) {
+            return;
+        }
+
+        String parent = JavaTypeResolver.searchableTypeName(rawParent);
+        if (parent != null && !parent.isBlank()) {
+            directParents.computeIfAbsent(child, ignored -> new LinkedHashSet<>()).add(parent);
         }
     }
 }

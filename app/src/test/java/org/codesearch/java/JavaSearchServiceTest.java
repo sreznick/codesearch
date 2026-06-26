@@ -182,6 +182,45 @@ class JavaSearchServiceTest {
     }
 
     @Test
+    void shouldSearchVariableAssignableToProjectSuperclass(@TempDir Path tempDir) throws IOException, InterruptedException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Animal.java"), """
+                class Animal {
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Dog.java"), """
+                class Dog extends Animal {
+                }
+                """);
+        Files.writeString(sourcePath.resolve("DogUsage.java"), """
+                class DogUsage {
+                    void run() {
+                        var dog = new Dog();
+                    }
+                }
+                """);
+
+        JavaSourceIndexer.indexJavaSources(sourcePath.toString(), indexPath);
+        JavaSearchService.SearchResponse response = new JavaSearchService(indexPath).searchAssignableVariables(
+                "Animal",
+                "java",
+                true,
+                100,
+                null
+        );
+
+        assertEquals(1, response.totalHits());
+        CodeEntity entity = response.results().getFirst().entity();
+        assertEquals(EntityKind.LOCAL_VARIABLE, entity.kind());
+        assertEquals("dog", entity.content());
+        assertEquals("Dog", entity.declaredType());
+        assertTrue(entity.attributes().get("assignableTypes").contains("Animal"));
+        assertEquals("var -> Dog", entity.attributes().get("typeInference"));
+    }
+
+    @Test
     void shouldLimitReturnedResultsWithoutChangingTotalHits() throws IOException {
         SearchQuery query = new SearchQuery("String", EntityKind.FIELD, "java", SearchTarget.DECLARED_TYPE, false, true, 1);
 

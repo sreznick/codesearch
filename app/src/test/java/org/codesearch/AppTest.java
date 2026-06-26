@@ -283,6 +283,39 @@ class AppTest {
     }
 
     @Test
+    void shouldExplainProjectClassInheritance(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Animal.java"), """
+                class Animal {
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Dog.java"), """
+                class Dog extends Animal {
+                }
+                """);
+        Files.writeString(sourcePath.resolve("DogUsage.java"), """
+                class DogUsage {
+                    void run() {
+                        var dog = new Dog();
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "variable-assignable-to", "Animal", "--explain"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("dog"));
+        assertTrue(output.contains("[Dog]"));
+        assertTrue(output.contains("explain: var -> Dog -> Animal"));
+        assertTrue(output.contains("совместимые типы: Dog, Object, Animal"));
+    }
+
+    @Test
     void shouldIndexAndSearchThroughSharedCli() {
         int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
         int searchExitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err);
