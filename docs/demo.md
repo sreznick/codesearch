@@ -144,6 +144,18 @@ var inferredBuilder = new StringBuilder("hello");
 
 Здесь тип переменной выводится как `StringBuilder`, а `StringBuilder` реализует `Appendable`, поэтому переменная находится по запросу выше.
 
+Можно попросить CLI объяснить совпадение:
+
+```bash
+codesearch --cached variable-assignable-to Appendable --explain
+```
+
+В таком режиме под результатом будет строка вида:
+
+```text
+explain: var -> StringBuilder -> Appendable
+```
+
 Похожий пример со строкой:
 
 ```java

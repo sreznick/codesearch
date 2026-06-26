@@ -162,6 +162,7 @@ public class JavaEntityExtractor {
     }
 
     private CodeEntity typedEntity(EntityKind kind, String content, String file, int line, String declaredType, String initializer) {
+        String originalType = JavaTypeResolver.normalizeType(declaredType);
         String resolvedType = JavaTypeResolver.resolveDeclaredType(declaredType, initializer);
         return new CodeEntity(
                 kind,
@@ -169,17 +170,22 @@ public class JavaEntityExtractor {
                 new EntityLocation(file, line, 0),
                 JavaLanguageModule.LANGUAGE,
                 resolvedType,
-                typedAttributes(resolvedType)
+                typedAttributes(originalType, resolvedType)
         );
     }
 
-    private Map<String, String> typedAttributes(String declaredType) {
+    private Map<String, String> typedAttributes(String originalType, String declaredType) {
         Map<String, String> attributes = new HashMap<>();
         if (declaredType != null && !declaredType.isBlank()) {
             attributes.put("declaredType", declaredType);
-            Set<String> assignableTypes = JavaTypeResolver.assignableTypes(declaredType);
-            if (!assignableTypes.isEmpty()) {
-                attributes.put("assignableTypes", JavaTypeResolver.serializeTypes(assignableTypes));
+            if ("var".equals(originalType) && !"var".equals(declaredType)) {
+                attributes.put("typeInference", "var -> " + declaredType);
+            }
+            if (!"var".equals(declaredType)) {
+                Set<String> assignableTypes = JavaTypeResolver.assignableTypes(declaredType);
+                if (!assignableTypes.isEmpty()) {
+                    attributes.put("assignableTypes", JavaTypeResolver.serializeTypes(assignableTypes));
+                }
             }
         }
         return attributes;

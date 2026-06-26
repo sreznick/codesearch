@@ -103,6 +103,7 @@ codesearch --cached field-type String
 codesearch --cached method-return-type String
 codesearch --cached local-variable-type String
 codesearch --cached variable-assignable-to Appendable
+codesearch --cached variable-assignable-to Appendable --explain
 ```
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
@@ -133,6 +134,18 @@ var builder = new StringBuilder("hello");
 
 `builder` найдётся как `Appendable`, потому что `StringBuilder` реализует `Appendable`.
 
+Если добавить `--explain`, в выдаче будет видно, почему результат подошел:
+
+```bash
+codesearch --cached variable-assignable-to Appendable --explain
+```
+
+Пример объяснения:
+
+```text
+explain: var -> StringBuilder -> Appendable
+explain: совместимые типы: StringBuilder, Appendable, CharSequence, Serializable, Object
+```
 
 ## Полезные опции
 
@@ -146,6 +159,7 @@ codesearch class testclass . -cs
 - `--path` фильтрует результаты по части пути в режиме `--cached`
 - `-cs` включает case-sensitive поиск
 - `--kind` или `-k` задаёт вид сущности, если не хочется писать его первым аргументом
+- `--explain` показывает, за счет какой цепочки типов результат подошел под запрос
 
 Пример с `--kind`:
 

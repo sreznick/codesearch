@@ -140,7 +140,7 @@ public class App {
                     command.limit(),
                     null
             );
-            printResults(out, response);
+            printResults(out, response, false, null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
@@ -206,7 +206,7 @@ public class App {
                         command.pathFilter()
                 );
             }
-            printResults(out, response);
+            printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
@@ -311,10 +311,15 @@ public class App {
         boolean caseSensitive = false;
         int limit = DEFAULT_LIMIT;
         String pathFilter = null;
+        boolean explain = false;
         List<String> operands = new ArrayList<>();
 
         for (int i = startIndex; i < args.length; i++) {
             String arg = args[i];
+            if ("--explain".equalsIgnoreCase(arg)) {
+                explain = true;
+                continue;
+            }
             if ("-cs".equalsIgnoreCase(arg) || "--case-sensitive".equalsIgnoreCase(arg)) {
                 caseSensitive = true;
                 continue;
@@ -391,7 +396,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter);
+        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain);
     }
 
     private static SearchKind parseSearchKindOrNull(String value) {
@@ -430,11 +435,14 @@ public class App {
         boolean caseSensitive = false;
         int limit = DEFAULT_LIMIT;
         String pathFilter = null;
+        boolean explain = false;
         for (int i = 4; i < args.length; i++) {
             if ("-f".equalsIgnoreCase(args[i])) {
                 fuzzy = true;
             } else if ("-cs".equalsIgnoreCase(args[i])) {
                 caseSensitive = true;
+            } else if ("--explain".equalsIgnoreCase(args[i])) {
+                explain = true;
             } else if ("--limit".equalsIgnoreCase(args[i]) || "-n".equalsIgnoreCase(args[i])) {
                 if (i + 1 >= args.length) {
                     err.println(colorize(RED, "Не указан лимит результатов."));
@@ -477,7 +485,7 @@ public class App {
                 SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
                 response = searchService.searchWithMetadata(searchCommand.query());
             }
-            printResults(out, response);
+            printResults(out, response, explain, isAssignableTypeSearch(args[2]) ? args[3] : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Ошибка поиска: ") + e.getMessage());
@@ -514,7 +522,7 @@ public class App {
                 || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
-    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response) {
+    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, String assignableTargetType) {
         out.println(colorize(BLUE, "Найдено совпадений: ") + response.totalHits());
 
         if (response.results().isEmpty()) {
@@ -525,8 +533,49 @@ public class App {
         int index = 1;
         for (SearchResult result : response.results()) {
             out.println(formatResult(index, result.entity()));
+            if (explain) {
+                explainResult(result.entity(), assignableTargetType).forEach(line ->
+                        out.println(colorize(DIM, "   explain: ") + line)
+                );
+            }
             index++;
         }
+    }
+
+    private static List<String> explainResult(CodeEntity entity, String assignableTargetType) {
+        List<String> lines = new ArrayList<>();
+        if (assignableTargetType != null) {
+            String chain = assignableChain(entity, assignableTargetType);
+            if (chain != null) {
+                lines.add(chain);
+            }
+        }
+
+        String assignableTypes = entity.attributes().get("assignableTypes");
+        if (assignableTypes != null && !assignableTypes.isBlank()) {
+            lines.add("совместимые типы: " + assignableTypes.replace(",", ", "));
+        }
+
+        if (lines.isEmpty() && entity.declaredType() != null && !entity.declaredType().isBlank()) {
+            lines.add("объявленный тип: " + entity.declaredType());
+        }
+        return lines;
+    }
+
+    private static String assignableChain(CodeEntity entity, String targetType) {
+        String declaredType = entity.declaredType();
+        if (declaredType == null || declaredType.isBlank()) {
+            return null;
+        }
+
+        String typeInference = entity.attributes().get("typeInference");
+        if (typeInference != null && !typeInference.isBlank()) {
+            return typeInference + " -> " + targetType;
+        }
+        if (declaredType.equals(targetType)) {
+            return declaredType;
+        }
+        return declaredType + " -> " + targetType;
     }
 
     private static String formatResult(int index, CodeEntity entity) {
@@ -576,6 +625,7 @@ public class App {
         out.println("  -cs, --case-sensitive  учитывать регистр");
         out.println("  --cached               искать по постоянному индексу без переиндексации");
         out.println("  -p, --path PATH        фильтр пути для --cached");
+        out.println("  --explain              показать, почему результат подошел под запрос");
         out.println("  --lang java            язык; сейчас поддерживается только java");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
@@ -614,7 +664,7 @@ public class App {
 
     private record QuickSearchCommand(String query, String sourcePath, String language, EntityKind kind, boolean caseSensitive, int limit) {}
 
-    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter) {}
+    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain) {}
 
     private record IndexCommand(String language, String sourcePath) {}
 

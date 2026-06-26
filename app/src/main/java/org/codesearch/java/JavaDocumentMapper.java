@@ -21,6 +21,10 @@ final class JavaDocumentMapper {
         if (!assignableTypes.isBlank()) {
             attributes.put("assignableTypes", assignableTypes);
         }
+        String typeInference = document.get("typeInference");
+        if (typeInference != null && !typeInference.isBlank()) {
+            attributes.put("typeInference", typeInference);
+        }
 
         return new CodeEntity(
                 EntityKind.fromValue(document.get("type")),

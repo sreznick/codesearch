@@ -52,6 +52,7 @@ class JavaEntityExtractorTest {
                 entity.kind() == EntityKind.LOCAL_VARIABLE
                         && entity.content().equals("inferredBuilder")
                         && "StringBuilder".equals(entity.declaredType())
+                        && "var -> StringBuilder".equals(entity.attributes().get("typeInference"))
                         && entity.attributes().get("assignableTypes").contains("Appendable")));
     }
 

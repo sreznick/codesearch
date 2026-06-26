@@ -224,6 +224,29 @@ class AppTest {
     }
 
     @Test
+    void shouldExplainAssignableTypeSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    public void run() {
+                        var builder = new StringBuilder("hello");
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "variable-assignable-to", "Appendable", "--explain"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("builder"));
+        assertTrue(output.contains("explain: var -> StringBuilder -> Appendable"));
+        assertTrue(output.contains("совместимые типы: StringBuilder, Appendable"));
+    }
+
+    @Test
     void shouldIndexAndSearchThroughSharedCli() {
         int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
         int searchExitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err);

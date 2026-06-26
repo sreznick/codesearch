@@ -33,6 +33,11 @@ public final class JavaIndexDocumentMapper {
             }
         }
 
+        String typeInference = entity.attributes().get("typeInference");
+        if (typeInference != null && !typeInference.isBlank()) {
+            document.add(new StringField("typeInference", typeInference, Field.Store.YES));
+        }
+
         return document;
     }
 }
