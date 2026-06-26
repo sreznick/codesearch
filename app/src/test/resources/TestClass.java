@@ -45,3 +45,14 @@ class DogUsage {
         var dog = new Dog();
     }
 }
+
+@DemoController
+class AnnotationFixture {
+    @DemoField
+    private String annotatedField;
+
+    @DemoTest
+    void annotatedMethod() {
+        @DemoLocal var annotatedLocal = "value";
+    }
+}

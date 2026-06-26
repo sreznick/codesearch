@@ -38,6 +38,16 @@ public final class JavaIndexDocumentMapper {
             document.add(new StringField(JavaIndexFields.TYPE_INFERENCE, typeInference, Field.Store.YES));
         }
 
+        addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_KIND, JavaIndexFields.ANNOTATION_TARGET_KIND);
+        addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_NAME, JavaIndexFields.ANNOTATION_TARGET_NAME);
+
         return document;
+    }
+
+    private static void addStoredAttribute(Document document, CodeEntity entity, String attributeName, String fieldName) {
+        String value = entity.attributes().get(attributeName);
+        if (value != null && !value.isBlank()) {
+            document.add(new StringField(fieldName, value, Field.Store.YES));
+        }
     }
 }

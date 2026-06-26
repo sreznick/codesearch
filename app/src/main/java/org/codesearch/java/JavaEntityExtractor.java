@@ -12,6 +12,7 @@ import org.codesearch.core.EntityLocation;
 import org.example.JavaBaseListener;
 import org.example.JavaLexer;
 import org.example.JavaParser;
+import org.example.extractors.JavaAnnotationExtractor;
 import org.example.extractors.JavaClassExtractor;
 import org.example.extractors.JavaFieldExtractor;
 import org.example.extractors.JavaInterfaceExtractor;
@@ -48,6 +49,7 @@ public class JavaEntityExtractor {
 
         List<CodeEntity> entities = new ArrayList<>();
         entities.addAll(extractSafely(filePath, "string constants", () -> extractStringConstants(content, filePath)));
+        entities.addAll(extractSafely(filePath, "annotations", () -> extractAnnotations(content, filePath)));
         entities.addAll(extractSafely(filePath, "classes", () -> extractClasses(content, filePath)));
         entities.addAll(extractSafely(filePath, "methods", () -> extractMethods(content, filePath)));
         entities.addAll(extractSafely(filePath, "interfaces", () -> extractInterfaces(content, filePath)));
@@ -55,6 +57,21 @@ public class JavaEntityExtractor {
         entities.addAll(extractSafely(filePath, "local variables", () -> extractLocalVariables(content, filePath)));
         entities.addAll(extractSafely(filePath, "literals", () -> extractLiterals(content, filePath)));
         return entities;
+    }
+
+    private List<CodeEntity> extractAnnotations(String content, String filePath) {
+        JavaAnnotationExtractor extractor = new JavaAnnotationExtractor();
+
+        return extractor.extract(content, filePath).stream()
+                .map(value -> new CodeEntity(
+                        EntityKind.ANNOTATION,
+                        value.annotationName(),
+                        new EntityLocation(value.file(), value.line(), 0),
+                        JavaLanguageModule.LANGUAGE,
+                        null,
+                        annotationAttributes(value)
+                ))
+                .toList();
     }
 
     private List<CodeEntity> extractSafely(String filePath, String extractionName, ExtractionStep extractionStep) {
@@ -210,6 +227,15 @@ public class JavaEntityExtractor {
                     attributes.put(JavaEntityAttributes.ASSIGNABLE_TYPES, JavaTypeResolver.serializeTypes(assignableTypes));
                 }
             }
+        }
+        return attributes;
+    }
+
+    private Map<String, String> annotationAttributes(JavaAnnotationExtractor.ExtractedAnnotation annotation) {
+        Map<String, String> attributes = new HashMap<>();
+        if (annotation.targetKind() != null && annotation.targetName() != null) {
+            attributes.put(JavaEntityAttributes.ANNOTATION_TARGET_KIND, annotation.targetKind());
+            attributes.put(JavaEntityAttributes.ANNOTATION_TARGET_NAME, annotation.targetName());
         }
         return attributes;
     }

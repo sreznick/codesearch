@@ -38,6 +38,8 @@ class AppTest {
         assertTrue(outContent.toString().contains("codesearch index [path]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
         assertTrue(outContent.toString().contains("codesearch class TestClass"));
+        assertTrue(outContent.toString().contains("annotation <name>"));
+        assertTrue(outContent.toString().contains("codesearch annotation DemoController"));
         assertTrue(outContent.toString().contains("field-type <type>"));
         assertTrue(outContent.toString().contains("local-variable-type <type>"));
         assertTrue(outContent.toString().contains("method-return-type <type>"));
@@ -369,6 +371,22 @@ class AppTest {
     }
 
     @Test
+    void shouldSearchAnnotationByName(@TempDir Path tempDir) {
+        int exitCode = App.run(
+                new String[]{"annotation", "DemoController", "src/test/resources"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Annotation DemoController on Class AnnotationFixture"));
+        assertTrue(output.contains("src/test/resources/TestClass.java"));
+    }
+
+    @Test
     void shouldIndexAndSearchThroughSharedCli(@TempDir Path tempDir) {
         Path indexPath = tempDir.resolve("index");
         int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err, indexPath);
@@ -443,7 +461,7 @@ class AppTest {
 
         String output = outContent.toString();
         assertEquals(0, exitCode);
-        assertTrue(output.contains("Найдено совпадений: 2"));
+        assertTrue(output.contains("Найдено совпадений: 3"));
         assertTrue(output.contains("testField"));
         assertFalse(output.contains("testFieldDuplicate"));
     }

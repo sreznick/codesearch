@@ -6,6 +6,7 @@ import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
 import org.codesearch.java.JavaLanguageModule;
+import org.codesearch.java.JavaEntityAttributes;
 import org.codesearch.java.JavaSearchService;
 import org.codesearch.java.JavaSourceIndexer;
 
@@ -599,6 +600,10 @@ public class App {
         String kind = colorize(GREEN, entity.kind().legacyJavaType());
         String file = colorize(DIM, entity.location().filePath() + ":" + entity.location().line());
 
+        if (entity.kind() == EntityKind.ANNOTATION) {
+            return formatAnnotationResult(prefix, kind, entity, file);
+        }
+
         if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
             return String.format(
                     "%s %s %s  [%s]  %s",
@@ -606,6 +611,30 @@ public class App {
                     kind,
                     entity.content(),
                     entity.declaredType(),
+                    file
+            );
+        }
+
+        return String.format(
+                "%s %s %s  %s",
+                prefix,
+                kind,
+                entity.content(),
+                file
+        );
+    }
+
+    private static String formatAnnotationResult(String prefix, String kind, CodeEntity entity, String file) {
+        String targetKind = entity.attributes().get(JavaEntityAttributes.ANNOTATION_TARGET_KIND);
+        String targetName = entity.attributes().get(JavaEntityAttributes.ANNOTATION_TARGET_NAME);
+        if (targetKind != null && targetName != null) {
+            return String.format(
+                    "%s %s %s on %s %s  %s",
+                    prefix,
+                    kind,
+                    entity.content(),
+                    targetKind,
+                    targetName,
                     file
             );
         }
@@ -637,6 +666,7 @@ public class App {
         out.println();
         out.println(colorize(BLUE, "Виды поиска"));
         out.println("  class|method|field|interface|local-variable <name>");
+        out.println("  annotation <name>                 Java-аннотации и место применения");
         out.println("  field-type <type>                 поля с точным declared type");
         out.println("  local-variable-type <type>        локальные переменные с точным declared type");
         out.println("  method-return-type <type>         методы с указанным return type");
@@ -654,6 +684,7 @@ public class App {
         out.println(colorize(BLUE, "Примеры"));
         out.println("  codesearch TestClass");
         out.println("  codesearch class TestClass");
+        out.println("  codesearch annotation DemoController");
         out.println("  codesearch testField src --kind field");
         out.println("  codesearch index .");
         out.println("  codesearch --cached class TestClass");

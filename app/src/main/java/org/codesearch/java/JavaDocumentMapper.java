@@ -25,6 +25,8 @@ final class JavaDocumentMapper {
         if (typeInference != null && !typeInference.isBlank()) {
             attributes.put(JavaEntityAttributes.TYPE_INFERENCE, typeInference);
         }
+        addAttribute(document, attributes, JavaIndexFields.ANNOTATION_TARGET_KIND, JavaEntityAttributes.ANNOTATION_TARGET_KIND);
+        addAttribute(document, attributes, JavaIndexFields.ANNOTATION_TARGET_NAME, JavaEntityAttributes.ANNOTATION_TARGET_NAME);
 
         return new CodeEntity(
                 EntityKind.fromValue(document.get(JavaIndexFields.TYPE)),
@@ -47,5 +49,12 @@ final class JavaDocumentMapper {
         }
 
         return document.get(JavaIndexFields.LEGACY_VAR_TYPE);
+    }
+
+    private static void addAttribute(Document document, Map<String, String> attributes, String fieldName, String attributeName) {
+        String value = document.get(fieldName);
+        if (value != null && !value.isBlank()) {
+            attributes.put(attributeName, value);
+        }
     }
 }

@@ -102,7 +102,30 @@ codesearch --cached method getTestField
 codesearch index app/src/test/resources
 ```
 
-## 5. Поиск по типам
+## 5. Поиск аннотаций
+
+Найти Java-аннотацию:
+
+```bash
+codesearch --cached annotation DemoController
+```
+
+В тестовом файле есть пример:
+
+```java
+@DemoController
+class AnnotationFixture {
+}
+```
+
+Пример результата:
+
+```text
+Найдено совпадений: 1
+1. Annotation DemoController on Class AnnotationFixture  app/src/test/resources/TestClass.java:49
+```
+
+## 6. Поиск по типам
 
 Найти поля типа `String`:
 
@@ -113,9 +136,10 @@ codesearch --cached field-type String
 Пример результата:
 
 ```text
-Найдено совпадений: 2
+Найдено совпадений: 3
 1. Field testField  [String]  app/src/test/resources/TestClass.java:7
 2. Field testFieldDuplicate  [String]  app/src/test/resources/TestClass.java:12
+3. Field annotatedField  [String]  app/src/test/resources/TestClass.java:52
 ```
 
 Найти методы, которые возвращают `String`:
@@ -235,7 +259,7 @@ codesearch --cached variable-assignable-to Animal --explain
 explain: var -> Dog -> Animal
 ```
 
-## 6. Лимит и фильтр по пути
+## 7. Лимит и фильтр по пути
 
 Показать только один результат:
 
@@ -262,7 +286,7 @@ codesearch --cached class TestClass --path missing/path
 Совпадений нет.
 ```
 
-## 7. Архив для скачивания
+## 8. Архив для скачивания
 
 Собрать zip:
 

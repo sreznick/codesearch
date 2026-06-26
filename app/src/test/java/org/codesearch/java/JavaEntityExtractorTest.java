@@ -55,6 +55,12 @@ class JavaEntityExtractorTest {
                         && "StringBuilder".equals(entity.declaredType())
                         && "var -> StringBuilder".equals(entity.attributes().get("typeInference"))
                         && entity.attributes().get("assignableTypes").contains("Appendable")));
+
+        assertTrue(entities.stream().anyMatch(entity ->
+                entity.kind() == EntityKind.ANNOTATION
+                        && entity.content().equals("DemoController")
+                        && "Class".equals(entity.attributes().get(JavaEntityAttributes.ANNOTATION_TARGET_KIND))
+                        && "AnnotationFixture".equals(entity.attributes().get(JavaEntityAttributes.ANNOTATION_TARGET_NAME))));
     }
 
     @Test
@@ -69,6 +75,7 @@ class JavaEntityExtractorTest {
         assertTrue(counts.getOrDefault(EntityKind.INTERFACE, 0L) >= 1);
         assertTrue(counts.getOrDefault(EntityKind.FIELD, 0L) >= 6);
         assertTrue(counts.getOrDefault(EntityKind.LOCAL_VARIABLE, 0L) >= 4);
+        assertTrue(counts.getOrDefault(EntityKind.ANNOTATION, 0L) >= 4);
         assertTrue(counts.getOrDefault(EntityKind.STRING_CONSTANT, 0L) >= 4);
         assertTrue(counts.getOrDefault(EntityKind.STRING_LITERAL, 0L) >= 5);
     }

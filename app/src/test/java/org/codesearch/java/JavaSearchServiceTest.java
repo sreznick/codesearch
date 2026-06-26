@@ -79,7 +79,7 @@ class JavaSearchServiceTest {
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
-        assertEquals(2, results.size());
+        assertEquals(3, results.size());
         assertTrue(results.stream().allMatch(result -> result.entity().kind() == EntityKind.FIELD));
         assertTrue(results.stream().allMatch(result -> "String".equals(result.entity().declaredType())));
     }
@@ -92,7 +92,7 @@ class JavaSearchServiceTest {
 
         List<SearchResult> results = SEARCH_SERVICE.search(query);
 
-        assertEquals(3, results.size());
+        assertEquals(4, results.size());
         assertTrue(results.stream().allMatch(result -> result.entity().kind() == EntityKind.LOCAL_VARIABLE));
         assertTrue(results.stream().allMatch(result -> "String".equals(result.entity().declaredType())));
     }
@@ -248,6 +248,20 @@ class JavaSearchServiceTest {
     }
 
     @Test
+    void shouldSearchAnnotationByName() throws IOException {
+        SearchQuery query = query("DemoController", EntityKind.ANNOTATION).build();
+
+        List<SearchResult> results = SEARCH_SERVICE.search(query);
+
+        assertEquals(1, results.size());
+        CodeEntity entity = results.getFirst().entity();
+        assertEquals(EntityKind.ANNOTATION, entity.kind());
+        assertEquals("DemoController", entity.content());
+        assertEquals("Class", entity.attributes().get(JavaEntityAttributes.ANNOTATION_TARGET_KIND));
+        assertEquals("AnnotationFixture", entity.attributes().get(JavaEntityAttributes.ANNOTATION_TARGET_NAME));
+    }
+
+    @Test
     void shouldLimitReturnedResultsWithoutChangingTotalHits() throws IOException {
         SearchQuery query = query("String", EntityKind.FIELD)
                 .target(SearchTarget.DECLARED_TYPE)
@@ -257,7 +271,7 @@ class JavaSearchServiceTest {
 
         JavaSearchService.SearchResponse response = SEARCH_SERVICE.searchWithMetadata(query);
 
-        assertEquals(2, response.totalHits());
+        assertEquals(3, response.totalHits());
         assertEquals(1, response.results().size());
     }
 

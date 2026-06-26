@@ -8,6 +8,7 @@ public enum EntityKind {
     METHOD("method", "Method"),
     FIELD("field", "Field"),
     LOCAL_VARIABLE("local_variable", "LocalVariable"),
+    ANNOTATION("annotation", "Annotation"),
     STRING_CONSTANT("string_constant", "StringConstant"),
     INTEGER_LITERAL("integer_literal", "IntegerLiteral"),
     FLOAT_LITERAL("float_literal", "FloatLiteral"),

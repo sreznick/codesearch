@@ -15,6 +15,7 @@ public class JavaLanguageModule implements LanguageModule {
             EntityKind.METHOD,
             EntityKind.FIELD,
             EntityKind.LOCAL_VARIABLE,
+            EntityKind.ANNOTATION,
             EntityKind.STRING_CONSTANT,
             EntityKind.INTEGER_LITERAL,
             EntityKind.FLOAT_LITERAL,

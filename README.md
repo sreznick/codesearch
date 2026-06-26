@@ -102,11 +102,35 @@ codesearch --cached field testField
 codesearch --cached field-type String
 codesearch --cached method-return-type String
 codesearch --cached local-variable-type String
+codesearch --cached annotation DemoController
 codesearch --cached variable-assignable-to Appendable
 codesearch --cached variable-assignable-to Appendable --explain
 ```
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
+
+## Поиск аннотаций
+
+Можно искать Java-аннотации по имени:
+
+```bash
+codesearch annotation DemoController
+codesearch --cached annotation DemoController
+```
+
+Для кода:
+
+```java
+@DemoController
+class AnnotationFixture {
+}
+```
+
+вывод будет показывать не только саму аннотацию, но и место применения:
+
+```text
+Annotation DemoController on Class AnnotationFixture
+```
 
 ## Поиск по совместимому типу
 
