@@ -630,6 +630,13 @@ public class App {
         out.println("  codesearch --cached [options] <query> [path-filter]");
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
+        out.println(colorize(BLUE, "Виды поиска"));
+        out.println("  class|method|field|interface|local-variable <name>");
+        out.println("  field-type <type>                 поля с точным declared type");
+        out.println("  local-variable-type <type>        локальные переменные с точным declared type");
+        out.println("  method-return-type <type>         методы с указанным return type");
+        out.println("  variable-assignable-to <type>     переменные, совместимые с типом");
+        out.println();
         out.println(colorize(BLUE, "Опции"));
         out.println("  -k, --kind KIND        искать только сущности указанного вида");
         out.println("  -n, --limit N          показать не больше N результатов");
@@ -647,6 +654,13 @@ public class App {
         out.println("  codesearch --cached class TestClass");
         out.println("  codesearch --cached field-type String");
         out.println("  codesearch --cached variable-assignable-to Appendable");
+        out.println("  codesearch --cached variable-assignable-to Printable --explain");
+        out.println("  codesearch --cached variable-assignable-to Animal --explain");
+        out.println();
+        out.println(colorize(BLUE, "Семантический поиск по типам"));
+        out.println("  variable-assignable-to учитывает простое выведение var, JDK-типы,");
+        out.println("  а также implements/extends внутри индексируемого Java-проекта.");
+        out.println("  --explain показывает цепочку, например: var -> Dog -> Animal");
     }
 
     private static void printQuickSearchUsage(PrintStream err) {

@@ -38,6 +38,13 @@ class AppTest {
         assertTrue(outContent.toString().contains("codesearch index [path]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
         assertTrue(outContent.toString().contains("codesearch class TestClass"));
+        assertTrue(outContent.toString().contains("field-type <type>"));
+        assertTrue(outContent.toString().contains("local-variable-type <type>"));
+        assertTrue(outContent.toString().contains("method-return-type <type>"));
+        assertTrue(outContent.toString().contains("variable-assignable-to <type>"));
+        assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Printable --explain"));
+        assertTrue(outContent.toString().contains("implements/extends"));
+        assertTrue(outContent.toString().contains("var -> Dog -> Animal"));
         assertFalse(outContent.toString().contains("-r, --recursive"));
         assertFalse(outContent.toString().contains("codesearch -r"));
         assertFalse(outContent.toString().contains("Legacy-команды"));
