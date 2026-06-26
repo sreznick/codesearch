@@ -170,6 +170,41 @@ codesearch --cached variable-assignable-to CharSequence
 
 Запрос ищет не просто слово `String` или `Appendable` в тексте, а конкретные Java-сущности с учетом простого вывода типов и совместимости с интерфейсами.
 
+### Интерфейсы из проекта
+
+Поиск также учитывает простой случай `implements` внутри индексируемого проекта.
+
+Например:
+
+```java
+interface Printable {
+    void print();
+}
+
+class Report implements Printable {
+    public void print() {
+    }
+}
+
+class ReportUsage {
+    void run() {
+        var report = new Report();
+    }
+}
+```
+
+После индексации переменную `report` можно найти по интерфейсу:
+
+```bash
+codesearch --cached variable-assignable-to Printable --explain
+```
+
+В объяснении будет видно:
+
+```text
+explain: var -> Report -> Printable
+```
+
 ## 6. Лимит и фильтр по пути
 
 Показать только один результат:

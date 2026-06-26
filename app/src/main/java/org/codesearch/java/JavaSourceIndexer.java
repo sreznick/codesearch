@@ -53,6 +53,7 @@ public class JavaSourceIndexer {
             throw new IllegalArgumentException("В указанном пути нет .java файлов: " + sourcePath);
         }
 
+        JavaTypeHierarchy typeHierarchy = JavaTypeHierarchyExtractor.extract(javaFiles);
         deleteDirectoryRecursively(indexDirectoryPath);
 
         try (MMapDirectory directory = new MMapDirectory(indexDirectoryPath);
@@ -63,7 +64,7 @@ public class JavaSourceIndexer {
             try {
                 javaFiles.forEach(file -> executor.submit(() -> {
                     try {
-                        indexJavaFile(file, writer);
+                        indexJavaFile(file, writer, typeHierarchy);
                         logger.info("Файл проиндексирован: {}", file);
                     } catch (Exception e) {
                         logger.debug("Файл пропущен при индексации {}: {}", file, e.getMessage());
@@ -127,8 +128,8 @@ public class JavaSourceIndexer {
         }
     }
 
-    private static void indexJavaFile(Path file, IndexWriter writer) throws Exception {
-        JavaEntityExtractor extractor = new JavaEntityExtractor();
+    private static void indexJavaFile(Path file, IndexWriter writer, JavaTypeHierarchy typeHierarchy) throws Exception {
+        JavaEntityExtractor extractor = new JavaEntityExtractor(typeHierarchy);
         List<CodeEntity> entities = extractor.extractEntities(file);
 
         synchronized (writer) {

@@ -28,6 +28,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class JavaEntityExtractor {
+    private final JavaTypeHierarchy typeHierarchy;
+
+    public JavaEntityExtractor() {
+        this(JavaTypeHierarchy.empty());
+    }
+
+    JavaEntityExtractor(JavaTypeHierarchy typeHierarchy) {
+        this.typeHierarchy = typeHierarchy;
+    }
+
     public List<CodeEntity> extractEntities(Path file) throws Exception {
         String content = Files.readString(file);
         String filePath = file.toString();
@@ -182,7 +192,7 @@ public class JavaEntityExtractor {
                 attributes.put("typeInference", "var -> " + declaredType);
             }
             if (!"var".equals(declaredType)) {
-                Set<String> assignableTypes = JavaTypeResolver.assignableTypes(declaredType);
+                Set<String> assignableTypes = typeHierarchy.assignableTypes(declaredType);
                 if (!assignableTypes.isEmpty()) {
                     attributes.put("assignableTypes", JavaTypeResolver.serializeTypes(assignableTypes));
                 }

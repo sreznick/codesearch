@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -136,6 +137,48 @@ class JavaSearchServiceTest {
                 result.entity().kind() == EntityKind.LOCAL_VARIABLE
                         && result.entity().content().equals("inferredText")
                         && result.entity().declaredType().equals("String")));
+    }
+
+    @Test
+    void shouldSearchVariableAssignableToProjectInterface(@TempDir Path tempDir) throws IOException, InterruptedException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Printable.java"), """
+                interface Printable {
+                    void print();
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Report.java"), """
+                class Report implements Printable {
+                    public void print() {
+                    }
+                }
+                """);
+        Files.writeString(sourcePath.resolve("ReportUsage.java"), """
+                class ReportUsage {
+                    void run() {
+                        var report = new Report();
+                    }
+                }
+                """);
+
+        JavaSourceIndexer.indexJavaSources(sourcePath.toString(), indexPath);
+        JavaSearchService.SearchResponse response = new JavaSearchService(indexPath).searchAssignableVariables(
+                "Printable",
+                "java",
+                true,
+                100,
+                null
+        );
+
+        assertEquals(1, response.totalHits());
+        CodeEntity entity = response.results().getFirst().entity();
+        assertEquals(EntityKind.LOCAL_VARIABLE, entity.kind());
+        assertEquals("report", entity.content());
+        assertEquals("Report", entity.declaredType());
+        assertTrue(entity.attributes().get("assignableTypes").contains("Printable"));
+        assertEquals("var -> Report", entity.attributes().get("typeInference"));
     }
 
     @Test

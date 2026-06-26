@@ -147,6 +147,33 @@ explain: var -> StringBuilder -> Appendable
 explain: совместимые типы: StringBuilder, Appendable, CharSequence, Serializable, Object
 ```
 
+Также учитываются простые интерфейсы из самого проекта:
+
+```java
+interface Printable {
+    void print();
+}
+
+class Report implements Printable {
+    public void print() {
+    }
+}
+
+var report = new Report();
+```
+
+Запрос:
+
+```bash
+codesearch --cached variable-assignable-to Printable --explain
+```
+
+покажет цепочку:
+
+```text
+explain: var -> Report -> Printable
+```
+
 ## Полезные опции
 
 ```bash

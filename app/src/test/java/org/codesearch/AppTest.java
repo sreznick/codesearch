@@ -247,6 +247,42 @@ class AppTest {
     }
 
     @Test
+    void shouldExplainProjectInterfaceImplementation(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Printable.java"), """
+                interface Printable {
+                    void print();
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Report.java"), """
+                class Report implements Printable {
+                    public void print() {
+                    }
+                }
+                """);
+        Files.writeString(sourcePath.resolve("ReportUsage.java"), """
+                class ReportUsage {
+                    void run() {
+                        var report = new Report();
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "variable-assignable-to", "Printable", "--explain"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("report"));
+        assertTrue(output.contains("[Report]"));
+        assertTrue(output.contains("explain: var -> Report -> Printable"));
+        assertTrue(output.contains("совместимые типы: Report, Object, Printable"));
+    }
+
+    @Test
     void shouldIndexAndSearchThroughSharedCli() {
         int indexExitCode = App.run(new String[]{"index", "java", "src/test/resources"}, out, err);
         int searchExitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err);
