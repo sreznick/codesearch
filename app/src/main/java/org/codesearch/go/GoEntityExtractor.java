@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
 import org.codesearch.core.EntityLocation;
+import org.codesearch.java.JavaEntityAttributes;
 import org.example.GoParserBaseListener;
 import org.example.GoLexer;
 import org.example.GoParser;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +35,8 @@ public class GoEntityExtractor {
     private static final class GoCollector extends GoParserBaseListener {
         private final String filePath;
         private final List<CodeEntity> entities = new ArrayList<>();
+        private String currentContainerKind;
+        private String currentContainerName;
 
         private GoCollector(String filePath) {
             this.filePath = filePath;
@@ -62,7 +66,7 @@ public class GoEntityExtractor {
 
         @Override
         public void enterMethodDecl(GoParser.MethodDeclContext ctx) {
-            add(EntityKind.METHOD, ctx.IDENTIFIER().getText(), ctx, resultType(ctx.signature()), Map.of("receiver", ctx.receiver().getText()));
+            add(EntityKind.METHOD, ctx.IDENTIFIER().getText(), ctx, resultType(ctx.signature()), methodAttributes(ctx));
         }
 
         @Override
@@ -75,9 +79,19 @@ public class GoEntityExtractor {
             GoParser.Type_Context type = ctx.typeDef().type_();
             if (isStruct(type)) {
                 add(EntityKind.STRUCT, name, ctx, "struct");
+                currentContainerKind = "struct";
+                currentContainerName = name;
             } else if (isInterface(type)) {
                 add(EntityKind.INTERFACE, name, ctx, "interface");
+                currentContainerKind = "interface";
+                currentContainerName = name;
             }
+        }
+
+        @Override
+        public void exitTypeSpec(GoParser.TypeSpecContext ctx) {
+            currentContainerKind = null;
+            currentContainerName = null;
         }
 
         @Override
@@ -85,13 +99,13 @@ public class GoEntityExtractor {
             if (ctx.identifierList() != null) {
                 String declaredType = textOrNull(ctx.type_());
                 for (var identifier : ctx.identifierList().IDENTIFIER()) {
-                    add(EntityKind.FIELD, identifier.getText(), ctx, declaredType);
+                    add(EntityKind.FIELD, identifier.getText(), ctx, declaredType, containerAttributes());
                 }
                 return;
             }
 
             if (ctx.embeddedField() != null) {
-                add(EntityKind.FIELD, ctx.embeddedField().typeName().getText(), ctx, ctx.embeddedField().getText());
+                add(EntityKind.FIELD, ctx.embeddedField().typeName().getText(), ctx, ctx.embeddedField().getText(), containerAttributes());
             }
         }
 
@@ -135,6 +149,42 @@ public class GoEntityExtractor {
                 return null;
             }
             return signature.result().getText();
+        }
+
+        private Map<String, String> methodAttributes(GoParser.MethodDeclContext ctx) {
+            Map<String, String> attributes = new HashMap<>();
+            attributes.put("receiver", ctx.receiver().getText());
+            String receiverType = receiverType(ctx.receiver());
+            if (receiverType != null && !receiverType.isBlank()) {
+                attributes.put(JavaEntityAttributes.CONTAINER_KIND, "type");
+                attributes.put(JavaEntityAttributes.CONTAINER_NAME, receiverType);
+            }
+            return attributes;
+        }
+
+        private String receiverType(GoParser.ReceiverContext receiver) {
+            if (receiver == null
+                    || receiver.parameters() == null
+                    || receiver.parameters().parameterDecl().isEmpty()
+                    || receiver.parameters().parameterDecl(0).type_() == null) {
+                return null;
+            }
+
+            String type = receiver.parameters().parameterDecl(0).type_().getText();
+            while (type.startsWith("*")) {
+                type = type.substring(1);
+            }
+            return type;
+        }
+
+        private Map<String, String> containerAttributes() {
+            if (currentContainerKind == null || currentContainerName == null) {
+                return Map.of();
+            }
+            return Map.of(
+                    JavaEntityAttributes.CONTAINER_KIND, currentContainerKind,
+                    JavaEntityAttributes.CONTAINER_NAME, currentContainerName
+            );
         }
 
         private String textOrNull(ParserRuleContext ctx) {

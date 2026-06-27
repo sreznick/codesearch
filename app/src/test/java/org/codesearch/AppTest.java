@@ -99,6 +99,7 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Field"));
         assertTrue(output.contains("magicToken"));
+        assertTrue(output.contains("in class SampleSearch"));
         assertFalse(output.contains("magicMethod"));
     }
 
@@ -247,16 +248,26 @@ class AppTest {
         int indexExitCode = App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
         int structExitCode = App.run(new String[]{"--cached", "--lang", "go", "struct", "BitSet"}, out, err, indexPath);
         int importExitCode = App.run(new String[]{"--cached", "--lang", "go", "import", "fmt"}, out, err, indexPath);
+        int fieldExitCode = App.run(new String[]{"--cached", "--lang", "go", "field", "name"}, out, err, indexPath);
+        int methodExitCode = App.run(new String[]{"--cached", "--lang", "go", "method", "Add"}, out, err, indexPath);
 
         String output = outContent.toString();
         assertEquals(0, indexExitCode);
         assertEquals(0, structExitCode);
         assertEquals(0, importExitCode);
+        assertEquals(0, fieldExitCode);
+        assertEquals(0, methodExitCode);
         assertTrue(output.contains("Язык: go"));
         assertTrue(output.contains("Struct"));
         assertTrue(output.contains("BitSet"));
         assertTrue(output.contains("Import"));
         assertTrue(output.contains("fmt"));
+        assertTrue(output.contains("Field"));
+        assertTrue(output.contains("name"));
+        assertTrue(output.contains("in struct BitSet"));
+        assertTrue(output.contains("Method"));
+        assertTrue(output.contains("Add"));
+        assertTrue(output.contains("in type BitSet"));
     }
 
     @Test
@@ -357,6 +368,7 @@ class AppTest {
         assertTrue(output.contains("Field"));
         assertTrue(output.contains("cachedField"));
         assertTrue(output.contains("[String]"));
+        assertTrue(output.contains("in class SampleSearch"));
     }
 
     @Test

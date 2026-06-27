@@ -56,7 +56,8 @@ public class JavaEntityExtractor {
         entities.addAll(extractSafely(filePath, "fields", () -> extractFields(content, filePath)));
         entities.addAll(extractSafely(filePath, "local variables", () -> extractLocalVariables(content, filePath)));
         entities.addAll(extractSafely(filePath, "literals", () -> extractLiterals(content, filePath)));
-        return entities;
+        List<JavaContainer> containers = extractSafely(filePath, "containers", () -> extractContainers(content));
+        return addContainerAttributes(entities, containers);
     }
 
     private List<CodeEntity> extractAnnotations(String content, String filePath) {
@@ -74,7 +75,7 @@ public class JavaEntityExtractor {
                 .toList();
     }
 
-    private List<CodeEntity> extractSafely(String filePath, String extractionName, ExtractionStep extractionStep) {
+    private <T> List<T> extractSafely(String filePath, String extractionName, ExtractionStep<T> extractionStep) {
         try {
             return extractionStep.extract();
         } catch (RuntimeException e) {
@@ -187,6 +188,11 @@ public class JavaEntityExtractor {
                 .toList());
     }
 
+    private List<JavaContainer> extractContainers(String content) {
+        JavaContainerExtractor extractor = new JavaContainerExtractor();
+        return parse(content, extractor, parsed -> ((JavaContainerExtractor) parsed).containers());
+    }
+
     private <T> T parse(String content, JavaBaseListener extractor, ParseResultMapper<T> callback) {
         JavaLexer lexer = new JavaLexer(CharStreams.fromString(content));
         lexer.removeErrorListeners();
@@ -240,13 +246,87 @@ public class JavaEntityExtractor {
         return attributes;
     }
 
+    private List<CodeEntity> addContainerAttributes(List<CodeEntity> entities, List<JavaContainer> containers) {
+        if (containers.isEmpty()) {
+            return entities;
+        }
+
+        return entities.stream()
+                .map(entity -> withContainer(entity, containers))
+                .toList();
+    }
+
+    private CodeEntity withContainer(CodeEntity entity, List<JavaContainer> containers) {
+        if (entity.kind() == EntityKind.CLASS || entity.kind() == EntityKind.INTERFACE) {
+            return entity;
+        }
+
+        JavaContainer container = containers.stream()
+                .filter(value -> value.contains(entity.location().line()))
+                .min((left, right) -> Integer.compare(left.length(), right.length()))
+                .orElse(null);
+        if (container == null) {
+            return entity;
+        }
+
+        Map<String, String> attributes = new HashMap<>(entity.attributes());
+        attributes.put(JavaEntityAttributes.CONTAINER_KIND, container.kind());
+        attributes.put(JavaEntityAttributes.CONTAINER_NAME, container.name());
+        return new CodeEntity(
+                entity.kind(),
+                entity.content(),
+                entity.location(),
+                entity.language(),
+                entity.declaredType(),
+                attributes
+        );
+    }
+
+    private record JavaContainer(String kind, String name, int startLine, int endLine) {
+        boolean contains(int line) {
+            return line >= startLine && line <= endLine;
+        }
+
+        int length() {
+            return endLine - startLine;
+        }
+    }
+
+    private static final class JavaContainerExtractor extends JavaBaseListener {
+        private final List<JavaContainer> containers = new ArrayList<>();
+
+        private List<JavaContainer> containers() {
+            return containers;
+        }
+
+        @Override
+        public void enterClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
+            containers.add(new JavaContainer(
+                    "class",
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    ctx.getStop().getLine()
+            ));
+        }
+
+        @Override
+        public void enterInterfaceDeclaration(JavaParser.InterfaceDeclarationContext ctx) {
+            containers.add(new JavaContainer(
+                    "interface",
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    ctx.getStop().getLine()
+            ));
+        }
+    }
+
     @FunctionalInterface
     private interface ParseResultMapper<T> {
         T map(JavaBaseListener extractor);
     }
 
     @FunctionalInterface
-    private interface ExtractionStep {
-        List<CodeEntity> extract();
+    private interface ExtractionStep<T> {
+        List<T> extract();
     }
 }

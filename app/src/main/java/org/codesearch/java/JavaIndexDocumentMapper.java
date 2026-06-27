@@ -39,6 +39,8 @@ public final class JavaIndexDocumentMapper {
             document.add(new StringField(JavaIndexFields.TYPE_INFERENCE, typeInference, Field.Store.YES));
         }
 
+        addStoredAttribute(document, entity, JavaEntityAttributes.CONTAINER_KIND, JavaIndexFields.CONTAINER_KIND);
+        addStoredAttribute(document, entity, JavaEntityAttributes.CONTAINER_NAME, JavaIndexFields.CONTAINER_NAME);
         addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_KIND, JavaIndexFields.ANNOTATION_TARGET_KIND);
         addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_NAME, JavaIndexFields.ANNOTATION_TARGET_NAME);
 

@@ -14,6 +14,8 @@ final class JavaIndexFields {
     static final String ASSIGNABLE_TYPE = "assignableType";
     static final String ASSIGNABLE_TYPE_LOWERCASE = "assignableType_lowercase";
     static final String TYPE_INFERENCE = "typeInference";
+    static final String CONTAINER_KIND = "containerKind";
+    static final String CONTAINER_NAME = "containerName";
     static final String ANNOTATION_TARGET_KIND = "annotationTargetKind";
     static final String ANNOTATION_TARGET_NAME = "annotationTargetName";
 

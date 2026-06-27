@@ -935,6 +935,7 @@ public class App {
         String prefix = colorize(BLUE, index + ".");
         String kind = colorize(GREEN, entity.kind().legacyJavaType());
         String file = colorize(DIM, entity.location().filePath() + ":" + entity.location().line());
+        String container = formatContainer(entity);
 
         if (entity.kind() == EntityKind.ANNOTATION) {
             return formatAnnotationResult(prefix, kind, entity, file);
@@ -942,22 +943,33 @@ public class App {
 
         if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
             return String.format(
-                    "%s %s %s  [%s]  %s",
+                    "%s %s %s  [%s]%s  %s",
                     prefix,
                     kind,
                     entity.content(),
                     entity.declaredType(),
+                    container,
                     file
             );
         }
 
         return String.format(
-                "%s %s %s  %s",
+                "%s %s %s%s  %s",
                 prefix,
                 kind,
                 entity.content(),
+                container,
                 file
         );
+    }
+
+    private static String formatContainer(CodeEntity entity) {
+        String containerKind = entity.attributes().get(JavaEntityAttributes.CONTAINER_KIND);
+        String containerName = entity.attributes().get(JavaEntityAttributes.CONTAINER_NAME);
+        if (containerKind == null || containerKind.isBlank() || containerName == null || containerName.isBlank()) {
+            return "";
+        }
+        return " in " + containerKind + " " + containerName;
     }
 
     private static String formatAnnotationResult(String prefix, String kind, CodeEntity entity, String file) {
