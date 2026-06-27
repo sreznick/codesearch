@@ -35,8 +35,8 @@ class AppTest {
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("codesearch [options] <query> [path]"));
         assertTrue(outContent.toString().contains("codesearch [options] <kind> <query> [path]"));
-        assertTrue(outContent.toString().contains("codesearch index [path]"));
-        assertTrue(outContent.toString().contains("codesearch stats [--path PATH]"));
+        assertTrue(outContent.toString().contains("codesearch index [--lang java|go] [path]"));
+        assertTrue(outContent.toString().contains("codesearch stats [--lang java|go] [--path PATH]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
         assertTrue(outContent.toString().contains("codesearch class TestClass"));
         assertTrue(outContent.toString().contains("codesearch stats"));
@@ -52,6 +52,11 @@ class AppTest {
         assertTrue(outContent.toString().contains("-C, --context N"));
         assertTrue(outContent.toString().contains("codesearch --cached annotation DemoController --json"));
         assertTrue(outContent.toString().contains("codesearch method getTestField --snippet"));
+        assertTrue(outContent.toString().contains("--lang java|go"));
+        assertTrue(outContent.toString().contains("package|import|function|struct|var|const"));
+        assertTrue(outContent.toString().contains("codesearch index --lang go app/src/test/resources/go"));
+        assertTrue(outContent.toString().contains("codesearch --lang go function intMin app/src/test/resources/go"));
+        assertFalse(outContent.toString().contains("Go MVP"));
         assertTrue(outContent.toString().contains("implements/extends"));
         assertTrue(outContent.toString().contains("var -> Dog -> Animal"));
         assertFalse(outContent.toString().contains("-r, --recursive"));
@@ -62,10 +67,10 @@ class AppTest {
 
     @Test
     void shouldRejectUnsupportedLanguage() {
-        int exitCode = App.run(new String[]{"index", "go", "src"}, out, err);
+        int exitCode = App.run(new String[]{"index", "--lang", "python", "src"}, out, err);
 
         assertEquals(1, exitCode);
-        assertTrue(errContent.toString().contains("Пока поддерживается только язык java."));
+        assertTrue(errContent.toString().contains("Неподдерживаемый язык: python"));
     }
 
     @Test
@@ -208,6 +213,71 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Class"));
         assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldRunQuickGoFunctionSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int exitCode = App.run(
+                new String[]{"--lang", "go", "function", "intMin", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Function"));
+        assertTrue(output.contains("intMin"));
+        assertTrue(output.contains("sample.go:10"));
+    }
+
+    @Test
+    void shouldIndexAndSearchCachedGoStructAndImport(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int indexExitCode = App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        int structExitCode = App.run(new String[]{"--cached", "--lang", "go", "struct", "BitSet"}, out, err, indexPath);
+        int importExitCode = App.run(new String[]{"--cached", "--lang", "go", "import", "fmt"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, indexExitCode);
+        assertEquals(0, structExitCode);
+        assertEquals(0, importExitCode);
+        assertTrue(output.contains("Язык: go"));
+        assertTrue(output.contains("Struct"));
+        assertTrue(output.contains("BitSet"));
+        assertTrue(output.contains("Import"));
+        assertTrue(output.contains("fmt"));
+    }
+
+    @Test
+    void shouldPrintGoIndexStats(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"stats", "--lang", "go"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Статистика индекса"));
+        assertTrue(output.contains("Язык: go"));
+        assertTrue(output.contains("Файлов: 1"));
+        assertTrue(output.contains("Function:"));
+        assertTrue(output.contains("Struct:"));
+        assertTrue(output.contains("Import:"));
     }
 
     @Test
@@ -816,5 +886,40 @@ class AppTest {
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Найдено совпадений: 0"));
         assertTrue(outContent.toString().contains("Совпадений нет."));
+    }
+
+    private String sampleGoSource() {
+        return """
+                package sample
+
+                import (
+                    "fmt"
+                    "strings"
+                )
+
+                const bitsPerWord = 64
+
+                func intMin(a, b int) int {
+                    if a < b {
+                        return a
+                    }
+                    return b
+                }
+
+                type BitSet struct {
+                    data []uint64
+                    name string
+                }
+
+                type Printer interface {
+                    Print(value string) error
+                }
+
+                var defaultName string = "main"
+
+                func (b *BitSet) Add(value int) {
+                    fmt.Println(strings.TrimSpace(defaultName), value)
+                }
+                """;
     }
 }

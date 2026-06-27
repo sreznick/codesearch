@@ -1,14 +1,15 @@
 # codesearch
 
-`codesearch` - это CLI для поиска по Java-коду.
+`codesearch` - это CLI для структурного поиска по исходному коду.
 
-Он похож на `grep`, но ищет не только текстовые совпадения. Программа разбирает Java-файлы, достаёт из них сущности языка и кладёт их в Lucene-индекс. Поэтому можно искать, например, классы, методы, поля, локальные переменные, строки, литералы и объявления с конкретным типом.
+Он похож на `grep`, но ищет не только текстовые совпадения. Программа разбирает исходники, достаёт из них сущности языка и кладёт их в Lucene-индекс. Поэтому можно искать, например, классы, функции, методы, поля, локальные переменные, строки, литералы и объявления с конкретным типом.
 
 ## Что есть сейчас
 
 - поиск по Java-файлам
+- поиск по Go-файлам
 - grep-подобный режим: `codesearch <query> [path]`
-- поиск по виду сущности: `codesearch class TestClass .`
+- поиск по виду сущности: `codesearch class TestClass .`, `codesearch --lang go function intMin .`
 - постоянный индекс для быстрых повторных запросов
 - поиск полей, локальных переменных и методов по declared type / return type
 - поиск переменных по совместимому типу с простым выводом `var`
@@ -85,6 +86,8 @@ codesearch TestClass .
 codesearch class TestClass .
 codesearch field testField .
 codesearch method getTestField .
+codesearch --lang go function intMin app/src/test/resources/go
+codesearch --lang go struct BitSet app/src/test/resources/go
 ```
 
 В этом режиме программа сама создаёт временный индекс для указанного пути, выполняет поиск и удаляет временный индекс после завершения. Это удобно как `grep -r`, когда нужен один быстрый запрос.
@@ -115,12 +118,44 @@ codesearch stats
 
 `--cached` не переиндексирует проект. Он читает уже созданный локальный индекс из директории `index/`. Если код изменился, индекс нужно пересоздать командой `codesearch index .`.
 
+## Go MVP
+
+Go-поддержка пока сделана как MVP: она использует тот же CLI и тот же Lucene-индекс, но покрывает только базовые структурные сущности.
+
+Тестовый Go-файл лежит здесь:
+
+```bash
+app/src/test/resources/go/sample.go
+```
+
+Быстрый одноразовый поиск:
+
+```bash
+codesearch --lang go function intMin app/src/test/resources/go
+codesearch --lang go struct BitSet app/src/test/resources/go
+codesearch --lang go import fmt app/src/test/resources/go
+```
+
+Постоянный Go-индекс:
+
+```bash
+codesearch index --lang go app/src/test/resources/go
+codesearch --cached --lang go function intMin
+codesearch --cached --lang go method Add
+codesearch --cached --lang go interface Printer
+codesearch --cached --lang go var defaultName
+codesearch stats --lang go
+```
+
+Сейчас для Go поддерживаются `package`, `import`, `function`, `method`, `struct`, `interface`, `field`, `var`, `const` и базовые литералы. Семантический поиск по совместимым типам пока остаётся Java-фичей.
+
 ## Статистика индекса
 
-После создания постоянного индекса можно посмотреть, сколько файлов и Java-сущностей попало в индекс:
+После создания постоянного индекса можно посмотреть, сколько файлов и сущностей попало в индекс:
 
 ```bash
 codesearch stats
+codesearch stats --lang go
 codesearch stats --path app/src/test/resources
 ```
 
@@ -358,18 +393,19 @@ unzip codesearch.zip
 ## Как это работает внутри
 
 1. CLI получает запрос и путь.
-2. Индексатор обходит Java-файлы.
+2. Индексатор обходит файлы выбранного языка.
 3. Служебные директории вроде `build`, `.git`, `.gradle`, `target`, `node_modules` пропускаются.
-4. Java-код разбирается через ANTLR.
+4. Код разбирается через ANTLR.
 5. Найденные сущности превращаются в документы Lucene.
 6. Поиск выполняется по индексу.
 7. В выдаче показываются вид сущности, имя, тип при наличии, файл и строка.
 
 ## Ограничения
 
-- сейчас поддерживается Java
+- Java поддерживается как основной сценарий
+- Go поддерживается для базовых объявлений
 - если используется `--cached`, индекс нужно пересоздавать после изменений в коде
-- это не замена `grep` для любого текста, а поиск по сущностям Java-кода
+- это не замена `grep` для любого текста, а поиск по сущностям исходного кода
 
 ## Демо
 

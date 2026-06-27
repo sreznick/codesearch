@@ -12,6 +12,7 @@ public final class JavaIndexDocumentMapper {
         Document document = new Document();
         document.add(new StringField(JavaIndexFields.CONTENT, entity.content(), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.CONTENT_LOWERCASE, entity.content().toLowerCase(), Field.Store.NO));
+        document.add(new StringField(JavaIndexFields.LANGUAGE, entity.language(), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.FILE, entity.location().filePath(), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.LINE, String.valueOf(entity.location().line()), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.TYPE, entity.kind().legacyJavaType(), Field.Store.YES));

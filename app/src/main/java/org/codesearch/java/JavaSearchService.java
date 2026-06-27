@@ -17,6 +17,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.MMapDirectory;
 import org.codesearch.core.EntityKind;
+import org.codesearch.core.LanguageModule;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
@@ -38,13 +39,13 @@ public class JavaSearchService {
     private static final int MAX_RESULTS_TO_SCAN = 100000;
 
     private final Path indexPath;
-    private final JavaLanguageModule languageModule;
+    private final LanguageModule languageModule;
 
     public JavaSearchService(Path indexPath) {
         this(indexPath, new JavaLanguageModule());
     }
 
-    JavaSearchService(Path indexPath, JavaLanguageModule languageModule) {
+    public JavaSearchService(Path indexPath, LanguageModule languageModule) {
         this.indexPath = indexPath;
         this.languageModule = languageModule;
     }
@@ -71,14 +72,13 @@ public class JavaSearchService {
             List<SearchResult> results = new ArrayList<>();
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = searcher.storedFields().document(scoreDoc.doc);
-                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score);
-                if (matchesPathFilter(result, searchQuery.pathFilter())) {
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document, languageModule.language()), scoreDoc.score);
+                if (matchesLanguage(result) && matchesPathFilter(result, searchQuery.pathFilter())) {
                     results.add(result);
                 }
             }
 
-            long totalHits = searchQuery.pathFilter() == null ? topDocs.totalHits.value() : results.size();
-            return new SearchResponse(totalHits, results.stream().limit(searchQuery.limit()).toList());
+            return new SearchResponse(results.size(), results.stream().limit(searchQuery.limit()).toList());
         } catch (IndexNotFoundException e) {
             throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
         } catch (CorruptIndexException e) {
@@ -107,8 +107,9 @@ public class JavaSearchService {
             List<SearchResult> matches = new ArrayList<>();
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = searcher.storedFields().document(scoreDoc.doc);
-                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score);
-                if (matchesKind(result, kind)
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document, languageModule.language()), scoreDoc.score);
+                if (matchesLanguage(result)
+                        && matchesKind(result, kind)
                         && matchesPathFilter(result, pathFilter)
                         && containsText(result, needle, caseSensitive)) {
                     matches.add(result);
@@ -152,14 +153,13 @@ public class JavaSearchService {
             List<SearchResult> results = new ArrayList<>();
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = searcher.storedFields().document(scoreDoc.doc);
-                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document), scoreDoc.score);
-                if (matchesPathFilter(result, pathFilter)) {
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document, languageModule.language()), scoreDoc.score);
+                if (matchesLanguage(result) && matchesPathFilter(result, pathFilter)) {
                     results.add(result);
                 }
             }
 
-            long totalHits = pathFilter == null ? topDocs.totalHits.value() : results.size();
-            return new SearchResponse(totalHits, results.stream().limit(limit).toList());
+            return new SearchResponse(results.size(), results.stream().limit(limit).toList());
         } catch (IndexNotFoundException e) {
             throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
         } catch (CorruptIndexException e) {
@@ -184,6 +184,11 @@ public class JavaSearchService {
 
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 Document document = searcher.storedFields().document(scoreDoc.doc);
+                String language = document.get(JavaIndexFields.LANGUAGE);
+                String documentLanguage = language == null || language.isBlank() ? JavaLanguageModule.LANGUAGE : language;
+                if (!languageModule.language().equals(documentLanguage)) {
+                    continue;
+                }
                 String file = document.get(JavaIndexFields.FILE);
                 if (pathFilter != null && (file == null || !file.contains(pathFilter))) {
                     continue;
@@ -218,6 +223,10 @@ public class JavaSearchService {
 
     private boolean matchesKind(SearchResult result, EntityKind kind) {
         return kind == null || result.entity().kind() == kind;
+    }
+
+    private boolean matchesLanguage(SearchResult result) {
+        return languageModule.language().equals(result.entity().language());
     }
 
     private boolean containsText(SearchResult result, String needle, boolean caseSensitive) {
@@ -301,13 +310,13 @@ public class JavaSearchService {
 
     private void validateQuery(SearchQuery searchQuery) {
         if (searchQuery.kind() == null) {
-            throw new IllegalArgumentException("Java search requires entity kind");
+            throw new IllegalArgumentException(languageModule.language() + " search requires entity kind");
         }
         if (searchQuery.target() == SearchTarget.ASSIGNABLE_TYPE) {
             throw new IllegalArgumentException("Assignable type search uses a dedicated variable search");
         }
         if (!languageModule.supportedEntityKinds().contains(searchQuery.kind())) {
-            throw new IllegalArgumentException("Java search does not support entity kind: " + searchQuery.kind());
+            throw new IllegalArgumentException(languageModule.language() + " search does not support entity kind: " + searchQuery.kind());
         }
         if (searchQuery.target() == SearchTarget.DECLARED_TYPE
                 && searchQuery.kind() != EntityKind.FIELD
@@ -328,11 +337,14 @@ public class JavaSearchService {
             return;
         }
         if (kind != null && !languageModule.supportedEntityKinds().contains(kind)) {
-            throw new IllegalArgumentException("Java search does not support entity kind: " + kind);
+            throw new IllegalArgumentException(languageModule.language() + " search does not support entity kind: " + kind);
         }
     }
 
     private void validateAssignableTypeQuery(String type, String language, int limit) {
+        if (!JavaLanguageModule.LANGUAGE.equals(languageModule.language())) {
+            throw new IllegalArgumentException("Assignable type search is supported only for java");
+        }
         if (type == null || type.isBlank()) {
             throw new IllegalArgumentException("Assignable type must not be blank");
         }

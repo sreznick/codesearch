@@ -11,7 +11,7 @@ import java.util.Map;
 final class JavaDocumentMapper {
     private JavaDocumentMapper() {}
 
-    static CodeEntity toCodeEntity(Document document) {
+    static CodeEntity toCodeEntity(Document document, String defaultLanguage) {
         Map<String, String> attributes = new HashMap<>();
         String declaredType = readDeclaredType(document);
         if (declaredType != null && !declaredType.isBlank()) {
@@ -36,10 +36,18 @@ final class JavaDocumentMapper {
                         Integer.parseInt(document.get(JavaIndexFields.LINE)),
                         0
                 ),
-                JavaLanguageModule.LANGUAGE,
+                readLanguage(document, defaultLanguage),
                 declaredType,
                 attributes
         );
+    }
+
+    private static String readLanguage(Document document, String defaultLanguage) {
+        String language = document.get(JavaIndexFields.LANGUAGE);
+        if (language != null && !language.isBlank()) {
+            return language;
+        }
+        return JavaLanguageModule.LANGUAGE;
     }
 
     private static String readDeclaredType(Document document) {

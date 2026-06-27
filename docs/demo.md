@@ -8,6 +8,12 @@
 app/src/test/resources/TestClass.java
 ```
 
+Для Go используется отдельный тестовый файл:
+
+```bash
+app/src/test/resources/go/sample.go
+```
+
 ## 1. Проверить проект
 
 ```bash
@@ -364,7 +370,7 @@ codesearch --cached class TestClass --path missing/path
 codesearch method getTestField app/src/test/resources --snippet
 ```
 
-По умолчанию показываются две строки до и две строки после результата. Если нужен другой размер контекста, можно использовать grep-подобные флаги:
+По умолчанию показываются две строки до и две строки после результата. Если нужен другой размер контекста, можно использовать флаги:
 
 ```bash
 codesearch method getTestField app/src/test/resources -C 3
@@ -406,3 +412,34 @@ unzip app/build/distributions/codesearch.zip
 
 
 `Codesearch` разбирает Java-код, создаёт индекс и позволяет искать классы, методы, поля и типы точнее, чем обычный текстовый поиск.
+
+## 12. Go
+
+
+Быстрый поиск без постоянного индекса:
+
+```bash
+codesearch --lang go function intMin app/src/test/resources/go
+codesearch --lang go struct BitSet app/src/test/resources/go
+codesearch --lang go import fmt app/src/test/resources/go
+```
+
+Постоянный индекс:
+
+```bash
+codesearch index --lang go app/src/test/resources/go
+codesearch --cached --lang go function intMin
+codesearch --cached --lang go method Add
+codesearch --cached --lang go interface Printer
+codesearch --cached --lang go var defaultName
+codesearch stats --lang go
+```
+
+Пример ожидаемого результата:
+
+```text
+Найдено совпадений: 1
+1. Function intMin  app/src/test/resources/go/sample.go:10
+```
+
+Go-сущности попадают в общий формат индекса и доступны через те же режимы `--cached`, `--json`, `--snippet` и `stats`.

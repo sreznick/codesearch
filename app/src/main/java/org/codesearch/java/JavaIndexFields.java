@@ -3,6 +3,7 @@ package org.codesearch.java;
 final class JavaIndexFields {
     static final String CONTENT = "content";
     static final String CONTENT_LOWERCASE = "content_lowercase";
+    static final String LANGUAGE = "language";
     static final String FILE = "file";
     static final String LINE = "line";
     static final String TYPE = "type";

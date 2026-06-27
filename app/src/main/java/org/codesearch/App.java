@@ -2,9 +2,12 @@ package org.codesearch;
 
 import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
+import org.codesearch.core.LanguageModule;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
+import org.codesearch.go.GoLanguageModule;
+import org.codesearch.go.GoSourceIndexer;
 import org.codesearch.java.JavaLanguageModule;
 import org.codesearch.java.JavaEntityAttributes;
 import org.codesearch.java.JavaSearchService;
@@ -73,15 +76,15 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
-            return 1;
-        }
-
         try {
-            JavaSourceIndexer.indexJavaSources(command.sourcePath(), indexPath);
+            LanguageModule module = languageModule(command.language());
+            if (isJava(module.language())) {
+                JavaSourceIndexer.indexJavaSources(command.sourcePath(), indexPath);
+            } else if (isGo(module.language())) {
+                GoSourceIndexer.indexGoSources(command.sourcePath(), indexPath);
+            }
             out.println(colorize(GREEN, "Готово") + "  Индексация завершена");
-            out.println(colorize(DIM, "Язык: ") + "java");
+            out.println(colorize(DIM, "Язык: ") + module.language());
             out.println(colorize(DIM, "Путь:  ") + command.sourcePath());
             return 0;
         } catch (IllegalArgumentException e) {
@@ -98,22 +101,32 @@ public class App {
     }
 
     private static IndexCommand parseIndexCommand(String[] args) {
-        if (args.length == 1) {
-            return new IndexCommand(JavaLanguageModule.LANGUAGE, ".");
-        }
+        String language = JavaLanguageModule.LANGUAGE;
+        String sourcePath = null;
 
-        if (args.length == 2) {
-            if (isJava(args[1])) {
-                return new IndexCommand(args[1].trim().toLowerCase(), ".");
+        for (int i = 1; i < args.length; i++) {
+            String arg = args[i];
+            if ("--lang".equalsIgnoreCase(arg) || "-l".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан язык.");
+                }
+                language = normalizeLanguage(args[++i]);
+                continue;
             }
-            return new IndexCommand(JavaLanguageModule.LANGUAGE, args[1]);
+            if (isSupportedLanguage(arg)) {
+                language = normalizeLanguage(arg);
+                continue;
+            }
+            if (arg.startsWith("-")) {
+                throw new IllegalArgumentException("Неизвестный флаг: " + arg);
+            }
+            if (sourcePath != null) {
+                throw new IllegalArgumentException("слишком много аргументов.");
+            }
+            sourcePath = arg;
         }
 
-        if (args.length == 3) {
-            return new IndexCommand(args[1].trim().toLowerCase(), args[2]);
-        }
-
-        throw new IllegalArgumentException("слишком много аргументов.");
+        return new IndexCommand(language, sourcePath == null ? "." : sourcePath);
     }
 
     private static int handleStats(String[] args, PrintStream out, PrintStream err, Path indexPath) {
@@ -126,15 +139,11 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
-            return 1;
-        }
-
         try {
-            JavaSearchService searchService = new JavaSearchService(indexPath);
+            LanguageModule module = languageModule(command.language());
+            JavaSearchService searchService = new JavaSearchService(indexPath, module);
             JavaSearchService.IndexStats stats = searchService.stats(command.pathFilter());
-            printStats(out, stats, command.pathFilter());
+            printStats(out, stats, command.pathFilter(), module.language());
             return 0;
         } catch (JavaSearchService.IndexUnavailableException e) {
             err.println(colorize(RED, "Индекс не готов: ") + e.getMessage());
@@ -156,7 +165,7 @@ public class App {
                 if (i + 1 >= args.length) {
                     throw new IllegalArgumentException("Не указан язык.");
                 }
-                language = args[++i].trim().toLowerCase();
+                language = normalizeLanguage(args[++i]);
                 continue;
             }
             if ("--path".equalsIgnoreCase(arg) || "-p".equalsIgnoreCase(arg)) {
@@ -166,8 +175,8 @@ public class App {
                 pathFilter = args[++i];
                 continue;
             }
-            if (isJava(arg)) {
-                language = arg.trim().toLowerCase();
+            if (isSupportedLanguage(arg)) {
+                language = normalizeLanguage(arg);
                 continue;
             }
             if (arg.startsWith("-")) {
@@ -189,16 +198,16 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
-            return 1;
-        }
-
         Path quickIndexPath = null;
         try {
+            LanguageModule module = languageModule(command.language());
             quickIndexPath = Files.createTempDirectory("codesearch-quick-index");
-            JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
-            JavaSearchService searchService = new JavaSearchService(quickIndexPath);
+            if (isJava(module.language())) {
+                JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
+            } else if (isGo(module.language())) {
+                GoSourceIndexer.indexGoSources(command.sourcePath(), quickIndexPath);
+            }
+            JavaSearchService searchService = new JavaSearchService(quickIndexPath, module);
             JavaSearchService.SearchResponse response = executeSearch(searchService, command);
             printResults(out, response, command.explain(), command.json(), command.snippet(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
@@ -227,13 +236,9 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
-            return 1;
-        }
-
         try {
-            JavaSearchService searchService = new JavaSearchService(indexPath);
+            LanguageModule module = languageModule(command.language());
+            JavaSearchService searchService = new JavaSearchService(indexPath, module);
             JavaSearchService.SearchResponse response = executeSearch(searchService, command);
             printResults(out, response, command.explain(), command.json(), command.snippet(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
@@ -329,7 +334,7 @@ public class App {
                 if (i + 1 >= args.length) {
                     throw new IllegalArgumentException("Не указан язык.");
                 }
-                language = args[++i].trim().toLowerCase();
+                language = normalizeLanguage(args[++i]);
                 continue;
             }
             if ("--kind".equalsIgnoreCase(arg) || "-k".equalsIgnoreCase(arg) || "--type".equalsIgnoreCase(arg)) {
@@ -359,8 +364,8 @@ public class App {
             operands.add(arg);
         }
 
-        if (!operands.isEmpty() && isJava(operands.getFirst())) {
-            language = operands.removeFirst().trim().toLowerCase();
+        if (!operands.isEmpty() && isSupportedLanguage(operands.getFirst())) {
+            language = normalizeLanguage(operands.removeFirst());
         }
 
         String query;
@@ -440,7 +445,7 @@ public class App {
                 if (i + 1 >= args.length) {
                     throw new IllegalArgumentException("Не указан язык.");
                 }
-                language = args[++i].trim().toLowerCase();
+                language = normalizeLanguage(args[++i]);
                 continue;
             }
             if ("--kind".equalsIgnoreCase(arg) || "-k".equalsIgnoreCase(arg) || "--type".equalsIgnoreCase(arg)) {
@@ -477,8 +482,8 @@ public class App {
             operands.add(arg);
         }
 
-        if (!operands.isEmpty() && isJava(operands.getFirst())) {
-            language = operands.removeFirst().trim().toLowerCase();
+        if (!operands.isEmpty() && isSupportedLanguage(operands.getFirst())) {
+            language = normalizeLanguage(operands.removeFirst());
         }
 
         String query;
@@ -532,6 +537,8 @@ public class App {
             case "local-variable-type" -> new SearchKind(EntityKind.LOCAL_VARIABLE, SearchTarget.DECLARED_TYPE);
             case "method-return-type" -> new SearchKind(EntityKind.METHOD, SearchTarget.DECLARED_TYPE);
             case "variable-assignable-to", "assignable-type" -> new SearchKind(null, SearchTarget.ASSIGNABLE_TYPE);
+            case "var" -> new SearchKind(EntityKind.VARIABLE, SearchTarget.CONTENT);
+            case "constant" -> new SearchKind(EntityKind.CONSTANT, SearchTarget.CONTENT);
             default -> {
                 EntityKind kind = parseEntityKindOrNull(value);
                 yield kind == null ? null : new SearchKind(kind, SearchTarget.CONTENT);
@@ -549,14 +556,15 @@ public class App {
 
     private static int handleSearch(String[] args, PrintStream out, PrintStream err, Path indexPath) {
         if (args.length < 4) {
-            err.println(colorize(RED, "Использование: ") + "search java <kind> <query> [-f] [-cs] [--limit N] [--path PATH] [--snippet] [--json]");
+            err.println(colorize(RED, "Использование: ") + "search <java|go> <kind> <query> [-f] [-cs] [--limit N] [--path PATH] [--snippet] [--json]");
             return 1;
         }
 
-        if (!isJava(args[1])) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
+        if (!isSupportedLanguage(args[1])) {
+            err.println(colorize(RED, "Неподдерживаемый язык: ") + args[1]);
             return 1;
         }
+        String language = normalizeLanguage(args[1]);
 
         boolean fuzzy = false;
         boolean caseSensitive = false;
@@ -625,18 +633,19 @@ public class App {
         }
 
         try {
-            JavaSearchService searchService = new JavaSearchService(indexPath);
+            LanguageModule module = languageModule(language);
+            JavaSearchService searchService = new JavaSearchService(indexPath, module);
             JavaSearchService.SearchResponse response;
             if (isAssignableTypeSearch(args[2])) {
                 response = searchService.searchAssignableVariables(
                         args[3],
-                        JavaLanguageModule.LANGUAGE,
+                        language,
                         caseSensitive,
                         limit,
                         pathFilter
                 );
             } else {
-                SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
+                SearchCommand searchCommand = parseSearchCommand(args[2], args[3], language, fuzzy, caseSensitive, limit, pathFilter);
                 response = searchService.searchWithMetadata(searchCommand.query());
             }
             printResults(out, response, explain, json, snippet.build(), isAssignableTypeSearch(args[2]) ? args[3] : null);
@@ -654,19 +663,19 @@ public class App {
         }
     }
 
-    private static SearchCommand parseSearchCommand(String rawKind, String rawQuery, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
+    private static SearchCommand parseSearchCommand(String rawKind, String rawQuery, String language, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
         return switch (rawKind.toLowerCase()) {
             case "field-type" -> new SearchCommand(
-                    metadataQuery(rawQuery, EntityKind.FIELD, fuzzy, caseSensitive, limit, pathFilter)
+                    metadataQuery(rawQuery, EntityKind.FIELD, language, fuzzy, caseSensitive, limit, pathFilter)
             );
             case "local-variable-type" -> new SearchCommand(
-                    metadataQuery(rawQuery, EntityKind.LOCAL_VARIABLE, fuzzy, caseSensitive, limit, pathFilter)
+                    metadataQuery(rawQuery, EntityKind.LOCAL_VARIABLE, language, fuzzy, caseSensitive, limit, pathFilter)
             );
             case "method-return-type" -> new SearchCommand(
-                    metadataQuery(rawQuery, EntityKind.METHOD, fuzzy, caseSensitive, limit, pathFilter)
+                    metadataQuery(rawQuery, EntityKind.METHOD, language, fuzzy, caseSensitive, limit, pathFilter)
             );
             default -> new SearchCommand(
-                    SearchQuery.builder(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE)
+                    SearchQuery.builder(rawQuery, EntityKind.fromValue(rawKind), language)
                             .fuzzy(fuzzy)
                             .caseSensitive(caseSensitive)
                             .limit(limit)
@@ -676,8 +685,8 @@ public class App {
         };
     }
 
-    private static SearchQuery metadataQuery(String rawQuery, EntityKind kind, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
-        return SearchQuery.builder(rawQuery, kind, JavaLanguageModule.LANGUAGE)
+    private static SearchQuery metadataQuery(String rawQuery, EntityKind kind, String language, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
+        return SearchQuery.builder(rawQuery, kind, language)
                 .target(SearchTarget.DECLARED_TYPE)
                 .fuzzy(fuzzy)
                 .caseSensitive(caseSensitive)
@@ -691,9 +700,9 @@ public class App {
                 || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
-    private static void printStats(PrintStream out, JavaSearchService.IndexStats stats, String pathFilter) {
+    private static void printStats(PrintStream out, JavaSearchService.IndexStats stats, String pathFilter, String language) {
         out.println(colorize(BLUE, "Статистика индекса"));
-        out.println(colorize(DIM, "Язык: ") + "java");
+        out.println(colorize(DIM, "Язык: ") + language);
         if (pathFilter != null && !pathFilter.isBlank()) {
             out.println(colorize(DIM, "Фильтр пути: ") + pathFilter);
         }
@@ -983,17 +992,45 @@ public class App {
         return JavaLanguageModule.LANGUAGE.equalsIgnoreCase(value);
     }
 
+    private static boolean isGo(String value) {
+        return GoLanguageModule.LANGUAGE.equalsIgnoreCase(value);
+    }
+
+    private static boolean isSupportedLanguage(String value) {
+        return isJava(value) || isGo(value);
+    }
+
+    private static String normalizeLanguage(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Не указан язык.");
+        }
+        String language = value.trim().toLowerCase();
+        if (!isSupportedLanguage(language)) {
+            throw new IllegalArgumentException("Неподдерживаемый язык: " + value);
+        }
+        return language;
+    }
+
+    private static LanguageModule languageModule(String language) {
+        String normalized = normalizeLanguage(language);
+        if (isJava(normalized)) {
+            return new JavaLanguageModule();
+        }
+        return new GoLanguageModule();
+    }
+
     private static void printHelp(PrintStream out) {
         out.println(colorize(BLUE, "Команды"));
         out.println("  codesearch [options] <query> [path]");
         out.println("  codesearch [options] <kind> <query> [path]");
-        out.println("  codesearch index [path]");
-        out.println("  codesearch stats [--path PATH]");
+        out.println("  codesearch index [--lang java|go] [path]");
+        out.println("  codesearch stats [--lang java|go] [--path PATH]");
         out.println("  codesearch --cached [options] <query> [path-filter]");
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
         out.println(colorize(BLUE, "Виды поиска"));
         out.println("  class|method|field|interface|local-variable <name>");
+        out.println("  package|import|function|struct|var|const <name>  базовый Go-поиск");
         out.println("  annotation <name>                 Java-аннотации и место применения");
         out.println("  field-type <type>                 поля с точным declared type");
         out.println("  local-variable-type <type>        локальные переменные с точным declared type");
@@ -1012,7 +1049,7 @@ public class App {
         out.println("  -A, --after N          показать N строк после результата");
         out.println("  -B, --before N         показать N строк до результата");
         out.println("  -C, --context N        показать N строк до и после результата");
-        out.println("  --lang java            язык; сейчас поддерживается только java");
+        out.println("  --lang java|go         язык исходного кода");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
         out.println("  codesearch TestClass");
@@ -1020,7 +1057,9 @@ public class App {
         out.println("  codesearch annotation DemoController");
         out.println("  codesearch testField src --kind field");
         out.println("  codesearch index .");
+        out.println("  codesearch index --lang go app/src/test/resources/go");
         out.println("  codesearch stats");
+        out.println("  codesearch stats --lang go");
         out.println("  codesearch --cached class TestClass");
         out.println("  codesearch --cached field-type String");
         out.println("  codesearch --cached variable-assignable-to Appendable");
@@ -1028,6 +1067,8 @@ public class App {
         out.println("  codesearch --cached variable-assignable-to Animal --explain");
         out.println("  codesearch --cached annotation DemoController --json");
         out.println("  codesearch method getTestField --snippet");
+        out.println("  codesearch --lang go function intMin app/src/test/resources/go");
+        out.println("  codesearch --cached --lang go struct BitSet");
         out.println();
         out.println(colorize(BLUE, "Семантический поиск по типам"));
         out.println("  variable-assignable-to учитывает простое выведение var, JDK-типы,");
