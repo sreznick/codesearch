@@ -1029,8 +1029,8 @@ public class App {
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
         out.println(colorize(BLUE, "Виды поиска"));
-        out.println("  class|method|field|interface|local-variable <name>");
-        out.println("  package|import|function|struct|var|const <name>  базовый Go-поиск");
+        out.println("  Java: class|method|field|interface|local-variable <name>");
+        out.println("  Go: package|import|function|method|struct|interface|field|var|const <name>");
         out.println("  annotation <name>                 Java-аннотации и место применения");
         out.println("  field-type <type>                 поля с точным declared type");
         out.println("  local-variable-type <type>        локальные переменные с точным declared type");

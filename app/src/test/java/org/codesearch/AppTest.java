@@ -53,7 +53,8 @@ class AppTest {
         assertTrue(outContent.toString().contains("codesearch --cached annotation DemoController --json"));
         assertTrue(outContent.toString().contains("codesearch method getTestField --snippet"));
         assertTrue(outContent.toString().contains("--lang java|go"));
-        assertTrue(outContent.toString().contains("package|import|function|struct|var|const"));
+        assertTrue(outContent.toString().contains("Java: class|method|field|interface|local-variable <name>"));
+        assertTrue(outContent.toString().contains("Go: package|import|function|method|struct|interface|field|var|const <name>"));
         assertTrue(outContent.toString().contains("codesearch index --lang go app/src/test/resources/go"));
         assertTrue(outContent.toString().contains("codesearch --lang go function intMin app/src/test/resources/go"));
         assertFalse(outContent.toString().contains("Go MVP"));
