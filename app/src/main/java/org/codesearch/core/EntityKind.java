@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 public enum EntityKind {
     CLASS("class", "Class"),
+    RECORD("record", "Record"),
     INTERFACE("interface", "Interface"),
     STRUCT("struct", "Struct"),
     FUNCTION("function", "Function"),

@@ -971,6 +971,7 @@ public class App {
         String kind = colorize(GREEN, entity.kind().legacyJavaType());
         String file = colorize(DIM, entity.location().filePath() + ":" + entity.location().line());
         String container = formatContainer(entity);
+        String declarationHierarchy = formatDeclarationHierarchy(entity);
 
         if (entity.kind() == EntityKind.ANNOTATION) {
             return formatAnnotationResult(prefix, kind, entity, file);
@@ -978,21 +979,23 @@ public class App {
 
         if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
             return String.format(
-                    "%s %s %s  [%s]%s  %s",
+                    "%s %s %s  [%s]%s%s  %s",
                     prefix,
                     kind,
                     entity.content(),
                     entity.declaredType(),
+                    declarationHierarchy,
                     container,
                     file
             );
         }
 
         return String.format(
-                "%s %s %s%s  %s",
+                "%s %s %s%s%s  %s",
                 prefix,
                 kind,
                 entity.content(),
+                declarationHierarchy,
                 container,
                 file
         );
@@ -1005,6 +1008,23 @@ public class App {
             return "";
         }
         return " in " + containerKind + " " + containerName;
+    }
+
+    private static String formatDeclarationHierarchy(CodeEntity entity) {
+        if (entity.kind() != EntityKind.CLASS && entity.kind() != EntityKind.RECORD && entity.kind() != EntityKind.INTERFACE) {
+            return "";
+        }
+
+        String extendsTypes = entity.attributes().get(JavaEntityAttributes.EXTENDS_TYPES);
+        String implementsTypes = entity.attributes().get(JavaEntityAttributes.IMPLEMENTS_TYPES);
+        StringBuilder builder = new StringBuilder();
+        if (extendsTypes != null && !extendsTypes.isBlank()) {
+            builder.append(" extends ").append(extendsTypes);
+        }
+        if (implementsTypes != null && !implementsTypes.isBlank()) {
+            builder.append(" implements ").append(implementsTypes);
+        }
+        return builder.toString();
     }
 
     private static String formatAnnotationResult(String prefix, String kind, CodeEntity entity, String file) {
@@ -1078,7 +1098,7 @@ public class App {
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
         out.println(colorize(BLUE, "Виды поиска"));
-        out.println("  Java: class|method|field|interface|local-variable <name>");
+        out.println("  Java: class|record|method|field|interface|local-variable <name>");
         out.println("  Go: package|import|function|method|struct|interface|field|var|const <name>");
         out.println("  annotation <name>                 Java-аннотации");
         out.println("  field-type <type>                 поля с точным declared type");

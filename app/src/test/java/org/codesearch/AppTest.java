@@ -54,7 +54,7 @@ class AppTest {
         assertTrue(outContent.toString().contains("-C, --context N"));
         assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Appendable --explain"));
         assertTrue(outContent.toString().contains("--lang java|go"));
-        assertTrue(outContent.toString().contains("Java: class|method|field|interface|local-variable <name>"));
+        assertTrue(outContent.toString().contains("Java: class|record|method|field|interface|local-variable <name>"));
         assertTrue(outContent.toString().contains("Go: package|import|function|method|struct|interface|field|var|const <name>"));
         assertTrue(outContent.toString().contains("codesearch --lang go function intMin app/src/test/resources/go"));
         assertFalse(outContent.toString().contains("Go MVP"));
@@ -178,6 +178,115 @@ class AppTest {
         assertTrue(output.contains("FirstSearch"));
         assertTrue(output.contains("SecondSearch"));
         assertFalse(output.contains("firstMethod"));
+    }
+
+    @Test
+    void shouldPrintJavaDeclarationHierarchyInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Hierarchy.java"), """
+                interface Marker {
+                }
+
+                interface Named extends Marker {
+                }
+
+                class Base {
+                }
+
+                class Child extends Base implements Named {
+                }
+                """);
+
+        int classExitCode = App.run(
+                new String[]{"class", "Child", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+        int interfaceExitCode = App.run(
+                new String[]{"interface", "Named", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, classExitCode);
+        assertEquals(0, interfaceExitCode);
+        assertTrue(output.contains("Class Child extends Base implements Named"));
+        assertTrue(output.contains("Interface Named extends Marker"));
+    }
+
+    @Test
+    void shouldFindJavaRecordsInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Person.java"), """
+                interface Named {
+                }
+
+                public record Person(String name) implements Named {
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"record", "Person", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Record Person implements Named"));
+    }
+
+    @Test
+    void shouldPrintJavaDeclarationHierarchyFromCachedIndex(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Hierarchy.java"), """
+                interface CloseableResource {
+                }
+
+                class ResourceBase {
+                }
+
+                class FileResource extends ResourceBase implements CloseableResource {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "class", "FileResource"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Class FileResource extends ResourceBase implements CloseableResource"));
+    }
+
+    @Test
+    void shouldFindJavaRecordsFromCachedIndex(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("UserRecord.java"), """
+                interface Persisted {
+                }
+
+                record UserRecord(long id) implements Persisted {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "record", "UserRecord"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Record UserRecord implements Persisted"));
     }
 
     @Test

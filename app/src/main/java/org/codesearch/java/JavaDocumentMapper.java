@@ -27,6 +27,8 @@ final class JavaDocumentMapper {
         }
         addAttribute(document, attributes, JavaIndexFields.CONTAINER_KIND, JavaEntityAttributes.CONTAINER_KIND);
         addAttribute(document, attributes, JavaIndexFields.CONTAINER_NAME, JavaEntityAttributes.CONTAINER_NAME);
+        addAttribute(document, attributes, JavaIndexFields.EXTENDS_TYPES, JavaEntityAttributes.EXTENDS_TYPES);
+        addAttribute(document, attributes, JavaIndexFields.IMPLEMENTS_TYPES, JavaEntityAttributes.IMPLEMENTS_TYPES);
         addAttribute(document, attributes, JavaIndexFields.ANNOTATION_TARGET_KIND, JavaEntityAttributes.ANNOTATION_TARGET_KIND);
         addAttribute(document, attributes, JavaIndexFields.ANNOTATION_TARGET_NAME, JavaEntityAttributes.ANNOTATION_TARGET_NAME);
 

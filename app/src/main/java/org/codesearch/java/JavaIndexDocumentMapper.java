@@ -41,6 +41,8 @@ public final class JavaIndexDocumentMapper {
 
         addStoredAttribute(document, entity, JavaEntityAttributes.CONTAINER_KIND, JavaIndexFields.CONTAINER_KIND);
         addStoredAttribute(document, entity, JavaEntityAttributes.CONTAINER_NAME, JavaIndexFields.CONTAINER_NAME);
+        addStoredAttribute(document, entity, JavaEntityAttributes.EXTENDS_TYPES, JavaIndexFields.EXTENDS_TYPES);
+        addStoredAttribute(document, entity, JavaEntityAttributes.IMPLEMENTS_TYPES, JavaIndexFields.IMPLEMENTS_TYPES);
         addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_KIND, JavaIndexFields.ANNOTATION_TARGET_KIND);
         addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_NAME, JavaIndexFields.ANNOTATION_TARGET_NAME);
 

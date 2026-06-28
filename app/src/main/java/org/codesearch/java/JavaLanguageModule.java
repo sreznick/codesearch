@@ -11,6 +11,7 @@ public class JavaLanguageModule implements LanguageModule {
     private static final Set<String> FILE_EXTENSIONS = Set.of(".java");
     private static final Set<EntityKind> SUPPORTED_ENTITY_KINDS = Set.of(
             EntityKind.CLASS,
+            EntityKind.RECORD,
             EntityKind.INTERFACE,
             EntityKind.METHOD,
             EntityKind.FIELD,
