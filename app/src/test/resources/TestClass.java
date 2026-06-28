@@ -13,6 +13,8 @@ public class TestClass {
 
     public void testMethod() {
         String localVariable = "Test Local Variable";
+        var inferredText = "hello";
+        var inferredBuilder = new StringBuilder("hello");
         System.out.println("Test Method called");
     }
 
@@ -32,3 +34,25 @@ public class TestClass {
     }
 }
 
+class Animal {
+}
+
+class Dog extends Animal {
+}
+
+class DogUsage {
+    void run() {
+        var dog = new Dog();
+    }
+}
+
+@DemoController
+class AnnotationFixture {
+    @DemoField
+    private String annotatedField;
+
+    @DemoTest
+    void annotatedMethod() {
+        @DemoLocal var annotatedLocal = "value";
+    }
+}

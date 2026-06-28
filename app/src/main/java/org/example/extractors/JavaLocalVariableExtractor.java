@@ -31,7 +31,10 @@ public class JavaLocalVariableExtractor extends JavaBaseListener {
             String type = ctx.typeSpec().getText();
             ctx.variableDeclarators().variableDeclarator().forEach(varDeclarator -> {
                 String varName = varDeclarator.variableDeclaratorId().getText();
-                variables.add(new ExtractedLocalVariable(currentFile, line, varName, type));
+                String initializer = varDeclarator.variableInitializer() == null
+                        ? null
+                        : varDeclarator.variableInitializer().getText();
+                variables.add(new ExtractedLocalVariable(currentFile, line, varName, type, initializer));
             });
         }
     }
@@ -42,12 +45,14 @@ public class JavaLocalVariableExtractor extends JavaBaseListener {
         private final String variableName;
 
         private final String type;
+        private final String initializer;
 
-        public ExtractedLocalVariable(String file, int line, String variableName, String type) {
+        public ExtractedLocalVariable(String file, int line, String variableName, String type, String initializer) {
             this.file = file;
             this.line = line;
             this.variableName = variableName;
             this.type = type;
+            this.initializer = initializer;
         }
 
         public String getFile() {
@@ -64,6 +69,10 @@ public class JavaLocalVariableExtractor extends JavaBaseListener {
 
         public String getType() {
             return type;
+        }
+
+        public String getInitializer() {
+            return initializer;
         }
 
         @Override

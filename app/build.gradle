@@ -43,15 +43,22 @@ java {
     }
 }
 
+def luceneRuntimeJvmArgs = [
+        '--enable-native-access=ALL-UNNAMED',
+        '-Djava.util.logging.config.file=$APP_HOME/config/java-logging.properties'
+]
+
 application {
     // Define the main class for the application.
-    mainClass = 'org.example.CodeSearch'
+    mainClass = 'org.codesearch.App'
+    applicationName = 'codesearch'
+    applicationDefaultJvmArgs = luceneRuntimeJvmArgs
 }
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'org.example.CodeSearch'
+                'Main-Class': 'org.codesearch.App'
         )
     }
 }
@@ -59,10 +66,29 @@ jar {
 tasks.named('test') {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+    jvmArgs luceneRuntimeJvmArgs
 }
 
 tasks.named('run') {
+    workingDir = rootProject.projectDir
     standardInput = System.in
+    jvmArgs '--enable-native-access=ALL-UNNAMED',
+            "-Djava.util.logging.config.file=${layout.projectDirectory.file('config/java-logging.properties').asFile.absolutePath}"
+}
+
+distributions {
+    main {
+        distributionBaseName = 'codesearch'
+        contents {
+            from('config') {
+                into 'config'
+            }
+        }
+    }
+}
+
+tasks.named('distZip') {
+    archiveFileName = 'codesearch.zip'
 }
 
 generateGrammarSource {

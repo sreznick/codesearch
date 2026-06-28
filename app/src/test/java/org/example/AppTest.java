@@ -51,7 +51,7 @@ public class AppTest {
 
         assertTrue(logOutput.contains("Найдено совпадений c testMethod: 2"));
         assertTrue(logOutput.contains("Method: testMethod, Файл: src/test/resources/TestClass.java, Строка: 14"));
-        assertTrue(logOutput.contains("Method: testMethod, Файл: src/test/resources/TestClass.java, Строка: 24"));
+        assertTrue(logOutput.contains("Method: testMethod, Файл: src/test/resources/TestClass.java, Строка: 26"));
     }
 
     @Test
@@ -60,7 +60,7 @@ public class AppTest {
         String logOutput = QueryExecutor.logBuilder.toString();
 
         assertTrue(logOutput.contains("Найдено совпадений c testMethodWithReturn: 1"));
-        assertTrue(logOutput.contains("Method: testMethodWithReturn, Файл: src/test/resources/TestClass.java, Строка: 19"));
+        assertTrue(logOutput.contains("Method: testMethodWithReturn, Файл: src/test/resources/TestClass.java, Строка: 21"));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class AppTest {
 
         assertTrue(logOutput.contains("Найдено совпадений c localVariable: 2"));
         assertTrue(logOutput.contains("LocalVariable: localVariable, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 15"));
-        assertTrue(logOutput.contains("LocalVariable: localVariable, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 20"));
+        assertTrue(logOutput.contains("LocalVariable: localVariable, Тип: String, Файл: src/test/resources/TestClass.java, Строка: 22"));
     }
 
     @Test
@@ -108,7 +108,7 @@ public class AppTest {
 
         assertTrue(logOutput.contains("Найдено совпадений c 12345: 2"));
         assertTrue(logOutput.contains("IntegerLiteral: 12345, Файл: src/test/resources/TestClass.java, Строка: 8"));
-        assertTrue(logOutput.contains("IntegerLiteral: 12345, Файл: src/test/resources/TestClass.java, Строка: 26"));
+        assertTrue(logOutput.contains("IntegerLiteral: 12345, Файл: src/test/resources/TestClass.java, Строка: 28"));
     }
 
     @Test
@@ -118,7 +118,7 @@ public class AppTest {
 
         assertTrue(logOutput.contains("Найдено совпадений c 123.45: 2"));
         assertTrue(logOutput.contains("FloatLiteral: 123.45, Файл: src/test/resources/TestClass.java, Строка: 9"));
-        assertTrue(logOutput.contains("FloatLiteral: 123.45, Файл: src/test/resources/TestClass.java, Строка: 27"));
+        assertTrue(logOutput.contains("FloatLiteral: 123.45, Файл: src/test/resources/TestClass.java, Строка: 29"));
     }
 
     @Test
@@ -165,7 +165,7 @@ public class AppTest {
 
         assertTrue(logOutput.contains("Найдено совпадений с testMethood: 2"));
         assertTrue(logOutput.contains("Method: testMethod, Файл: src/test/resources/TestClass.java, Строка: 14"));
-        assertTrue(logOutput.contains("Method: testMethod, Файл: src/test/resources/TestClass.java, Строка: 24"));
+        assertTrue(logOutput.contains("Method: testMethod, Файл: src/test/resources/TestClass.java, Строка: 26"));
     }
 
     @Test
@@ -184,7 +184,7 @@ public class AppTest {
 
         assertTrue(logOutput.contains("Найдено совпадений с 1234: 2"));
         assertTrue(logOutput.contains("IntegerLiteral: 12345, Файл: src/test/resources/TestClass.java, Строка: 8"));
-        assertTrue(logOutput.contains("IntegerLiteral: 12345, Файл: src/test/resources/TestClass.java, Строка: 26"));
+        assertTrue(logOutput.contains("IntegerLiteral: 12345, Файл: src/test/resources/TestClass.java, Строка: 28"));
     }
 
     @Test
