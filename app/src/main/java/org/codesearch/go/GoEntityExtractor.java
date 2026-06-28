@@ -24,8 +24,10 @@ public class GoEntityExtractor {
     public List<CodeEntity> extractEntities(Path file) throws IOException {
         String content = Files.readString(file);
         GoLexer lexer = new GoLexer(CharStreams.fromString(content));
+        lexer.removeErrorListeners();
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         GoParser parser = new GoParser(tokens);
+        parser.removeErrorListeners();
 
         GoCollector collector = new GoCollector(file.toString());
         ParseTreeWalker.DEFAULT.walk(collector, parser.sourceFile());

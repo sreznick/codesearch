@@ -210,15 +210,12 @@ public class JavaSearchService {
         try (MMapDirectory directory = new MMapDirectory(indexPath);
              IndexReader reader = DirectoryReader.open(directory)) {
 
-            IndexSearcher searcher = new IndexSearcher(reader);
-            TopDocs topDocs = searcher.search(new MatchAllDocsQuery(), MAX_RESULTS_TO_SCAN);
-
             Set<String> files = new HashSet<>();
             Map<EntityKind, Long> counts = new EnumMap<>(EntityKind.class);
             long totalEntities = 0;
 
-            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-                Document document = searcher.storedFields().document(scoreDoc.doc);
+            for (int docId = 0; docId < reader.maxDoc(); docId++) {
+                Document document = reader.storedFields().document(docId);
                 String language = document.get(JavaIndexFields.LANGUAGE);
                 String documentLanguage = language == null || language.isBlank() ? JavaLanguageModule.LANGUAGE : language;
                 if (!languageModule.language().equals(documentLanguage)) {
