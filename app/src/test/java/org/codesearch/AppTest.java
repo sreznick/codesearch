@@ -50,6 +50,8 @@ class AppTest {
         assertTrue(outContent.toString().contains("переменные совместимого или родственного типа"));
         assertTrue(outContent.toString().contains("--json"));
         assertTrue(outContent.toString().contains("вывод в формате JSON"));
+        assertTrue(outContent.toString().contains("--fuzzy"));
+        assertTrue(outContent.toString().contains("искать имя сущности с небольшой опечаткой"));
         assertTrue(outContent.toString().contains("--snippet"));
         assertTrue(outContent.toString().contains("-C, --context N"));
         assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Appendable --explain"));
@@ -145,6 +147,29 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Class"));
         assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldFindJavaEntityNameWithFuzzyQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class TestClass {
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"class", "TestClas", sourcePath.toString(), "--fuzzy"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("TestClass"));
     }
 
     @Test
@@ -403,6 +428,25 @@ class AppTest {
         assertTrue(output.contains("Function"));
         assertTrue(output.contains("intMin"));
         assertTrue(output.contains("sample.go:10"));
+    }
+
+    @Test
+    void shouldFindGoEntityNameWithFuzzyCachedSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int indexExitCode = App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+        int searchExitCode = App.run(new String[]{"--cached", "--lang", "go", "function", "intMn", "--fuzzy"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, indexExitCode);
+        assertEquals(0, searchExitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Function"));
+        assertTrue(output.contains("intMin"));
     }
 
     @Test

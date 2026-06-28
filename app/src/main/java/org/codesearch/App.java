@@ -277,6 +277,17 @@ public class App {
             return searchService.searchWithMetadata(
                     SearchQuery.builder(command.query(), command.kind(), command.language())
                             .target(SearchTarget.DECLARED_TYPE)
+                            .fuzzy(command.fuzzy())
+                            .caseSensitive(command.caseSensitive())
+                            .limit(command.limit())
+                            .pathFilter(command.pathFilter())
+                            .build()
+            );
+        }
+        if (command.fuzzy()) {
+            return searchService.searchWithMetadata(
+                    SearchQuery.builder(command.query(), command.kind(), command.language())
+                            .fuzzy(true)
                             .caseSensitive(command.caseSensitive())
                             .limit(command.limit())
                             .pathFilter(command.pathFilter())
@@ -299,6 +310,7 @@ public class App {
         EntityKind kind = null;
         SearchTarget target = SearchTarget.CONTENT;
         boolean caseSensitive = false;
+        boolean fuzzy = false;
         int limit = DEFAULT_LIMIT;
         boolean explain = false;
         boolean json = false;
@@ -330,6 +342,10 @@ public class App {
             }
             if ("--explain".equalsIgnoreCase(arg)) {
                 explain = true;
+                continue;
+            }
+            if ("--fuzzy".equalsIgnoreCase(arg) || "-f".equalsIgnoreCase(arg)) {
+                fuzzy = true;
                 continue;
             }
             if ("-r".equalsIgnoreCase(arg) || "--recursive".equalsIgnoreCase(arg)) {
@@ -418,7 +434,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new QuickSearchCommand(query, sourcePath, language, kind, target, caseSensitive, limit, explain, json, snippet.build());
+        return new QuickSearchCommand(query, sourcePath, language, kind, target, fuzzy, caseSensitive, limit, explain, json, snippet.build());
     }
 
     private static CachedSearchCommand parseCachedSearchCommand(String[] args, int startIndex) {
@@ -426,6 +442,7 @@ public class App {
         EntityKind kind = null;
         SearchTarget target = SearchTarget.CONTENT;
         boolean caseSensitive = false;
+        boolean fuzzy = false;
         int limit = DEFAULT_LIMIT;
         String pathFilter = null;
         boolean explain = false;
@@ -457,6 +474,10 @@ public class App {
             }
             if ("--explain".equalsIgnoreCase(arg)) {
                 explain = true;
+                continue;
+            }
+            if ("--fuzzy".equalsIgnoreCase(arg) || "-f".equalsIgnoreCase(arg)) {
+                fuzzy = true;
                 continue;
             }
             if ("-cs".equalsIgnoreCase(arg) || "--case-sensitive".equalsIgnoreCase(arg)) {
@@ -542,7 +563,7 @@ public class App {
             throw new IllegalArgumentException("Нужно указать запрос.");
         }
 
-        return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain, json, snippet.build());
+        return new CachedSearchCommand(query, language, kind, target, fuzzy, caseSensitive, limit, pathFilter, explain, json, snippet.build());
     }
 
     private static boolean isListableKind(SearchKind searchKind) {
@@ -1113,6 +1134,7 @@ public class App {
         out.println("  --cached               искать по постоянному индексу без переиндексации");
         out.println("  -p, --path PATH        путь для быстрого поиска или фильтр пути для --cached");
         out.println("  --explain              показать, почему результат подошел под запрос");
+        out.println("  -f, --fuzzy            искать имя сущности с небольшой опечаткой");
         out.println("  --json                 вывод в формате JSON");
         out.println("  --snippet              показать фрагмент кода вокруг результата");
         out.println("  -A, --after N          показать N строк после результата");
@@ -1156,6 +1178,7 @@ public class App {
         String language();
         EntityKind kind();
         SearchTarget target();
+        boolean fuzzy();
         boolean caseSensitive();
         int limit();
         String pathFilter();
@@ -1170,6 +1193,7 @@ public class App {
             String language,
             EntityKind kind,
             SearchTarget target,
+            boolean fuzzy,
             boolean caseSensitive,
             int limit,
             boolean explain,
@@ -1182,7 +1206,7 @@ public class App {
         }
     }
 
-    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean caseSensitive, int limit, String pathFilter, boolean explain, boolean json, SnippetOptions snippet) implements SearchCommandSpec {}
+    private record CachedSearchCommand(String query, String language, EntityKind kind, SearchTarget target, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter, boolean explain, boolean json, SnippetOptions snippet) implements SearchCommandSpec {}
 
     private record IndexCommand(String language, String sourcePath) {}
 
