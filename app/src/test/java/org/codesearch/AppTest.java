@@ -34,32 +34,30 @@ class AppTest {
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("codesearch [options] <query> [path]"));
+        assertTrue(outContent.toString().contains("codesearch [options] <kind> [--path path]"));
         assertTrue(outContent.toString().contains("codesearch [options] <kind> <query> [path]"));
         assertTrue(outContent.toString().contains("codesearch index [--lang java|go] [path]"));
         assertTrue(outContent.toString().contains("codesearch stats [--lang java|go] [--path PATH]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
-        assertTrue(outContent.toString().contains("codesearch class TestClass"));
+        assertTrue(outContent.toString().contains("codesearch class"));
         assertTrue(outContent.toString().contains("codesearch stats"));
         assertTrue(outContent.toString().contains("annotation <name>"));
-        assertTrue(outContent.toString().contains("codesearch annotation DemoController"));
+        assertTrue(outContent.toString().contains("Java-аннотации"));
         assertTrue(outContent.toString().contains("field-type <type>"));
         assertTrue(outContent.toString().contains("local-variable-type <type>"));
         assertTrue(outContent.toString().contains("method-return-type <type>"));
         assertTrue(outContent.toString().contains("variable-assignable-to <type>"));
-        assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Printable --explain"));
+        assertTrue(outContent.toString().contains("переменные совместимого или родственного типа"));
         assertTrue(outContent.toString().contains("--json"));
+        assertTrue(outContent.toString().contains("вывод в формате JSON"));
         assertTrue(outContent.toString().contains("--snippet"));
         assertTrue(outContent.toString().contains("-C, --context N"));
-        assertTrue(outContent.toString().contains("codesearch --cached annotation DemoController --json"));
-        assertTrue(outContent.toString().contains("codesearch method getTestField --snippet"));
+        assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Appendable --explain"));
         assertTrue(outContent.toString().contains("--lang java|go"));
         assertTrue(outContent.toString().contains("Java: class|method|field|interface|local-variable <name>"));
         assertTrue(outContent.toString().contains("Go: package|import|function|method|struct|interface|field|var|const <name>"));
-        assertTrue(outContent.toString().contains("codesearch index --lang go app/src/test/resources/go"));
         assertTrue(outContent.toString().contains("codesearch --lang go function intMin app/src/test/resources/go"));
         assertFalse(outContent.toString().contains("Go MVP"));
-        assertTrue(outContent.toString().contains("implements/extends"));
-        assertTrue(outContent.toString().contains("var -> Dog -> Animal"));
         assertFalse(outContent.toString().contains("-r, --recursive"));
         assertFalse(outContent.toString().contains("codesearch -r"));
         assertFalse(outContent.toString().contains("Legacy-команды"));
@@ -150,6 +148,39 @@ class AppTest {
     }
 
     @Test
+    void shouldListJavaEntitiesByKindInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("First.java"), """
+                public class FirstSearch {
+                    void firstMethod() {
+                    }
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Second.java"), """
+                public class SecondSearch {
+                    void secondMethod() {
+                    }
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"class", "--path", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 2"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("FirstSearch"));
+        assertTrue(output.contains("SecondSearch"));
+        assertFalse(output.contains("firstMethod"));
+    }
+
+    @Test
     void shouldIgnoreBuildOutputInQuickSearch(@TempDir Path tempDir) throws IOException {
         Path sourcePath = tempDir.resolve("project");
         Path sourceFile = sourcePath.resolve("src/test/resources/TestClass.java");
@@ -218,6 +249,33 @@ class AppTest {
     }
 
     @Test
+    void shouldListCachedJavaEntitiesByKind(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String cachedField = "value";
+
+                    public void run() {
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"--cached", "method"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Method"));
+        assertTrue(output.contains("run"));
+        assertFalse(output.contains("cachedField"));
+    }
+
+    @Test
     void shouldRunQuickGoFunctionSearch(@TempDir Path tempDir) throws IOException {
         Path sourcePath = tempDir.resolve("go-sources");
         Files.createDirectories(sourcePath);
@@ -236,6 +294,27 @@ class AppTest {
         assertTrue(output.contains("Function"));
         assertTrue(output.contains("intMin"));
         assertTrue(output.contains("sample.go:10"));
+    }
+
+    @Test
+    void shouldListGoEntitiesByKindInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int exitCode = App.run(
+                new String[]{"--lang", "go", "function", "--path", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Function"));
+        assertTrue(output.contains("intMin"));
+        assertFalse(output.contains("BitSet"));
     }
 
     @Test
@@ -268,6 +347,26 @@ class AppTest {
         assertTrue(output.contains("Method"));
         assertTrue(output.contains("Add"));
         assertTrue(output.contains("in type BitSet"));
+    }
+
+    @Test
+    void shouldListCachedGoEntitiesByKind(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"--cached", "--lang", "go", "struct"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Struct"));
+        assertTrue(output.contains("BitSet"));
+        assertFalse(output.contains("intMin"));
     }
 
     @Test

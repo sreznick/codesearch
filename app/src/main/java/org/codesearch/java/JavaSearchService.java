@@ -126,6 +126,41 @@ public class JavaSearchService {
         }
     }
 
+    public SearchResponse searchByKind(EntityKind kind, String language, int limit, String pathFilter) throws IOException {
+        validateKindQuery(kind, language, limit);
+
+        if (language != null && !languageModule.language().equals(language)) {
+            return new SearchResponse(0, List.of());
+        }
+
+        validateIndexPath();
+
+        Query query = new TermQuery(new Term(JavaIndexFields.TYPE, kind.legacyJavaType()));
+        try (MMapDirectory directory = new MMapDirectory(indexPath);
+             IndexReader reader = DirectoryReader.open(directory)) {
+
+            IndexSearcher searcher = new IndexSearcher(reader);
+            TopDocs topDocs = searcher.search(query, MAX_RESULTS_TO_SCAN);
+
+            List<SearchResult> results = new ArrayList<>();
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                Document document = searcher.storedFields().document(scoreDoc.doc);
+                SearchResult result = new SearchResult(JavaDocumentMapper.toCodeEntity(document, languageModule.language()), scoreDoc.score);
+                if (matchesLanguage(result) && matchesPathFilter(result, pathFilter)) {
+                    results.add(result);
+                }
+            }
+
+            return new SearchResponse(results.size(), results.stream().limit(limit).toList());
+        } catch (IndexNotFoundException e) {
+            throw new IndexUnavailableException("Индекс пуст или поврежден: " + indexPath, e);
+        } catch (CorruptIndexException e) {
+            throw new IndexUnavailableException("Индекс поврежден: " + indexPath, e);
+        } catch (IOException e) {
+            throw new IndexUnavailableException("Не удалось прочитать индекс, возможно, он поврежден: " + indexPath, e);
+        }
+    }
+
     public SearchResponse searchAssignableVariables(String type, String language, boolean caseSensitive, int limit, String pathFilter) throws IOException {
         validateAssignableTypeQuery(type, language, limit);
 
@@ -337,6 +372,21 @@ public class JavaSearchService {
             return;
         }
         if (kind != null && !languageModule.supportedEntityKinds().contains(kind)) {
+            throw new IllegalArgumentException(languageModule.language() + " search does not support entity kind: " + kind);
+        }
+    }
+
+    private void validateKindQuery(EntityKind kind, String language, int limit) {
+        if (kind == null) {
+            throw new IllegalArgumentException(languageModule.language() + " search requires entity kind");
+        }
+        if (limit < 1) {
+            throw new IllegalArgumentException("Limit must be positive");
+        }
+        if (language != null && !languageModule.language().equals(language)) {
+            return;
+        }
+        if (!languageModule.supportedEntityKinds().contains(kind)) {
             throw new IllegalArgumentException(languageModule.language() + " search does not support entity kind: " + kind);
         }
     }

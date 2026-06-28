@@ -265,6 +265,14 @@ public class App {
                     command.pathFilter()
             );
         }
+        if (command.query() == null) {
+            return searchService.searchByKind(
+                    command.kind(),
+                    command.language(),
+                    command.limit(),
+                    command.pathFilter()
+            );
+        }
         if (command.target() == SearchTarget.DECLARED_TYPE) {
             return searchService.searchWithMetadata(
                     SearchQuery.builder(command.query(), command.kind(), command.language())
@@ -294,6 +302,7 @@ public class App {
         int limit = DEFAULT_LIMIT;
         boolean explain = false;
         boolean json = false;
+        String sourcePath = ".";
         SnippetBuilder snippet = new SnippetBuilder();
         List<String> operands = new ArrayList<>();
 
@@ -358,6 +367,13 @@ public class App {
                 }
                 continue;
             }
+            if ("--path".equalsIgnoreCase(arg) || "-p".equalsIgnoreCase(arg)) {
+                if (i + 1 >= args.length) {
+                    throw new IllegalArgumentException("Не указан путь.");
+                }
+                sourcePath = args[++i];
+                continue;
+            }
             if (arg.startsWith("-")) {
                 throw new IllegalArgumentException("Неизвестный флаг: " + arg);
             }
@@ -369,9 +385,15 @@ public class App {
         }
 
         String query;
-        String sourcePath = ".";
         if (operands.size() == 1) {
-            query = operands.getFirst();
+            SearchKind searchKind = parseSearchKindOrNull(operands.getFirst());
+            if (kind == null && isListableKind(searchKind)) {
+                kind = searchKind.kind();
+                target = searchKind.target();
+                query = null;
+            } else {
+                query = operands.getFirst();
+            }
         } else if (operands.size() == 2) {
             SearchKind searchKind = parseSearchKindOrNull(operands.getFirst());
             if (kind == null && searchKind != null) {
@@ -488,7 +510,14 @@ public class App {
 
         String query;
         if (operands.size() == 1) {
-            query = operands.getFirst();
+            SearchKind searchKind = parseSearchKindOrNull(operands.getFirst());
+            if (kind == null && isListableKind(searchKind)) {
+                kind = searchKind.kind();
+                target = searchKind.target();
+                query = null;
+            } else {
+                query = operands.getFirst();
+            }
         } else if (operands.size() == 2) {
             SearchKind searchKind = parseSearchKindOrNull(operands.getFirst());
             if (kind == null && searchKind != null) {
@@ -514,6 +543,12 @@ public class App {
         }
 
         return new CachedSearchCommand(query, language, kind, target, caseSensitive, limit, pathFilter, explain, json, snippet.build());
+    }
+
+    private static boolean isListableKind(SearchKind searchKind) {
+        return searchKind != null
+                && searchKind.kind() != null
+                && searchKind.target() == SearchTarget.CONTENT;
     }
 
     private static int parseRequiredSnippetLineCount(String[] args, int valueIndex, String flag) {
@@ -1034,29 +1069,31 @@ public class App {
     private static void printHelp(PrintStream out) {
         out.println(colorize(BLUE, "Команды"));
         out.println("  codesearch [options] <query> [path]");
+        out.println("  codesearch [options] <kind> [--path path]");
         out.println("  codesearch [options] <kind> <query> [path]");
         out.println("  codesearch index [--lang java|go] [path]");
         out.println("  codesearch stats [--lang java|go] [--path PATH]");
+        out.println("  codesearch --cached [options] <kind>");
         out.println("  codesearch --cached [options] <query> [path-filter]");
         out.println("  codesearch --cached [options] <kind> <query> [path-filter]");
         out.println();
         out.println(colorize(BLUE, "Виды поиска"));
         out.println("  Java: class|method|field|interface|local-variable <name>");
         out.println("  Go: package|import|function|method|struct|interface|field|var|const <name>");
-        out.println("  annotation <name>                 Java-аннотации и место применения");
+        out.println("  annotation <name>                 Java-аннотации");
         out.println("  field-type <type>                 поля с точным declared type");
         out.println("  local-variable-type <type>        локальные переменные с точным declared type");
         out.println("  method-return-type <type>         методы с указанным return type");
-        out.println("  variable-assignable-to <type>     переменные, совместимые с типом");
+        out.println("  variable-assignable-to <type>     переменные совместимого или родственного типа");
         out.println();
         out.println(colorize(BLUE, "Опции"));
         out.println("  -k, --kind KIND        искать только сущности указанного вида");
         out.println("  -n, --limit N          показать не больше N результатов");
         out.println("  -cs, --case-sensitive  учитывать регистр");
         out.println("  --cached               искать по постоянному индексу без переиндексации");
-        out.println("  -p, --path PATH        фильтр пути для --cached");
+        out.println("  -p, --path PATH        путь для быстрого поиска или фильтр пути для --cached");
         out.println("  --explain              показать, почему результат подошел под запрос");
-        out.println("  --json                 вывести результат в JSON для скриптов и интеграций");
+        out.println("  --json                 вывод в формате JSON");
         out.println("  --snippet              показать фрагмент кода вокруг результата");
         out.println("  -A, --after N          показать N строк после результата");
         out.println("  -B, --before N         показать N строк до результата");
@@ -1064,28 +1101,10 @@ public class App {
         out.println("  --lang java|go         язык исходного кода");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
-        out.println("  codesearch TestClass");
-        out.println("  codesearch class TestClass");
-        out.println("  codesearch annotation DemoController");
-        out.println("  codesearch testField src --kind field");
+        out.println("  codesearch class");
         out.println("  codesearch index .");
-        out.println("  codesearch index --lang go app/src/test/resources/go");
-        out.println("  codesearch stats");
-        out.println("  codesearch stats --lang go");
-        out.println("  codesearch --cached class TestClass");
-        out.println("  codesearch --cached field-type String");
-        out.println("  codesearch --cached variable-assignable-to Appendable");
-        out.println("  codesearch --cached variable-assignable-to Printable --explain");
-        out.println("  codesearch --cached variable-assignable-to Animal --explain");
-        out.println("  codesearch --cached annotation DemoController --json");
-        out.println("  codesearch method getTestField --snippet");
+        out.println("  codesearch --cached variable-assignable-to Appendable --explain");
         out.println("  codesearch --lang go function intMin app/src/test/resources/go");
-        out.println("  codesearch --cached --lang go struct BitSet");
-        out.println();
-        out.println(colorize(BLUE, "Семантический поиск по типам"));
-        out.println("  variable-assignable-to учитывает простое выведение var, JDK-типы,");
-        out.println("  а также implements/extends внутри индексируемого Java-проекта.");
-        out.println("  --explain показывает цепочку, например: var -> Dog -> Animal");
     }
 
     private static void printQuickSearchUsage(PrintStream err) {
