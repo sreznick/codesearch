@@ -57,6 +57,7 @@ typeDeclaration
     :   classOrInterfaceModifier* classDeclaration
     |   classOrInterfaceModifier* enumDeclaration
     |   classOrInterfaceModifier* interfaceDeclaration
+    |   classOrInterfaceModifier* recordDeclaration
     |   classOrInterfaceModifier* annotationTypeDeclaration
     |   ';'
     ;
@@ -90,6 +91,13 @@ variableModifier
 classDeclaration
     :   'class' Identifier typeParameters?
         ('extends' typeSpec)?
+        ('implements' typeList)?
+        classBody
+    ;
+
+recordDeclaration
+    :   'record' Identifier typeParameters?
+        formalParameters
         ('implements' typeList)?
         classBody
     ;
@@ -154,6 +162,7 @@ memberDeclaration
     |   interfaceDeclaration
     |   annotationTypeDeclaration
     |   classDeclaration
+    |   recordDeclaration
     |   enumDeclaration
     ;
 
@@ -199,6 +208,7 @@ interfaceMemberDeclaration
     |   interfaceDeclaration
     |   annotationTypeDeclaration
     |   classDeclaration
+    |   recordDeclaration
     |   enumDeclaration
     ;
 

@@ -27,7 +27,9 @@ class JavaEntityExtractorTest {
         assertTrue(entities.stream().anyMatch(entity ->
                 entity.kind() == EntityKind.FIELD
                         && entity.content().equals("testField")
-                        && "String".equals(entity.declaredType())));
+                        && "String".equals(entity.declaredType())
+                        && "class".equals(entity.attributes().get(JavaEntityAttributes.CONTAINER_KIND))
+                        && "TestClass".equals(entity.attributes().get(JavaEntityAttributes.CONTAINER_NAME))));
 
         assertTrue(entities.stream().anyMatch(entity ->
                 entity.kind() == EntityKind.STRING_LITERAL

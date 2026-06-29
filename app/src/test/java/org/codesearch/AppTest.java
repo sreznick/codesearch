@@ -34,24 +34,32 @@ class AppTest {
 
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("codesearch [options] <query> [path]"));
+        assertTrue(outContent.toString().contains("codesearch [options] <kind> [--path path]"));
         assertTrue(outContent.toString().contains("codesearch [options] <kind> <query> [path]"));
-        assertTrue(outContent.toString().contains("codesearch index [path]"));
+        assertTrue(outContent.toString().contains("codesearch index [--lang java|go] [path]"));
+        assertTrue(outContent.toString().contains("codesearch stats [--lang java|go] [--path PATH]"));
         assertTrue(outContent.toString().contains("codesearch --cached"));
-        assertTrue(outContent.toString().contains("codesearch class TestClass"));
+        assertTrue(outContent.toString().contains("codesearch class"));
+        assertTrue(outContent.toString().contains("codesearch stats"));
         assertTrue(outContent.toString().contains("annotation <name>"));
-        assertTrue(outContent.toString().contains("codesearch annotation DemoController"));
+        assertTrue(outContent.toString().contains("Java-аннотации"));
         assertTrue(outContent.toString().contains("field-type <type>"));
         assertTrue(outContent.toString().contains("local-variable-type <type>"));
         assertTrue(outContent.toString().contains("method-return-type <type>"));
         assertTrue(outContent.toString().contains("variable-assignable-to <type>"));
-        assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Printable --explain"));
+        assertTrue(outContent.toString().contains("переменные совместимого или родственного типа"));
         assertTrue(outContent.toString().contains("--json"));
+        assertTrue(outContent.toString().contains("вывод в формате JSON"));
+        assertTrue(outContent.toString().contains("--fuzzy"));
+        assertTrue(outContent.toString().contains("искать имя сущности с небольшой опечаткой"));
         assertTrue(outContent.toString().contains("--snippet"));
         assertTrue(outContent.toString().contains("-C, --context N"));
-        assertTrue(outContent.toString().contains("codesearch --cached annotation DemoController --json"));
-        assertTrue(outContent.toString().contains("codesearch method getTestField --snippet"));
-        assertTrue(outContent.toString().contains("implements/extends"));
-        assertTrue(outContent.toString().contains("var -> Dog -> Animal"));
+        assertTrue(outContent.toString().contains("codesearch --cached variable-assignable-to Appendable --explain"));
+        assertTrue(outContent.toString().contains("--lang java|go"));
+        assertTrue(outContent.toString().contains("Java: class|record|method|field|interface|local-variable <name>"));
+        assertTrue(outContent.toString().contains("Go: package|import|function|method|struct|interface|field|var|const <name>"));
+        assertTrue(outContent.toString().contains("codesearch --lang go function intMin app/src/test/resources/go"));
+        assertFalse(outContent.toString().contains("Go MVP"));
         assertFalse(outContent.toString().contains("-r, --recursive"));
         assertFalse(outContent.toString().contains("codesearch -r"));
         assertFalse(outContent.toString().contains("Legacy-команды"));
@@ -60,10 +68,10 @@ class AppTest {
 
     @Test
     void shouldRejectUnsupportedLanguage() {
-        int exitCode = App.run(new String[]{"index", "go", "src"}, out, err);
+        int exitCode = App.run(new String[]{"index", "--lang", "python", "src"}, out, err);
 
         assertEquals(1, exitCode);
-        assertTrue(errContent.toString().contains("Пока поддерживается только язык java."));
+        assertTrue(errContent.toString().contains("Неподдерживаемый язык: python"));
     }
 
     @Test
@@ -91,6 +99,7 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Field"));
         assertTrue(output.contains("magicToken"));
+        assertTrue(output.contains("in class SampleSearch"));
         assertFalse(output.contains("magicMethod"));
     }
 
@@ -138,6 +147,171 @@ class AppTest {
         assertTrue(output.contains("Найдено совпадений: 1"));
         assertTrue(output.contains("Class"));
         assertTrue(output.contains("SampleSearch"));
+    }
+
+    @Test
+    void shouldFindJavaEntityNameWithFuzzyQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class TestClass {
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"class", "TestClas", sourcePath.toString(), "--fuzzy"},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("TestClass"));
+    }
+
+    @Test
+    void shouldListJavaEntitiesByKindInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("First.java"), """
+                public class FirstSearch {
+                    void firstMethod() {
+                    }
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Second.java"), """
+                public class SecondSearch {
+                    void secondMethod() {
+                    }
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"class", "--path", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 2"));
+        assertTrue(output.contains("Class"));
+        assertTrue(output.contains("FirstSearch"));
+        assertTrue(output.contains("SecondSearch"));
+        assertFalse(output.contains("firstMethod"));
+    }
+
+    @Test
+    void shouldPrintJavaDeclarationHierarchyInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Hierarchy.java"), """
+                interface Marker {
+                }
+
+                interface Named extends Marker {
+                }
+
+                class Base {
+                }
+
+                class Child extends Base implements Named {
+                }
+                """);
+
+        int classExitCode = App.run(
+                new String[]{"class", "Child", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+        int interfaceExitCode = App.run(
+                new String[]{"interface", "Named", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, classExitCode);
+        assertEquals(0, interfaceExitCode);
+        assertTrue(output.contains("Class Child extends Base implements Named"));
+        assertTrue(output.contains("Interface Named extends Marker"));
+    }
+
+    @Test
+    void shouldFindJavaRecordsInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Person.java"), """
+                interface Named {
+                }
+
+                public record Person(String name) implements Named {
+                }
+                """);
+
+        int exitCode = App.run(
+                new String[]{"record", "Person", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Record Person implements Named"));
+    }
+
+    @Test
+    void shouldPrintJavaDeclarationHierarchyFromCachedIndex(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Hierarchy.java"), """
+                interface CloseableResource {
+                }
+
+                class ResourceBase {
+                }
+
+                class FileResource extends ResourceBase implements CloseableResource {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "class", "FileResource"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Class FileResource extends ResourceBase implements CloseableResource"));
+    }
+
+    @Test
+    void shouldFindJavaRecordsFromCachedIndex(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("UserRecord.java"), """
+                interface Persisted {
+                }
+
+                record UserRecord(long id) implements Persisted {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"--cached", "record", "UserRecord"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Record UserRecord implements Persisted"));
     }
 
     @Test
@@ -209,6 +383,224 @@ class AppTest {
     }
 
     @Test
+    void shouldListCachedJavaEntitiesByKind(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String cachedField = "value";
+
+                    public void run() {
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"--cached", "method"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Method"));
+        assertTrue(output.contains("run"));
+        assertFalse(output.contains("cachedField"));
+    }
+
+    @Test
+    void shouldRunQuickGoFunctionSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int exitCode = App.run(
+                new String[]{"--lang", "go", "function", "intMin", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Function"));
+        assertTrue(output.contains("intMin"));
+        assertTrue(output.contains("sample.go:10"));
+    }
+
+    @Test
+    void shouldFindGoEntityNameWithFuzzyCachedSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int indexExitCode = App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+        int searchExitCode = App.run(new String[]{"--cached", "--lang", "go", "function", "intMn", "--fuzzy"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, indexExitCode);
+        assertEquals(0, searchExitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Function"));
+        assertTrue(output.contains("intMin"));
+    }
+
+    @Test
+    void shouldListGoEntitiesByKindInQuickSearch(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int exitCode = App.run(
+                new String[]{"--lang", "go", "function", "--path", sourcePath.toString()},
+                out,
+                err,
+                tempDir.resolve("index")
+        );
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Function"));
+        assertTrue(output.contains("intMin"));
+        assertFalse(output.contains("BitSet"));
+    }
+
+    @Test
+    void shouldIndexAndSearchCachedGoStructAndImport(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        int indexExitCode = App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        int structExitCode = App.run(new String[]{"--cached", "--lang", "go", "struct", "BitSet"}, out, err, indexPath);
+        int importExitCode = App.run(new String[]{"--cached", "--lang", "go", "import", "fmt"}, out, err, indexPath);
+        int fieldExitCode = App.run(new String[]{"--cached", "--lang", "go", "field", "name"}, out, err, indexPath);
+        int methodExitCode = App.run(new String[]{"--cached", "--lang", "go", "method", "Add"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, indexExitCode);
+        assertEquals(0, structExitCode);
+        assertEquals(0, importExitCode);
+        assertEquals(0, fieldExitCode);
+        assertEquals(0, methodExitCode);
+        assertTrue(output.contains("Язык: go"));
+        assertTrue(output.contains("Struct"));
+        assertTrue(output.contains("BitSet"));
+        assertTrue(output.contains("Import"));
+        assertTrue(output.contains("fmt"));
+        assertTrue(output.contains("Field"));
+        assertTrue(output.contains("name"));
+        assertTrue(output.contains("in struct BitSet"));
+        assertTrue(output.contains("Method"));
+        assertTrue(output.contains("Add"));
+        assertTrue(output.contains("in type BitSet"));
+    }
+
+    @Test
+    void shouldListCachedGoEntitiesByKind(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"--cached", "--lang", "go", "struct"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Найдено совпадений: 1"));
+        assertTrue(output.contains("Struct"));
+        assertTrue(output.contains("BitSet"));
+        assertFalse(output.contains("intMin"));
+    }
+
+    @Test
+    void shouldPrintGoIndexStats(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("go-sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("sample.go"), sampleGoSource());
+
+        App.run(new String[]{"index", "--lang", "go", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"stats", "--lang", "go"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Статистика индекса"));
+        assertTrue(output.contains("Язык: go"));
+        assertTrue(output.contains("Файлов: 1"));
+        assertTrue(output.contains("Function:"));
+        assertTrue(output.contains("Struct:"));
+        assertTrue(output.contains("Import:"));
+    }
+
+    @Test
+    void shouldPrintIndexStats(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("Sample.java"), """
+                public class SampleSearch {
+                    private String cachedField = "value";
+
+                    public void run() {
+                    }
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"stats"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Статистика индекса"));
+        assertTrue(output.contains("Язык: java"));
+        assertTrue(output.contains("Файлов: 1"));
+        assertTrue(output.contains("Сущностей:"));
+        assertTrue(output.contains("Class:"));
+        assertTrue(output.contains("Field:"));
+        assertTrue(output.contains("Method:"));
+    }
+
+    @Test
+    void shouldPrintIndexStatsWithPathFilter(@TempDir Path tempDir) throws IOException {
+        Path sourcePath = tempDir.resolve("sources");
+        Path indexPath = tempDir.resolve("index");
+        Files.createDirectories(sourcePath);
+        Files.writeString(sourcePath.resolve("First.java"), """
+                public class FirstSearch {
+                }
+                """);
+        Files.writeString(sourcePath.resolve("Second.java"), """
+                public class SecondSearch {
+                }
+                """);
+
+        App.run(new String[]{"index", sourcePath.toString()}, out, err, indexPath);
+        outContent.reset();
+
+        int exitCode = App.run(new String[]{"stats", "--path", "First.java"}, out, err, indexPath);
+
+        String output = outContent.toString();
+        assertEquals(0, exitCode);
+        assertTrue(output.contains("Фильтр пути: First.java"));
+        assertTrue(output.contains("Файлов: 1"));
+        assertTrue(output.contains("Сущностей: 1"));
+    }
+
+    @Test
     void shouldSearchCachedDeclaredType(@TempDir Path tempDir) throws IOException {
         Path sourcePath = tempDir.resolve("sources");
         Path indexPath = tempDir.resolve("index");
@@ -228,6 +620,7 @@ class AppTest {
         assertTrue(output.contains("Field"));
         assertTrue(output.contains("cachedField"));
         assertTrue(output.contains("[String]"));
+        assertTrue(output.contains("in class SampleSearch"));
     }
 
     @Test
@@ -697,6 +1090,19 @@ class AppTest {
     }
 
     @Test
+    void shouldExplainMissingIndexBeforeStats(@TempDir Path tempDir) {
+        Path indexPath = tempDir.resolve("missing-index");
+
+        int exitCode = App.run(new String[]{"stats"}, out, err, indexPath);
+
+        String errorOutput = errContent.toString();
+        assertEquals(1, exitCode);
+        assertTrue(errorOutput.contains("Индекс не готов"));
+        assertTrue(errorOutput.contains("Индекс не найден"));
+        assertTrue(errorOutput.contains("codesearch index [path]"));
+    }
+
+    @Test
     void shouldExplainEmptyIndexBeforeSearch(@TempDir Path tempDir) throws IOException {
         Path indexPath = tempDir.resolve("index");
         Files.createDirectories(indexPath);
@@ -745,5 +1151,40 @@ class AppTest {
         assertEquals(0, exitCode);
         assertTrue(outContent.toString().contains("Найдено совпадений: 0"));
         assertTrue(outContent.toString().contains("Совпадений нет."));
+    }
+
+    private String sampleGoSource() {
+        return """
+                package sample
+
+                import (
+                    "fmt"
+                    "strings"
+                )
+
+                const bitsPerWord = 64
+
+                func intMin(a, b int) int {
+                    if a < b {
+                        return a
+                    }
+                    return b
+                }
+
+                type BitSet struct {
+                    data []uint64
+                    name string
+                }
+
+                type Printer interface {
+                    Print(value string) error
+                }
+
+                var defaultName string = "main"
+
+                func (b *BitSet) Add(value int) {
+                    fmt.Println(strings.TrimSpace(defaultName), value)
+                }
+                """;
     }
 }

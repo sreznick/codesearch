@@ -276,6 +276,18 @@ class JavaSearchServiceTest {
     }
 
     @Test
+    void shouldReportStatsConsistently() throws IOException {
+        JavaSearchService.IndexStats stats = SEARCH_SERVICE.stats(null);
+
+        long countedByKind = stats.entitiesByKind().values().stream()
+                .mapToLong(Long::longValue)
+                .sum();
+
+        assertTrue(stats.totalEntities() > 0);
+        assertEquals(countedByKind, stats.totalEntities());
+    }
+
+    @Test
     void shouldFilterResultsByPath() throws IOException {
         SearchQuery query = query("TestClass", EntityKind.CLASS)
                 .caseSensitive(true)

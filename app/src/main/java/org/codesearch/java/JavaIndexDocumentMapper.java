@@ -12,6 +12,7 @@ public final class JavaIndexDocumentMapper {
         Document document = new Document();
         document.add(new StringField(JavaIndexFields.CONTENT, entity.content(), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.CONTENT_LOWERCASE, entity.content().toLowerCase(), Field.Store.NO));
+        document.add(new StringField(JavaIndexFields.LANGUAGE, entity.language(), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.FILE, entity.location().filePath(), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.LINE, String.valueOf(entity.location().line()), Field.Store.YES));
         document.add(new StringField(JavaIndexFields.TYPE, entity.kind().legacyJavaType(), Field.Store.YES));
@@ -38,6 +39,10 @@ public final class JavaIndexDocumentMapper {
             document.add(new StringField(JavaIndexFields.TYPE_INFERENCE, typeInference, Field.Store.YES));
         }
 
+        addStoredAttribute(document, entity, JavaEntityAttributes.CONTAINER_KIND, JavaIndexFields.CONTAINER_KIND);
+        addStoredAttribute(document, entity, JavaEntityAttributes.CONTAINER_NAME, JavaIndexFields.CONTAINER_NAME);
+        addStoredAttribute(document, entity, JavaEntityAttributes.EXTENDS_TYPES, JavaIndexFields.EXTENDS_TYPES);
+        addStoredAttribute(document, entity, JavaEntityAttributes.IMPLEMENTS_TYPES, JavaIndexFields.IMPLEMENTS_TYPES);
         addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_KIND, JavaIndexFields.ANNOTATION_TARGET_KIND);
         addStoredAttribute(document, entity, JavaEntityAttributes.ANNOTATION_TARGET_NAME, JavaIndexFields.ANNOTATION_TARGET_NAME);
 

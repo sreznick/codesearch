@@ -11,7 +11,7 @@ import java.util.Map;
 final class JavaDocumentMapper {
     private JavaDocumentMapper() {}
 
-    static CodeEntity toCodeEntity(Document document) {
+    static CodeEntity toCodeEntity(Document document, String defaultLanguage) {
         Map<String, String> attributes = new HashMap<>();
         String declaredType = readDeclaredType(document);
         if (declaredType != null && !declaredType.isBlank()) {
@@ -25,6 +25,10 @@ final class JavaDocumentMapper {
         if (typeInference != null && !typeInference.isBlank()) {
             attributes.put(JavaEntityAttributes.TYPE_INFERENCE, typeInference);
         }
+        addAttribute(document, attributes, JavaIndexFields.CONTAINER_KIND, JavaEntityAttributes.CONTAINER_KIND);
+        addAttribute(document, attributes, JavaIndexFields.CONTAINER_NAME, JavaEntityAttributes.CONTAINER_NAME);
+        addAttribute(document, attributes, JavaIndexFields.EXTENDS_TYPES, JavaEntityAttributes.EXTENDS_TYPES);
+        addAttribute(document, attributes, JavaIndexFields.IMPLEMENTS_TYPES, JavaEntityAttributes.IMPLEMENTS_TYPES);
         addAttribute(document, attributes, JavaIndexFields.ANNOTATION_TARGET_KIND, JavaEntityAttributes.ANNOTATION_TARGET_KIND);
         addAttribute(document, attributes, JavaIndexFields.ANNOTATION_TARGET_NAME, JavaEntityAttributes.ANNOTATION_TARGET_NAME);
 
@@ -36,10 +40,18 @@ final class JavaDocumentMapper {
                         Integer.parseInt(document.get(JavaIndexFields.LINE)),
                         0
                 ),
-                JavaLanguageModule.LANGUAGE,
+                readLanguage(document, defaultLanguage),
                 declaredType,
                 attributes
         );
+    }
+
+    private static String readLanguage(Document document, String defaultLanguage) {
+        String language = document.get(JavaIndexFields.LANGUAGE);
+        if (language != null && !language.isBlank()) {
+            return language;
+        }
+        return JavaLanguageModule.LANGUAGE;
     }
 
     private static String readDeclaredType(Document document) {

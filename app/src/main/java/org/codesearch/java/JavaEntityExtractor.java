@@ -51,12 +51,15 @@ public class JavaEntityExtractor {
         entities.addAll(extractSafely(filePath, "string constants", () -> extractStringConstants(content, filePath)));
         entities.addAll(extractSafely(filePath, "annotations", () -> extractAnnotations(content, filePath)));
         entities.addAll(extractSafely(filePath, "classes", () -> extractClasses(content, filePath)));
+        entities.addAll(extractSafely(filePath, "records", () -> extractRecords(content, filePath)));
         entities.addAll(extractSafely(filePath, "methods", () -> extractMethods(content, filePath)));
         entities.addAll(extractSafely(filePath, "interfaces", () -> extractInterfaces(content, filePath)));
         entities.addAll(extractSafely(filePath, "fields", () -> extractFields(content, filePath)));
         entities.addAll(extractSafely(filePath, "local variables", () -> extractLocalVariables(content, filePath)));
         entities.addAll(extractSafely(filePath, "literals", () -> extractLiterals(content, filePath)));
-        return entities;
+        List<JavaContainer> containers = extractSafely(filePath, "containers", () -> extractContainers(content));
+        List<JavaDeclarationHierarchy> declarations = extractSafely(filePath, "declaration hierarchy", () -> extractDeclarationHierarchy(content));
+        return addDeclarationHierarchyAttributes(addContainerAttributes(entities, containers), declarations);
     }
 
     private List<CodeEntity> extractAnnotations(String content, String filePath) {
@@ -74,7 +77,7 @@ public class JavaEntityExtractor {
                 .toList();
     }
 
-    private List<CodeEntity> extractSafely(String filePath, String extractionName, ExtractionStep extractionStep) {
+    private <T> List<T> extractSafely(String filePath, String extractionName, ExtractionStep<T> extractionStep) {
         try {
             return extractionStep.extract();
         } catch (RuntimeException e) {
@@ -106,6 +109,18 @@ public class JavaEntityExtractor {
                         EntityKind.CLASS,
                         value.getClassName(),
                         new EntityLocation(value.getFile(), value.getLine(), 0),
+                        JavaLanguageModule.LANGUAGE
+                ))
+                .toList());
+    }
+
+    private List<CodeEntity> extractRecords(String content, String filePath) {
+        JavaRecordExtractor extractor = new JavaRecordExtractor(filePath);
+        return parse(content, extractor, parsed -> ((JavaRecordExtractor) parsed).records().stream()
+                .map(value -> new CodeEntity(
+                        EntityKind.RECORD,
+                        value.name(),
+                        new EntityLocation(value.file(), value.line(), 0),
                         JavaLanguageModule.LANGUAGE
                 ))
                 .toList());
@@ -187,6 +202,16 @@ public class JavaEntityExtractor {
                 .toList());
     }
 
+    private List<JavaContainer> extractContainers(String content) {
+        JavaContainerExtractor extractor = new JavaContainerExtractor();
+        return parse(content, extractor, parsed -> ((JavaContainerExtractor) parsed).containers());
+    }
+
+    private List<JavaDeclarationHierarchy> extractDeclarationHierarchy(String content) {
+        JavaDeclarationHierarchyExtractor extractor = new JavaDeclarationHierarchyExtractor();
+        return parse(content, extractor, parsed -> ((JavaDeclarationHierarchyExtractor) parsed).declarations());
+    }
+
     private <T> T parse(String content, JavaBaseListener extractor, ParseResultMapper<T> callback) {
         JavaLexer lexer = new JavaLexer(CharStreams.fromString(content));
         lexer.removeErrorListeners();
@@ -240,13 +265,234 @@ public class JavaEntityExtractor {
         return attributes;
     }
 
+    private List<CodeEntity> addContainerAttributes(List<CodeEntity> entities, List<JavaContainer> containers) {
+        if (containers.isEmpty()) {
+            return entities;
+        }
+
+        return entities.stream()
+                .map(entity -> withContainer(entity, containers))
+                .toList();
+    }
+
+    private CodeEntity withContainer(CodeEntity entity, List<JavaContainer> containers) {
+        if (entity.kind() == EntityKind.CLASS || entity.kind() == EntityKind.RECORD || entity.kind() == EntityKind.INTERFACE) {
+            return entity;
+        }
+
+        JavaContainer container = containers.stream()
+                .filter(value -> value.contains(entity.location().line()))
+                .min((left, right) -> Integer.compare(left.length(), right.length()))
+                .orElse(null);
+        if (container == null) {
+            return entity;
+        }
+
+        Map<String, String> attributes = new HashMap<>(entity.attributes());
+        attributes.put(JavaEntityAttributes.CONTAINER_KIND, container.kind());
+        attributes.put(JavaEntityAttributes.CONTAINER_NAME, container.name());
+        return new CodeEntity(
+                entity.kind(),
+                entity.content(),
+                entity.location(),
+                entity.language(),
+                entity.declaredType(),
+                attributes
+        );
+    }
+
+    private List<CodeEntity> addDeclarationHierarchyAttributes(
+            List<CodeEntity> entities,
+            List<JavaDeclarationHierarchy> declarations
+    ) {
+        if (declarations.isEmpty()) {
+            return entities;
+        }
+
+        return entities.stream()
+                .map(entity -> withDeclarationHierarchy(entity, declarations))
+                .toList();
+    }
+
+    private CodeEntity withDeclarationHierarchy(CodeEntity entity, List<JavaDeclarationHierarchy> declarations) {
+        if (entity.kind() != EntityKind.CLASS && entity.kind() != EntityKind.RECORD && entity.kind() != EntityKind.INTERFACE) {
+            return entity;
+        }
+
+        JavaDeclarationHierarchy declaration = declarations.stream()
+                .filter(value -> value.kind() == entity.kind())
+                .filter(value -> value.name().equals(entity.content()))
+                .filter(value -> value.line() == entity.location().line())
+                .findFirst()
+                .orElse(null);
+        if (declaration == null || !declaration.hasHierarchy()) {
+            return entity;
+        }
+
+        Map<String, String> attributes = new HashMap<>(entity.attributes());
+        if (declaration.extendsTypes() != null && !declaration.extendsTypes().isBlank()) {
+            attributes.put(JavaEntityAttributes.EXTENDS_TYPES, declaration.extendsTypes());
+        }
+        if (declaration.implementsTypes() != null && !declaration.implementsTypes().isBlank()) {
+            attributes.put(JavaEntityAttributes.IMPLEMENTS_TYPES, declaration.implementsTypes());
+        }
+        return new CodeEntity(
+                entity.kind(),
+                entity.content(),
+                entity.location(),
+                entity.language(),
+                entity.declaredType(),
+                attributes
+        );
+    }
+
+    private record JavaContainer(String kind, String name, int startLine, int endLine) {
+        boolean contains(int line) {
+            return line >= startLine && line <= endLine;
+        }
+
+        int length() {
+            return endLine - startLine;
+        }
+    }
+
+    private static final class JavaContainerExtractor extends JavaBaseListener {
+        private final List<JavaContainer> containers = new ArrayList<>();
+
+        private List<JavaContainer> containers() {
+            return containers;
+        }
+
+        @Override
+        public void enterClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
+            containers.add(new JavaContainer(
+                    "class",
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    ctx.getStop().getLine()
+            ));
+        }
+
+        @Override
+        public void enterInterfaceDeclaration(JavaParser.InterfaceDeclarationContext ctx) {
+            containers.add(new JavaContainer(
+                    "interface",
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    ctx.getStop().getLine()
+            ));
+        }
+
+        @Override
+        public void enterRecordDeclaration(JavaParser.RecordDeclarationContext ctx) {
+            containers.add(new JavaContainer(
+                    "record",
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    ctx.getStop().getLine()
+            ));
+        }
+    }
+
+    private record JavaRecord(String file, int line, String name) {}
+
+    private static final class JavaRecordExtractor extends JavaBaseListener {
+        private final String filePath;
+        private final List<JavaRecord> records = new ArrayList<>();
+
+        private JavaRecordExtractor(String filePath) {
+            this.filePath = filePath;
+        }
+
+        private List<JavaRecord> records() {
+            return records;
+        }
+
+        @Override
+        public void enterRecordDeclaration(JavaParser.RecordDeclarationContext ctx) {
+            records.add(new JavaRecord(filePath, ctx.getStart().getLine(), ctx.Identifier().getText()));
+        }
+    }
+
+    private record JavaDeclarationHierarchy(
+            EntityKind kind,
+            String name,
+            int line,
+            String extendsTypes,
+            String implementsTypes
+    ) {
+        boolean hasHierarchy() {
+            return (extendsTypes != null && !extendsTypes.isBlank())
+                    || (implementsTypes != null && !implementsTypes.isBlank());
+        }
+    }
+
+    private static final class JavaDeclarationHierarchyExtractor extends JavaBaseListener {
+        private final List<JavaDeclarationHierarchy> declarations = new ArrayList<>();
+
+        private List<JavaDeclarationHierarchy> declarations() {
+            return declarations;
+        }
+
+        @Override
+        public void enterClassDeclaration(JavaParser.ClassDeclarationContext ctx) {
+            declarations.add(new JavaDeclarationHierarchy(
+                    EntityKind.CLASS,
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    typeSpecName(ctx.EXTENDS() == null ? null : ctx.typeSpec()),
+                    typeListNames(ctx.IMPLEMENTS() == null ? null : ctx.typeList())
+            ));
+        }
+
+        @Override
+        public void enterInterfaceDeclaration(JavaParser.InterfaceDeclarationContext ctx) {
+            declarations.add(new JavaDeclarationHierarchy(
+                    EntityKind.INTERFACE,
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    typeListNames(ctx.EXTENDS() == null ? null : ctx.typeList()),
+                    null
+            ));
+        }
+
+        @Override
+        public void enterRecordDeclaration(JavaParser.RecordDeclarationContext ctx) {
+            declarations.add(new JavaDeclarationHierarchy(
+                    EntityKind.RECORD,
+                    ctx.Identifier().getText(),
+                    ctx.getStart().getLine(),
+                    null,
+                    typeListNames(ctx.IMPLEMENTS() == null ? null : ctx.typeList())
+            ));
+        }
+
+        private static String typeListNames(JavaParser.TypeListContext typeList) {
+            if (typeList == null) {
+                return null;
+            }
+            return typeList.typeSpec().stream()
+                    .map(JavaDeclarationHierarchyExtractor::typeSpecName)
+                    .filter(value -> value != null && !value.isBlank())
+                    .reduce((left, right) -> left + ", " + right)
+                    .orElse(null);
+        }
+
+        private static String typeSpecName(JavaParser.TypeSpecContext typeSpec) {
+            if (typeSpec == null) {
+                return null;
+            }
+            return JavaTypeResolver.searchableTypeName(typeSpec.getText());
+        }
+    }
+
     @FunctionalInterface
     private interface ParseResultMapper<T> {
         T map(JavaBaseListener extractor);
     }
 
     @FunctionalInterface
-    private interface ExtractionStep {
-        List<CodeEntity> extract();
+    private interface ExtractionStep<T> {
+        List<T> extract();
     }
 }

@@ -58,6 +58,16 @@ final class JavaTypeHierarchyExtractor extends JavaBaseListener {
         addParents(interfaceName, ctx.typeList());
     }
 
+    @Override
+    public void enterRecordDeclaration(JavaParser.RecordDeclarationContext ctx) {
+        if (ctx.IMPLEMENTS() == null || ctx.typeList() == null) {
+            return;
+        }
+
+        String recordName = JavaTypeResolver.searchableTypeName(ctx.Identifier().getText());
+        addParents(recordName, ctx.typeList());
+    }
+
     private void parseFile(Path file) throws IOException {
         JavaLexer lexer = new JavaLexer(CharStreams.fromString(Files.readString(file)));
         lexer.removeErrorListeners();

@@ -3,6 +3,7 @@ package org.codesearch.java;
 final class JavaIndexFields {
     static final String CONTENT = "content";
     static final String CONTENT_LOWERCASE = "content_lowercase";
+    static final String LANGUAGE = "language";
     static final String FILE = "file";
     static final String LINE = "line";
     static final String TYPE = "type";
@@ -13,6 +14,10 @@ final class JavaIndexFields {
     static final String ASSIGNABLE_TYPE = "assignableType";
     static final String ASSIGNABLE_TYPE_LOWERCASE = "assignableType_lowercase";
     static final String TYPE_INFERENCE = "typeInference";
+    static final String EXTENDS_TYPES = "extendsTypes";
+    static final String IMPLEMENTS_TYPES = "implementsTypes";
+    static final String CONTAINER_KIND = "containerKind";
+    static final String CONTAINER_NAME = "containerName";
     static final String ANNOTATION_TARGET_KIND = "annotationTargetKind";
     static final String ANNOTATION_TARGET_NAME = "annotationTargetName";
 
