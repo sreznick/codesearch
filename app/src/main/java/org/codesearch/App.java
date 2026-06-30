@@ -1,23 +1,24 @@
 package org.codesearch;
 
+import org.codesearch.adapter.DefaultLanguageRegistry;
+import org.codesearch.adapter.IndexUnavailableException;
+import org.codesearch.adapter.LanguageScopes;
+import org.codesearch.adapter.SearchRequest;
+import org.codesearch.adapter.SearchResponse;
+import org.codesearch.adapter.cli.CliBridge;
+import org.codesearch.adapter.cli.SearchRequestMapper;
 import org.codesearch.core.CodeEntity;
 import org.codesearch.core.EntityKind;
 import org.codesearch.core.SearchQuery;
 import org.codesearch.core.SearchResult;
 import org.codesearch.core.SearchTarget;
-import org.codesearch.java.JavaLanguageModule;
-import org.codesearch.java.JavaSearchService;
-import org.codesearch.java.JavaSourceIndexer;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class App {
     private static final int DEFAULT_LIMIT = 100;
@@ -69,15 +70,15 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
+        if (!bridge(indexPath).supportsLanguage(command.language())) {
+            err.println(colorize(RED, unsupportedLanguageMessage(command.language())));
             return 1;
         }
 
         try {
-            JavaSourceIndexer.indexJavaSources(command.sourcePath(), indexPath);
+            List<String> indexedLanguages = bridge(indexPath).index(command.language(), Path.of(command.sourcePath()));
             out.println(colorize(GREEN, "Готово") + "  Индексация завершена");
-            out.println(colorize(DIM, "Язык: ") + "java");
+            out.println(colorize(DIM, "Языки: ") + String.join(", ", indexedLanguages));
             out.println(colorize(DIM, "Путь:  ") + command.sourcePath());
             return 0;
         } catch (IllegalArgumentException e) {
@@ -95,17 +96,20 @@ public class App {
 
     private static IndexCommand parseIndexCommand(String[] args) {
         if (args.length == 1) {
-            return new IndexCommand(JavaLanguageModule.LANGUAGE, ".");
+            return new IndexCommand(LanguageScopes.ALL, ".");
         }
 
         if (args.length == 2) {
-            if (isJava(args[1])) {
+            if (isSupportedLanguage(args[1])) {
                 return new IndexCommand(args[1].trim().toLowerCase(), ".");
             }
-            return new IndexCommand(JavaLanguageModule.LANGUAGE, args[1]);
+            return new IndexCommand(LanguageScopes.ALL, args[1]);
         }
 
         if (args.length == 3) {
+            if (!isSupportedLanguage(args[1])) {
+                throw new IllegalArgumentException("неизвестный язык: " + args[1]);
+            }
             return new IndexCommand(args[1].trim().toLowerCase(), args[2]);
         }
 
@@ -122,17 +126,17 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
+        if (!bridge(indexPath).supportsLanguage(command.language())) {
+            err.println(colorize(RED, unsupportedLanguageMessage(command.language())));
             return 1;
         }
 
-        Path quickIndexPath = null;
         try {
-            quickIndexPath = Files.createTempDirectory("codesearch-quick-index");
-            JavaSourceIndexer.indexJavaSources(command.sourcePath(), quickIndexPath);
-            JavaSearchService searchService = new JavaSearchService(quickIndexPath);
-            JavaSearchService.SearchResponse response = executeSearch(searchService, command);
+            SearchResponse response = bridge(indexPath).quickSearch(
+                    command.language(),
+                    Path.of(command.sourcePath()),
+                    toSearchRequest(command)
+            );
             printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
@@ -145,8 +149,6 @@ public class App {
         } catch (IOException e) {
             err.println(colorize(RED, "Ошибка чтения или записи индекса: ") + e.getMessage());
             return 1;
-        } finally {
-            deleteDirectoryQuietly(quickIndexPath);
         }
     }
 
@@ -160,20 +162,19 @@ public class App {
             return 1;
         }
 
-        if (!isJava(command.language())) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
+        if (!bridge(indexPath).supportsLanguage(command.language())) {
+            err.println(colorize(RED, unsupportedLanguageMessage(command.language())));
             return 1;
         }
 
         try {
-            JavaSearchService searchService = new JavaSearchService(indexPath);
-            JavaSearchService.SearchResponse response = executeSearch(searchService, command);
+            SearchResponse response = bridge(indexPath).search(command.language(), toSearchRequest(command));
             printResults(out, response, command.explain(), command.target() == SearchTarget.ASSIGNABLE_TYPE ? command.query() : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
             return 1;
-        } catch (JavaSearchService.IndexUnavailableException e) {
+        } catch (IndexUnavailableException e) {
             err.println(colorize(RED, "Индекс не готов: ") + e.getMessage());
             err.println(colorize(DIM, "Сначала выполните: ") + "codesearch index [path]");
             return 1;
@@ -183,39 +184,41 @@ public class App {
         }
     }
 
-    private static JavaSearchService.SearchResponse executeSearch(JavaSearchService searchService, SearchCommandSpec command) throws IOException {
+    private static SearchRequest toSearchRequest(SearchCommandSpec command) {
         if (command.target() == SearchTarget.ASSIGNABLE_TYPE) {
-            return searchService.searchAssignableVariables(
+            return SearchRequestMapper.assignableTypeSearch(
                     command.query(),
-                    command.language(),
                     command.caseSensitive(),
                     command.limit(),
                     command.pathFilter()
             );
         }
         if (command.target() == SearchTarget.DECLARED_TYPE) {
-            return searchService.searchWithMetadata(
-                    SearchQuery.builder(command.query(), command.kind(), command.language())
-                            .target(SearchTarget.DECLARED_TYPE)
-                            .caseSensitive(command.caseSensitive())
-                            .limit(command.limit())
-                            .pathFilter(command.pathFilter())
-                            .build()
+            return SearchRequestMapper.declaredTypeSearch(
+                    command.query(),
+                    command.kind(),
+                    command.caseSensitive(),
+                    command.limit(),
+                    command.pathFilter()
             );
         }
-
-        return searchService.searchContaining(
+        return SearchRequestMapper.contentSearch(
                 command.query(),
                 command.kind(),
-                command.language(),
+                false,
                 command.caseSensitive(),
                 command.limit(),
-                command.pathFilter()
+                command.pathFilter(),
+                true
         );
     }
 
+    private static CliBridge bridge(Path indexPath) {
+        return CliBridge.forCliIndex(indexPath);
+    }
+
     private static QuickSearchCommand parseQuickSearchCommand(String[] args, int startIndex) {
-        String language = JavaLanguageModule.LANGUAGE;
+        String language = LanguageScopes.ALL;
         EntityKind kind = null;
         SearchTarget target = SearchTarget.CONTENT;
         boolean caseSensitive = false;
@@ -270,7 +273,7 @@ public class App {
             operands.add(arg);
         }
 
-        if (!operands.isEmpty() && isJava(operands.getFirst())) {
+        if (!operands.isEmpty() && isSupportedLanguage(operands.getFirst())) {
             language = operands.removeFirst().trim().toLowerCase();
         }
 
@@ -306,7 +309,7 @@ public class App {
     }
 
     private static CachedSearchCommand parseCachedSearchCommand(String[] args, int startIndex) {
-        String language = JavaLanguageModule.LANGUAGE;
+        String language = LanguageScopes.ALL;
         EntityKind kind = null;
         SearchTarget target = SearchTarget.CONTENT;
         boolean caseSensitive = false;
@@ -366,7 +369,7 @@ public class App {
             operands.add(arg);
         }
 
-        if (!operands.isEmpty() && isJava(operands.getFirst())) {
+        if (!operands.isEmpty() && isSupportedLanguage(operands.getFirst())) {
             language = operands.removeFirst().trim().toLowerCase();
         }
 
@@ -427,8 +430,8 @@ public class App {
             return 1;
         }
 
-        if (!isJava(args[1])) {
-            err.println(colorize(RED, "Пока поддерживается только язык java."));
+        if (!bridge(indexPath).supportsLanguage(args[1])) {
+            err.println(colorize(RED, unsupportedLanguageMessage(args[1])));
             return 1;
         }
 
@@ -472,26 +475,23 @@ public class App {
         }
 
         try {
-            JavaSearchService searchService = new JavaSearchService(indexPath);
-            JavaSearchService.SearchResponse response;
+            CliBridge cli = bridge(indexPath);
+            SearchResponse response;
             if (isAssignableTypeSearch(args[2])) {
-                response = searchService.searchAssignableVariables(
-                        args[3],
-                        JavaLanguageModule.LANGUAGE,
-                        caseSensitive,
-                        limit,
-                        pathFilter
+                response = cli.search(
+                        args[1],
+                        SearchRequestMapper.assignableTypeSearch(args[3], caseSensitive, limit, pathFilter)
                 );
             } else {
                 SearchCommand searchCommand = parseSearchCommand(args[2], args[3], fuzzy, caseSensitive, limit, pathFilter);
-                response = searchService.searchWithMetadata(searchCommand.query());
+                response = cli.search(args[1], SearchRequestMapper.fromSearchQuery(searchCommand.query()));
             }
             printResults(out, response, explain, isAssignableTypeSearch(args[2]) ? args[3] : null);
             return 0;
         } catch (IllegalArgumentException e) {
             err.println(colorize(RED, "Некорректный запрос: ") + e.getMessage());
             return 1;
-        } catch (JavaSearchService.IndexUnavailableException e) {
+        } catch (IndexUnavailableException e) {
             err.println(colorize(RED, "Индекс не готов: ") + e.getMessage());
             err.println(colorize(DIM, "Сначала выполните: ") + "index java <path>");
             return 1;
@@ -513,7 +513,7 @@ public class App {
                     metadataQuery(rawQuery, EntityKind.METHOD, fuzzy, caseSensitive, limit, pathFilter)
             );
             default -> new SearchCommand(
-                    SearchQuery.builder(rawQuery, EntityKind.fromValue(rawKind), JavaLanguageModule.LANGUAGE)
+                    SearchQuery.builder(rawQuery, EntityKind.fromValue(rawKind), null)
                             .fuzzy(fuzzy)
                             .caseSensitive(caseSensitive)
                             .limit(limit)
@@ -524,7 +524,7 @@ public class App {
     }
 
     private static SearchQuery metadataQuery(String rawQuery, EntityKind kind, boolean fuzzy, boolean caseSensitive, int limit, String pathFilter) {
-        return SearchQuery.builder(rawQuery, kind, JavaLanguageModule.LANGUAGE)
+        return SearchQuery.builder(rawQuery, kind, null)
                 .target(SearchTarget.DECLARED_TYPE)
                 .fuzzy(fuzzy)
                 .caseSensitive(caseSensitive)
@@ -538,7 +538,7 @@ public class App {
                 || "assignable-type".equalsIgnoreCase(rawKind);
     }
 
-    private static void printResults(PrintStream out, JavaSearchService.SearchResponse response, boolean explain, String assignableTargetType) {
+    private static void printResults(PrintStream out, SearchResponse response, boolean explain, String assignableTargetType) {
         out.println(colorize(BLUE, "Найдено совпадений: ") + response.totalHits());
 
         if (response.results().isEmpty()) {
@@ -601,8 +601,9 @@ public class App {
 
         if (entity.declaredType() != null && !entity.declaredType().isBlank()) {
             return String.format(
-                    "%s %s %s  [%s]  %s",
+                    "%s [%s] %s %s  [%s]  %s",
                     prefix,
+                    entity.language(),
                     kind,
                     entity.content(),
                     entity.declaredType(),
@@ -611,8 +612,9 @@ public class App {
         }
 
         return String.format(
-                "%s %s %s  %s",
+                "%s [%s] %s %s  %s",
                 prefix,
+                entity.language(),
                 kind,
                 entity.content(),
                 file
@@ -623,8 +625,19 @@ public class App {
         return "help".equalsIgnoreCase(value) || "-h".equalsIgnoreCase(value) || "--help".equalsIgnoreCase(value);
     }
 
-    private static boolean isJava(String value) {
-        return JavaLanguageModule.LANGUAGE.equalsIgnoreCase(value);
+    private static String supportedLanguagesLabel() {
+        return String.join(", ", DefaultLanguageRegistry.withDefaults().all().stream()
+                .map(org.codesearch.adapter.LanguageAdapter::language)
+                .sorted()
+                .toList());
+    }
+
+    private static String unsupportedLanguageMessage(String language) {
+        return "Неподдерживаемый язык: " + language + ". Доступны: " + supportedLanguagesLabel() + ".";
+    }
+
+    private static boolean isSupportedLanguage(String value) {
+        return !LanguageScopes.isAll(value) && DefaultLanguageRegistry.withDefaults().find(value).isPresent();
     }
 
     private static void printHelp(PrintStream out) {
@@ -649,13 +662,14 @@ public class App {
         out.println("  --cached               искать по постоянному индексу без переиндексации");
         out.println("  -p, --path PATH        фильтр пути для --cached");
         out.println("  --explain              показать, почему результат подошел под запрос");
-        out.println("  --lang java            язык; сейчас поддерживается только java");
+        out.println("  --lang LANG            фильтр по языку (" + supportedLanguagesLabel() + ", all)");
         out.println();
         out.println(colorize(BLUE, "Примеры"));
-        out.println("  codesearch TestClass");
+        out.println("  codesearch TestClass              поиск по всем языкам в каталоге");
         out.println("  codesearch class TestClass");
         out.println("  codesearch testField src --kind field");
-        out.println("  codesearch index .");
+        out.println("  codesearch index .                индексировать все найденные языки");
+        out.println("  codesearch index java src         только Java");
         out.println("  codesearch --cached class TestClass");
         out.println("  codesearch --cached field-type String");
         out.println("  codesearch --cached variable-assignable-to Appendable");
@@ -674,20 +688,6 @@ public class App {
 
     private static void printCachedSearchUsage(PrintStream err) {
         err.println(colorize(DIM, "Использование: ") + "codesearch --cached [options] <query> [path-filter]");
-    }
-
-    private static void deleteDirectoryQuietly(Path path) {
-        if (path == null || !Files.exists(path)) {
-            return;
-        }
-
-        try (Stream<Path> paths = Files.walk(path)) {
-            for (Path file : paths.sorted(Comparator.reverseOrder()).toList()) {
-                Files.deleteIfExists(file);
-            }
-        } catch (IOException ignored) {
-            // Temporary quick-search indexes are best-effort cleanup only.
-        }
     }
 
     private record SearchCommand(SearchQuery query) {}

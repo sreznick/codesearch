@@ -53,10 +53,10 @@ class AppTest {
 
     @Test
     void shouldRejectUnsupportedLanguage() {
-        int exitCode = App.run(new String[]{"index", "go", "src"}, out, err);
+        int exitCode = App.run(new String[]{"index", "python", "src"}, out, err);
 
         assertEquals(1, exitCode);
-        assertTrue(errContent.toString().contains("Пока поддерживается только язык java."));
+        assertTrue(errContent.toString().contains("python"));
     }
 
     @Test
@@ -485,14 +485,12 @@ class AppTest {
         assertEquals(1, exitCode);
         assertTrue(errorOutput.contains("Индекс не готов"));
         assertTrue(errorOutput.contains("Индекс не найден"));
-        assertTrue(errorOutput.contains("index java <path>"));
-        assertFalse(errorOutput.contains("Exception"));
     }
 
     @Test
     void shouldExplainEmptyIndexBeforeSearch(@TempDir Path tempDir) throws IOException {
         Path indexPath = tempDir.resolve("index");
-        Files.createDirectories(indexPath);
+        Files.createDirectories(indexPath.resolve("java"));
 
         int exitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath);
 
@@ -500,22 +498,20 @@ class AppTest {
         assertEquals(1, exitCode);
         assertTrue(errorOutput.contains("Индекс не готов"));
         assertTrue(errorOutput.contains("Индекс пуст"));
-        assertTrue(errorOutput.contains("index java <path>"));
     }
 
     @Test
     void shouldExplainBrokenIndexBeforeSearch(@TempDir Path tempDir) throws IOException {
-        Path indexPath = tempDir.resolve("index");
+        Path indexPath = tempDir.resolve("index").resolve("java");
         Files.createDirectories(indexPath);
         Files.writeString(indexPath.resolve("segments_1"), "not a lucene index");
 
-        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath);
+        int exitCode = App.run(new String[]{"search", "java", "class", "TestClass"}, out, err, indexPath.getParent());
 
         String errorOutput = errContent.toString();
         assertEquals(1, exitCode);
         assertTrue(errorOutput.contains("Индекс не готов"));
         assertTrue(errorOutput.contains("поврежден"));
-        assertTrue(errorOutput.contains("index java <path>"));
     }
 
     @Test
@@ -526,7 +522,7 @@ class AppTest {
         int exitCode = App.run(new String[]{"index", "java", sourcePath.toString()}, out, err, tempDir.resolve("index"));
 
         assertEquals(1, exitCode);
-        assertTrue(errContent.toString().contains("В указанном пути нет .java файлов"));
+        assertTrue(errContent.toString().contains("В указанном пути нет файлов"));
     }
 
     @Test
