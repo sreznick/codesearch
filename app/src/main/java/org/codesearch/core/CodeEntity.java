@@ -1,5 +1,6 @@
 package org.codesearch.core;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public record CodeEntity(
@@ -30,5 +31,19 @@ public record CodeEntity(
 
     public CodeEntity(EntityKind kind, String content, EntityLocation location, String language) {
         this(kind, content, location, language, null, Map.of());
+    }
+
+    public String attribute(String name) {
+        String value = attributes.get(name);
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    public CodeEntity withAttributes(Map<String, String> extraAttributes) {
+        if (extraAttributes.isEmpty()) {
+            return this;
+        }
+        Map<String, String> merged = new HashMap<>(attributes);
+        merged.putAll(extraAttributes);
+        return new CodeEntity(kind, content, location, language, declaredType, merged);
     }
 }

@@ -92,8 +92,8 @@ tasks.named('distZip') {
 }
 
 generateGrammarSource {
-    maxHeapSize = "64m"
+    maxHeapSize = "512m"
     arguments += [ "-visitor",
                    "-long-messages",
-                   "-package", "org.example" ]
+                   "-package", "org.codesearch.grammar" ]
 }

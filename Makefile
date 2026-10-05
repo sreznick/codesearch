@@ -1,4 +1,4 @@
-.PHONY: help test install dist env run-help
+.PHONY: help test install dist env codesearch
 
 CODESEARCH_BIN := $(CURDIR)/app/build/install/codesearch/bin
 
@@ -7,7 +7,7 @@ help:
 	@echo "  make test       - run tests"
 	@echo "  make install    - build local CLI distribution"
 	@echo "  make env        - print PATH export command"
-	@echo "  make run-help   - build and run codesearch --help"
+	@echo "  make codesearch - build CLI and print PATH export command"
 	@echo "  make dist       - build zip distribution"
 
 test:
@@ -25,8 +25,7 @@ install:
 env:
 	@echo 'export PATH="$$PATH:$(CODESEARCH_BIN)"'
 
-run-help: install
-	$(CODESEARCH_BIN)/codesearch --help
+codesearch: install
 
 dist:
 	./gradlew distZip
