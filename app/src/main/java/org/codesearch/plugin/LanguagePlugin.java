@@ -1,22 +1,25 @@
 package org.codesearch.plugin;
 
-import org.codesearch.core.EntityExtractor;
-import org.codesearch.core.IndexingContext;
-import org.codesearch.core.LanguageModule;
-import org.codesearch.core.LanguageSearchCapabilities;
+import org.codesearch.core.EntityKind;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
+public interface LanguagePlugin {
+    String language();
 
-public interface LanguagePlugin extends LanguageModule {
+    Set<String> fileExtensions();
 
-    EntityExtractor createExtractor(IndexingContext context);
+    Set<EntityKind> supportedEntityKinds();
 
     LanguageSearchCapabilities searchCapabilities();
 
-    default IndexingContext prepareIndexing(List<Path> sourceFiles) throws IOException {
-        return IndexingContext.EMPTY;
+    EntityExtractor createExtractor(List<Path> sourceFiles) throws IOException;
+
+    default boolean supportsFile(Path file) {
+        String name = file.getFileName() == null ? file.toString() : file.getFileName().toString();
+        return fileExtensions().stream().anyMatch(name::endsWith);
     }
 }

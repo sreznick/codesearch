@@ -32,6 +32,18 @@ final class JavaTypeHierarchy {
         return result;
     }
 
+    Set<String> supertypes(String type) {
+        String name = JavaTypeResolver.searchableTypeName(type);
+        if (name == null || !directParents.containsKey(name)) {
+            return Set.of();
+        }
+        LinkedHashSet<String> result = new LinkedHashSet<>();
+        collectProjectParents(name, result, new HashSet<>());
+        result.remove(name);
+        result.remove("Object");
+        return result;
+    }
+
     private void collectProjectParents(String type, Set<String> result, Set<String> visited) {
         if (type == null || !visited.add(type)) {
             return;

@@ -1,68 +1,66 @@
 package org.codesearch.java;
 
-import org.codesearch.core.EntityExtractor;
 import org.codesearch.core.EntityKind;
-import org.codesearch.core.IndexingContext;
-import org.codesearch.core.LanguageSearchCapabilities;
-import org.codesearch.core.SearchTarget;
+import org.codesearch.plugin.EntityExtractor;
 import org.codesearch.plugin.LanguagePlugin;
+import org.codesearch.plugin.LanguageSearchCapabilities;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public final class JavaLanguagePlugin implements LanguagePlugin {
-    private final JavaLanguageModule module = new JavaLanguageModule();
+    public static final String LANGUAGE = "java";
+
+    private static final Set<String> FILE_EXTENSIONS = Set.of(".java");
+    private static final Set<EntityKind> SUPPORTED_ENTITY_KINDS = Set.of(
+            EntityKind.CLASS,
+            EntityKind.RECORD,
+            EntityKind.ENUM,
+            EntityKind.INTERFACE,
+            EntityKind.METHOD,
+            EntityKind.FIELD,
+            EntityKind.LOCAL_VARIABLE,
+            EntityKind.ANNOTATION,
+            EntityKind.CALL,
+            EntityKind.STRING_CONSTANT,
+            EntityKind.INTEGER_LITERAL,
+            EntityKind.FLOAT_LITERAL,
+            EntityKind.BOOLEAN_LITERAL,
+            EntityKind.CHAR_LITERAL,
+            EntityKind.STRING_LITERAL
+    );
+    private static final LanguageSearchCapabilities SEARCH_CAPABILITIES = new LanguageSearchCapabilities(
+            Set.of(EntityKind.FIELD, EntityKind.LOCAL_VARIABLE, EntityKind.METHOD),
+            Set.of(EntityKind.FIELD, EntityKind.LOCAL_VARIABLE),
+            Set.of(EntityKind.CLASS, EntityKind.RECORD, EntityKind.ENUM, EntityKind.INTERFACE),
+            JavaTypeResolver::searchableTypeName
+    );
 
     @Override
     public String language() {
-        return module.language();
+        return LANGUAGE;
     }
 
     @Override
     public Set<String> fileExtensions() {
-        return module.fileExtensions();
+        return FILE_EXTENSIONS;
     }
 
     @Override
     public Set<EntityKind> supportedEntityKinds() {
-        return module.supportedEntityKinds();
-    }
-
-    @Override
-    public EntityExtractor createExtractor(IndexingContext context) {
-        JavaTypeHierarchy typeHierarchy = context.get(JavaTypeHierarchy.class);
-        if (typeHierarchy == null) {
-            typeHierarchy = JavaTypeHierarchy.empty();
-        }
-        final JavaTypeHierarchy hierarchy = typeHierarchy;
-        return file -> new JavaEntityExtractor(hierarchy).extractEntities(file);
-    }
-
-    @Override
-    public IndexingContext prepareIndexing(List<Path> sourceFiles) throws IOException {
-        JavaTypeHierarchy hierarchy = JavaTypeHierarchyExtractor.extract(sourceFiles);
-        return new IndexingContext(Map.of(JavaTypeHierarchy.class, hierarchy));
+        return SUPPORTED_ENTITY_KINDS;
     }
 
     @Override
     public LanguageSearchCapabilities searchCapabilities() {
-        return LanguageSearchCapabilities.builder()
-                .searchTargets(Set.of(SearchTarget.CONTENT, SearchTarget.DECLARED_TYPE, SearchTarget.ASSIGNABLE_TYPE))
-                .declaredTypeKinds(Set.of(EntityKind.FIELD, EntityKind.LOCAL_VARIABLE, EntityKind.METHOD))
-                .assignableTypeSearch(new LanguageSearchCapabilities.AssignableTypeSearch() {
-                    @Override
-                    public String normalizeType(String rawType) {
-                        return JavaTypeResolver.searchableTypeName(rawType);
-                    }
+        return SEARCH_CAPABILITIES;
+    }
 
-                    @Override
-                    public Set<EntityKind> variableKinds() {
-                        return Set.of(EntityKind.FIELD, EntityKind.LOCAL_VARIABLE);
-                    }
-                })
-                .build();
+    @Override
+    public EntityExtractor createExtractor(List<Path> sourceFiles) {
+        JavaTypeHierarchy hierarchy = JavaTypeHierarchyExtractor.extract(sourceFiles);
+        JavaEntityExtractor extractor = new JavaEntityExtractor(hierarchy);
+        return extractor::extractEntities;
     }
 }
